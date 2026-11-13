@@ -44,6 +44,14 @@ async function upsert(table: string, rows: any[], conflict: string) {
   }
 }
 const catOf = (p: any) => (p && p.categories && p.categories[0] && p.categories[0].name) || "";
+// Себестоимость: в Billz она лежит по магазинам (shop_prices[].supply_price), на уровне товара supply_price = 0.
+// Если по магазинам разная — берём максимальную; 0 и 1 (служебные карточки линз) считаем отсутствующей.
+const costOf = (p: any): number => {
+  const ok = (v: any) => (+v > 1 ? +v : 0);
+  const shops = (p.shop_prices || []).map((x: any) => ok(x.supply_price)).filter(Boolean);
+  if (shops.length) return Math.max(...shops);
+  return ok(p.last_prices && p.last_prices.supply_price) || Math.max(0, ...(p.product_supply_stock || []).map((x: any) => ok(x.supply_price)));
+};
 
 // ---------- чеки ----------
 async function collectChecks(from: string, to: string, t0: number) {
@@ -107,7 +115,7 @@ async function collectStock() {
     const sku = String(p.sku || p.id);
     const prices: Record<string, number> = {};
     (p.shop_prices || []).forEach((x: any) => { if (SHOPS[x.shop_id]) prices[SHOPS[x.shop_id]] = +x.retail_price || 0; });
-    cat.push({ sku, pid: p.id, name: p.name, cat: catOf(p), prices, cp: +p.supply_price || null, updated_at: now });
+    cat.push({ sku, pid: p.id, name: p.name, cat: catOf(p), prices, cp: costOf(p) || null, updated_at: now });
     (p.shop_measurement_values || []).forEach((v: any) => {
       const pt = SHOPS[v.shop_id], q = +v.active_measurement_value || 0;
       if (pt && q) stock.push({ d: today, point: pt, sku, q, at: now });
@@ -157,7 +165,7 @@ async function collectTransfers(t0: number) {
           const p = i.product || i.product_info || {};
           const cp = +p.departure_shop_supply_price || 0;
           items.push({ n: p.name || "", sku: p.sku || "", sent: +i.transfer_measurement_value || 0, arr: +i.arrived_measurement_value || 0, price: +p.departure_shop_retail_price || 0, cp });
-          if (cp && p.sku) cps.push({ sku: p.sku, cp });
+          if (cp > 1 && p.sku) cps.push({ sku: p.sku, cp });
         });
         if ((j.items || []).length < 100) break;
       }

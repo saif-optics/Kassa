@@ -74,6 +74,14 @@ function saleName(cat: string, name: string): string {
 function stockCatFromSale(cat: string): string {
   return ({ "Солнцезащитные очки": "Очки С/З", "Очковые линзы": "Очковые линзы" } as Record<string, string>)[cat] || cat;
 }
+// Себестоимость: в Billz она лежит по магазинам (shop_prices[].supply_price), на уровне товара supply_price = 0.
+// Если по магазинам разная — берём максимальную; 0 и 1 (служебные карточки линз) считаем отсутствующей.
+const costOf = (p: any): number => {
+  const ok = (v: any) => (+v > 1 ? +v : 0);
+  const shops = (p.shop_prices || []).map((x: any) => ok(x.supply_price)).filter(Boolean);
+  if (shops.length) return Math.max(...shops);
+  return ok(p.last_prices && p.last_prices.supply_price) || Math.max(0, ...(p.product_supply_stock || []).map((x: any) => ok(x.supply_price)));
+};
 
 async function getAll(col: string) {
   const out: any[] = [];
@@ -205,7 +213,7 @@ async function run(trigger: string, P: Pt) {
     const cat = si ? si.c : stockCatFromSale(saleCat(p.categories && p.categories[0] && p.categories[0].name, p.name || ""));
     newItems.push({
       c: cat, g: (si && si.g) || (cat === "Очковые линзы" || cat === "Аксессуары" ? clean(p.name) : `${cat === "Детские оправы" ? "Детская оправа" : cat === "Очки С/З" ? "С/з очки" : "Оправа"} ${Math.round(price / 1000)}к`),
-      m: p.name, s: sku, p: price > 1 ? price : 0, cp: (si && +si.cp) || +p.supply_price || 0, q, pt: P.point, bz: p.id,
+      m: p.name, s: sku, p: price > 1 ? price : 0, cp: (si && +si.cp) || costOf(p), q, pt: P.point, bz: p.id,
     });
   });
   newItems.sort((a, b) => String(a.c).localeCompare(String(b.c)) || b.q - a.q);
