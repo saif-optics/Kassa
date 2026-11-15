@@ -158,7 +158,7 @@ function renderToday() {
   const names = Object.fromEntries(data.employees.map(e => [e.id, e.name]));
   const by = {};
   for (const ev of data.today) {
-    if (!names[ev.e]) continue;
+    if (!names[ev.e] || (ev.p && ev.p !== data.point)) continue; // в списке — только отметки этой точки
     const r = by[ev.e] ??= { name: names[ev.e], first: null, last: null };
     if (ev.k === "in" && !r.first) r.first = ev.t;
     r.last = ev;
@@ -206,7 +206,10 @@ async function scan() {
   $("status").textContent = "Смотрите в камеру";
   try {
     stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: "user" }, audio: false });
-  } catch { $("status").textContent = "Нет доступа к камере — разрешите в настройках Chrome"; setTimeout(home, 4000); return; }
+  } catch (e) {
+    $("status").textContent = e?.name === "NotFoundError" ? "Камера не найдена на этом компьютере" : "Нет доступа к камере — разрешите в настройках Chrome";
+    setTimeout(home, 4000); return;
+  }
   const v = $("video"); v.srcObject = stream; await v.play();
   const opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 });
   let streak = 0, lastId = null, t0 = Date.now();
