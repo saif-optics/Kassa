@@ -47,7 +47,7 @@
   function render(){
     const el=$("rsBody");if(!el||!S())return;
     const ms=months();
-    if(!ms.length){el.innerHTML='<div class="empty">Выписок по счёту ещё нет — нажмите «Внести выписку за день».</div>';$("rsSeg").innerHTML="";return}
+    if(!ms.length){el.innerHTML='<div class="empty">Выписок по счёту ещё нет.</div>';$("rsSeg").innerHTML="";return}
     if(st.m!=="all"&&!ms.includes(st.m))st.m=ms[ms.length-1];
     $("rsSeg").innerHTML=ms.map(m=>`<button type="button" data-rsm="${m}" aria-pressed="${st.m===m}">${MN[+m.slice(5,7)-1]}</button>`).join("")+(ms.length>1?`<button type="button" data-rsm="all" aria-pressed="${st.m==="all"}">Все месяцы</button>`:"");
     const C=calc(st.m),BM=byMonth();
@@ -64,20 +64,13 @@
     // по дням
     const L=C.days.slice().reverse();
     h+=`<section class="panel"><h2>Расходы по дням${st.m==="all"?"":" · "+MN[+st.m.slice(5,7)-1].toLowerCase()}</h2><p class="note">Нажмите на день, чтобы увидеть все списания, поменять статью или исправить выписку.</p>
-      <div class="tbl" style="margin-top:10px"><table class="rs-days"><thead><tr><th>День</th><th class="r">Утром</th><th class="r">Поступило</th><th class="r">Списано</th><th>Расходы</th><th class="r">Вечером</th></tr></thead><tbody>${L.map(x=>{const op=st.open===x.d;return `<tr class="tap${op?" rs-sel":""}" data-rsd="${x.d}"><td>${dS(x.d)} <span class="srcs">${WD[new Date(x.d+"T12:00:00Z").getUTCDay()]}</span></td><td class="r num">${x.s!=null?fmt(x.s):"—"}</td><td class="r num">${x.in>0.5?`<span class="up">+${fmt(x.in)}</span>`:'<span class="srcs">—</span>'}</td><td class="r num">${x.out?`<span class="down">−${fmt(x.out)}</span>`:'<span class="srcs">—</span>'}</td><td class="srcs">${esc(x.bank.slice(0,3).map(b=>b.n).join(", "))}${x.bank.length>3?" …":""}</td><td class="r num"><b>${x.e!=null?fmt(x.e):"—"}</b></td></tr>`+(op?`<tr class="rs-det"><td colspan="6">${x.bank.length?`<div class="tbl"><table><thead><tr><th>Расход</th><th>Статья</th><th class="r">Сумма</th></tr></thead><tbody>${x.bank.map((b,i)=>`<tr><td>${esc(b.n)}</td><td><select class="rs-cat" data-rsi="${i}">${CAT_NAMES.map(c=>`<option${catOf(b)===c?" selected":""}>${esc(c)}</option>`).join("")}</select>${b.c?' <span class="srcs">вручную</span>':""}</td><td class="r num">${fmt(b.a)}</td></tr>`).join("")}</tbody></table></div>`:'<p class="note">Списаний в этот день не было.</p>'}<div style="margin-top:10px"><button type="button" class="sec" data-rsedit="${x.d}">Исправить выписку за ${dS(x.d)}</button></div></td></tr>`:"")}).join("")||'<tr><td colspan="6" class="srcs" style="text-align:center;padding:14px">Нет выписок за период</td></tr>'}</tbody></table></div></section>`;
+      <div class="tbl" style="margin-top:10px"><table class="rs-days"><thead><tr><th>День</th><th class="r">Утром</th><th class="r">Поступило</th><th class="r">Списано</th><th>Расходы</th><th class="r">Вечером</th></tr></thead><tbody>${L.map(x=>{const op=st.open===x.d;return `<tr class="tap${op?" rs-sel":""}" data-rsd="${x.d}"><td>${dS(x.d)} <span class="srcs">${WD[new Date(x.d+"T12:00:00Z").getUTCDay()]}</span></td><td class="r num">${x.s!=null?fmt(x.s):"—"}</td><td class="r num">${x.in>0.5?`<span class="up">+${fmt(x.in)}</span>`:'<span class="srcs">—</span>'}</td><td class="r num">${x.out?`<span class="down">−${fmt(x.out)}</span>`:'<span class="srcs">—</span>'}</td><td class="srcs">${esc(x.bank.slice(0,3).map(b=>b.n).join(", "))}${x.bank.length>3?" …":""}</td><td class="r num"><b>${x.e!=null?fmt(x.e):"—"}</b></td></tr>`+(op?`<tr class="rs-det"><td colspan="6">${x.bank.length?`<div class="tbl"><table><thead><tr><th>Расход</th><th>Статья</th><th class="r">Сумма</th></tr></thead><tbody>${x.bank.map((b,i)=>`<tr><td>${esc(b.n)}</td><td><select class="rs-cat" data-rsi="${i}">${CAT_NAMES.map(c=>`<option${catOf(b)===c?" selected":""}>${esc(c)}</option>`).join("")}</select>${b.c?' <span class="srcs">вручную</span>':""}</td><td class="r num">${fmt(b.a)}</td></tr>`).join("")}</tbody></table></div>`:'<p class="note">Списаний в этот день не было.</p>'}</td></tr>`:"")}).join("")||'<tr><td colspan="6" class="srcs" style="text-align:center;padding:14px">Нет выписок за период</td></tr>'}</tbody></table></div></section>`;
     el.innerHTML=h;
   }
   // ---------- действия ----------
-  function openEditor(day){
-    const b=$("rsOldBody"),t=$("rsOldTg");if(!b)return;b.hidden=false;if(t){t.setAttribute("aria-expanded","true");t.querySelector("span").textContent="Свернуть"}
-    if(day){const btn=document.querySelector(`#rpDays [data-rd="${day}"]`);if(btn)btn.click()}
-    setTimeout(()=>{const p=$("rpRsPanel")||$("rsOld");if(p)p.scrollIntoView({behavior:"smooth",block:"start"})},60);
-  }
   document.addEventListener("click",e=>{
     const m=e.target.closest("[data-rsm]");if(m){st.m=m.dataset.rsm;st.open=null;try{localStorage.setItem("kassa.rs.m",st.m)}catch(x){}render();return}
     const d=e.target.closest("tr[data-rsd]");if(d&&!e.target.closest("select")){st.open=st.open===d.dataset.rsd?null:d.dataset.rsd;render();return}
-    const ed=e.target.closest("[data-rsedit]");if(ed){openEditor(ed.dataset.rsedit);return}
-    if(e.target.closest("#rsAdd")){openEditor(null);return}
     const tg=e.target.closest("#rsOldTg");if(tg){const b=$("rsOldBody");b.hidden=!b.hidden;tg.setAttribute("aria-expanded",String(!b.hidden));tg.querySelector("span").textContent=b.hidden?"Развернуть":"Свернуть";return}
     if(e.target.closest("#rsXlsx"))xlsx();
   });
@@ -99,5 +92,5 @@
     const out=XLSX.write(wb,{type:"array",bookType:"xlsx"});const blob=new Blob([out],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
     const dl=await window.claude.use("downloads");await dl.save({filename:"Отчёт по расчётному счёту.xlsx",data:blob});
   }
-  window.__RS={render,calc,months,catOf,CAT_NAMES,MN,MNg,openEditor};
+  window.__RS={render,calc,months,catOf,CAT_NAMES,MN,MNg};
 })();

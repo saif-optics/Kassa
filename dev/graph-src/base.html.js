@@ -1281,312 +1281,9 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 window.__uiZ=1;try{const z=localStorage.getItem("kassa.size");if(z==="s"||z==="l"){document.documentElement.setAttribute("data-size",z);window.__uiZ=z==="s"?.9:1.1}}catch(e){}
 window.__zr=function(el){const r=el.getBoundingClientRect(),z=window.__uiZ||1;return {left:r.left/z,right:r.right/z,top:r.top/z,bottom:r.bottom/z,width:r.width/z,height:r.height/z}};
 window.__zw=function(){return innerWidth/(window.__uiZ||1)};window.__zh=function(){return innerHeight/(window.__uiZ||1)};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -2596,6 +2293,8 @@ window.SaifXL=(function(){
     ]},"kassa_optiki_"+new Date().toISOString().slice(0,10)+".xlsx",kMsg);
   };
 
+  // записи кассы для других блоков страницы (расчёт прибыли, платежи)
+  window.__K={compute:m=>compute(m),cashState:(c,M)=>{M=M||lastM();const r=recFor(M);return r?cashState(c,r,M):null},get cash(){return cash},get entries(){return entries},get templates(){return templates},kMonths:()=>kMonths(),lastM:()=>lastM(),put,del,newId};
   async function init(){
     $("fDate").value=new Date().toISOString().slice(0,10);syncCatVis();render();
     const c=window.claude;
@@ -2659,9 +2358,6 @@ window.SaifXL=(function(){
   const PAYCOL={"Наличные":"var(--p1)","Терминал":"var(--p3)","QR/Payme":"var(--p4)","Перечисление":"var(--p5)"};
   const PCOL=["var(--p1)","var(--p2)","var(--p3)","var(--p4)","var(--p5)"];
   const CATCOL=["var(--p1)","var(--p3)","var(--p4)","var(--p2)","var(--p5)","var(--op)","var(--oth)","var(--warn)"];
-  const LTYPES=["Однофокальные","Прогрессивные","Бифокальные","Офисные","Замена линз"];
-  const LIDX=["1.50","1.56","1.59","1.60","1.61","1.67","1.74"];
-  const LCOAT=["Без покрытия","Антиблик","Блю-блок","Фотохром","Фотохром + блю-блок","4в1","Тонированные","Поляризация"];
   const normPay=p=>{const t=normS(p);if(!t)return"Наличные";if(/терм|карт|uzcard|humo|хумо/.test(t))return"Терминал";if(/переч|безнал/.test(t))return"Перечисление";if(/нал|б\/ч|cash/.test(t))return"Наличные";if(/qr|payme|пейми|click|клик/.test(t))return"QR/Payme";if(/переч|счет|счёт|безнал/.test(t))return"Перечисление";return PAYS.includes(p)?p:"Наличные"};
   const payOf=s=>{if(s.pays&&typeof s.pays==="object"){const o={};Object.entries(s.pays).forEach(([k,v])=>{const n=normPay(k);o[n]=(o[n]||0)+(+v||0)});return o}return {[normPay(s.pay)]:+s.sum||0}};
   const payLabel=s=>{const o=payOf(s);const ks=Object.keys(o).filter(k=>o[k]);return ks.length>1?ks.map(k=>k+" "+fmtM(o[k])).join(" + "):(ks[0]||"Наличные")};
@@ -2752,24 +2448,6 @@ window.SaifXL=(function(){
     "По месяцам":"Выручка по месяцам для сравнения месяц к месяцу.",
     "Точки × дни недели":"Тепловая карта: чем ярче клетка, тем больше выручка этой точки в этот день недели.",
     "Лучший день недели каждой точки":"В какой день недели каждая точка продаёт больше всего.",
-    "Новая партия":"Сколько товара из новой поставки уже продано, сколько осталось и на какую сумму.",
-    "Продано из партии":"Сколько штук новой партии продано за выбранный период и какой это процент от всей поставки.",
-    "Осталось из партии":"Сколько штук партии лежит на сегодня и на какую сумму по цене продажи — не зависит от фильтра.",
-    "Продажи партии по точкам":"Где продаётся новая партия — по точкам.",
-    "Партия: продажи по точкам":"Где продаётся новая партия — по точкам.",
-    "Партия: продажи по группам":"Какие группы товара из партии уходят лучше.",
-    "Группы: какая уходит быстрее":"Какая доля каждой группы товара уже продана — что берут охотнее.",
-    "Темп продаж партии":"Сколько штук партии продаётся в среднем за день — считается за всё время с прихода, не зависит от фильтра.",
-    "Продажи партии по дням":"Сколько штук партии продавали каждый день.",
-    "Прогноз распродажи":"Через сколько дней закончится остаток партии, если продавать в нынешнем темпе.",
-    "Остаток и прогноз распродажи":"Сколько товара осталось и когда он закончится при нынешнем темпе.",
-    "Модели без продаж":"Модели из партии, которые не продались ни разу — кандидаты на перемещение в другую точку или уценку.",
-    "Без единой продажи":"Модели из партии, которые не продались ни разу.",
-    "Партия: на дозаказ":"Модели, которые почти закончились (осталось 20% и меньше) — их стоит дозаказать.",
-    "На дозаказ":"Сколько моделей почти закончилось и требует дозаказа.",
-    "Выручка с партии":"Сколько денег принесла новая партия за выбранный период, сколько прибыли и какая маржа.",
-    "Доля партии в продажах":"Какую часть всей выручки за выбранный период дала новая партия.",
-    "Топ-10 моделей партии":"Самые продаваемые модели из новой партии."
   };
   const MHINT={59:"Что остаётся владельцу за месяц после расходов, кредита, налога и доли менеджера",1:"Сколько денег принесли продажи и как менялись по дням",2:"Лучше или хуже, чем в прошлом таком же периоде",3:"Выручка ÷ дни периода",4:"Сколько выйдет за месяц при нынешнем темпе",5:"Выручка периода против плана на эти дни",6:"Как набирается выручка с начала периода",7:"Сколько строк продаж (товаров в чеках)",8:"Сколько штук товара продано",9:"Сколько в среднем тратит покупатель за визит",10:"Средняя цена одной проданной штуки",11:"Сколько штук в среднем в одном чеке",12:"Самый сильный и слабый день",13:"Дни без продаж — выходной или не внесли",14:"Выручка каждой точки по дням",15:"Какую часть выручки даёт каждая точка",16:"Точки сейчас и в прошлом периоде",17:"Средний чек в каждой точке",18:"Точки от лучшей к худшей",19:"Выручка точки за день работы",20:"Наличные (Б/Ч) по точкам",21:"Наличные против карты и переводов",22:"Как платят покупатели",23:"Мелкие расходы точек из кассы",24:"Какой % выручки ушёл на расходы",25:"Как наличные уменьшаются после расходов",26:"Расчётная и фактическая наличка в кассе",27:"История расхождений при пересчётах",28:"Сколько принесла каждая группа товаров",29:"Доли групп товаров в выручке",30:"Средняя цена и разброс в каждой группе",31:"Модели, принёсшие больше всего денег",32:"Модели, проданные больше всего штук",33:"Главные (A), средние (B) и слабые (C) товары",34:"Продавались раньше, а сейчас нет",35:"Сколько чеков с оправой включают линзы",36:"Выручка минус закупочная цена",37:"Доля выручки после закупочной цены",38:"Что выгоднее продавать",39:"Прибыльность каждой точки",40:"Сколько отдали скидками",41:"Скидки в % от суммы до скидки",42:"Какая часть продаж со скидкой",43:"Какие дни недели сильнее",44:"Выручка по неделям",45:"Выручка по месяцам",46:"Сила точек по дням недели",47:"Лучший день недели каждой точки",48:"Сколько продано из новой партии",49:"Сколько партии осталось",50:"Где продаётся партия",51:"Какие группы партии уходят лучше",52:"Штук партии в день",53:"Когда закончится остаток",54:"Модели партии без продаж",55:"Что пора дозаказать",56:"Выручка и прибыль с партии",57:"Доля партии во всей выручке",58:"Ходовые ценовые диапазоны и модели"};
   let hintsOn=true;try{hintsOn=localStorage.getItem("an.hints")!=="0"}catch(e){}
@@ -2824,7 +2502,7 @@ window.SaifXL=(function(){
       ["sales","receipt","Продажи","Внести продажу или расход дня, касса дня по точкам","#34c759",N(fmtM(dayRev),"выручка "+lbl)+N(String(dayList.length),"позиций "+lbl)],
       ["analytics","chart","Аналитика","58 показателей и графиков за любой период","#5e5ce6",N(fmtM(mRev),"за месяц")+N(gr==null?"—":(gr>=0?"+":"")+gr+"%","к прошлому месяцу")],
       ["plan","target","План","План месяца, точки и продавцы","#ff9f0a",N(pt?pctF(mRev/pt):"—","выполнено")+N(S&&!K.past?fmtM(S.needDay):"—","нужно в день")],
-      ["lens","glasses","Линзы","Очковые линзы: виды, индексы, покрытия","#bf5af2",N(fmt(lensU)+" шт","за месяц")+N(fmtM(sum(lensM)),"выручка")],
+      ["lens","glasses","Линзы","Очковые линзы: виды, точки, дни","#bf5af2",N(fmt(lensU)+" шт","за месяц")+N(fmtM(sum(lensM)),"выручка")],
       ["batch","tag","Склад","Маржа, остатки по местам и новая партия","#ff375f",N(mg.m!=null?pctF(mg.m):"—","маржа месяца")+N(bb?fmt(bS)+" / "+fmt(bL):"—","партия: продано / осталось")],
     ];
     $("hmGrid").innerHTML=cards.map(([id,ic,tt,s,col,nums])=>`<button type="button" class="hm-card" data-go="${id}"><div class="top">${GI(ic,col)}<span class="t">${tt}</span><span class="go">›</span></div><div class="s">${s}</div><div class="nums">${nums}</div></button>`).join("");
@@ -2990,7 +2668,7 @@ window.SaifXL=(function(){
   };
 
   // ===================== вкладки =====================
-  const PAGES=["home","kassa","report","sales","analytics","plan","lens","batch","help"];
+  const PAGES=["home","kassa","report","sales","analytics","plan","lens","batch"];
   function setTab(t){
     tab=t;
     document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t?"true":"false"));
@@ -3064,9 +2742,6 @@ window.SaifXL=(function(){
     fillCatSel();
     $("sCat").innerHTML=opt(settings.cats,$("sCat").value||settings.cats[0]);
     $("sPay").innerHTML=opt(PAYS.concat(["Смешанная"]),$("sPay").value||PAYS[0]);
-    $("lType").innerHTML=`<option value="">определить по названию</option>`+opt(LTYPES,$("lType").value);
-    $("lIndex").innerHTML=`<option value="">определить по названию</option>`+opt(LIDX,$("lIndex").value);
-    $("lCoat").innerHTML=`<option value="">определить по названию</option>`+opt(LCOAT,$("lCoat").value);
     if(!curPoint||!settings.points.includes(curPoint))curPoint=settings.points[0];
     $("sPointSeg").innerHTML=settings.points.map(p=>`<button type="button" role="radio" aria-checked="${p===curPoint}" data-pt="${esc(p)}"><span class="sw" style="background:${pointColor(p)}"></span>${esc(p)}</button>`).join("");
     $("sPointSeg").querySelectorAll("button").forEach(b=>b.onclick=()=>{curPoint=b.dataset.pt;$("sPointSeg").querySelectorAll("button").forEach(x=>x.setAttribute("aria-checked",x===b?"true":"false"))});
@@ -3075,7 +2750,7 @@ window.SaifXL=(function(){
     $("setPoints").value=settings.points.join(", ");$("setCats").value=settings.cats.join(", ");$("setPlan").value=settings.plan?fmt(settings.plan):"";
     syncFormParts();
   }
-  function syncFormParts(){$("sMixed").hidden=$("sPay").value!=="Смешанная";$("sLens").hidden=!/очков.*линз/i.test($("sCat").value)}
+  function syncFormParts(){$("sMixed").hidden=$("sPay").value!=="Смешанная"}
   $("sPay").addEventListener("change",syncFormParts);$("sCat").addEventListener("change",syncFormParts);
   function updateDatalist(){const names=[...new Set(sales.map(s=>s.product).filter(Boolean))].sort();$("productList").innerHTML=names.slice(0,400).map(n=>`<option value="${esc(n)}">`).join("")}
   const fmtInput=inp=>inp.addEventListener("input",()=>{const v=parseAmt(inp.value);inp.value=isNaN(v)?"":fmt(v)});
@@ -3089,7 +2764,6 @@ window.SaifXL=(function(){
   const sMsg=(t,b)=>flash("sMsg",t,b);
   function resetSaleForm(keep){
     editId=null;["sProduct","sPrice","sSum","mx0","mx1","mx2","mx3"].forEach(id=>$(id).value="");$("sQty").value="1";sumTouched=false;
-    ["lType","lIndex","lCoat"].forEach(id=>$(id).value="");
     $("sSubmit").textContent="Добавить продажу";$("sCancel").hidden=true;$("saleFormTitle").textContent="Новая продажа";
     if(!keep){$("sDate").value=iso(new Date());$("sCheck").value=""}
   }
@@ -3110,7 +2784,6 @@ window.SaifXL=(function(){
       if(tot!==sum){sMsg(`Сумма частей (${fmt(tot)}) не равна оплаченному (${fmt(sum)}).`,true);return}
       rec.pays=pays;rec.pay="Смешанная";
     }else{rec.pay=$("sPay").value;rec.pays=null}
-    if(/очков.*линз/i.test(rec.cat)){const l={};if($("lType").value)l.type=$("lType").value;if($("lIndex").value)l.index=$("lIndex").value;if($("lCoat").value)l.coat=$("lCoat").value;rec.lens=Object.keys(l).length?l:null}
     jDay=rec.date;
     $("sSubmit").disabled=true;
     try{
@@ -3123,7 +2796,6 @@ window.SaifXL=(function(){
   function startEditSale(id){const s=sales.find(x=>x.id===id);if(!s)return;editId=id;
     $("sDate").value=s.date;curPoint=s.point;fillSelects();$("sCat").value=s.cat;$("sProduct").value=s.product;$("sQty").value=String(s.qty);$("sPrice").value=fmt(s.price||0);$("sSum").value=fmt(s.sum);sumTouched=true;$("sCheck").value=s.check||"";
     if(s.pays&&Object.keys(s.pays).length>1){$("sPay").value="Смешанная";const o=payOf(s);PAYS.forEach((p,i)=>$("mx"+i).value=o[p]?fmt(o[p]):"")}else{$("sPay").value=normPay(s.pay)}
-    const l=s.lens||{};$("lType").value=l.type||"";$("lIndex").value=l.index||"";$("lCoat").value=l.coat||"";
     syncFormParts();
     $("sSubmit").textContent="Сохранить изменения";$("sCancel").hidden=false;$("saleFormTitle").textContent="Изменить продажу";
     $("saleFormPanel").scrollIntoView({behavior:"smooth",block:"start"});}
@@ -3565,8 +3237,7 @@ window.SaifXL=(function(){
     ["Товары и категории",[[28,"Выручка по категориям"],[29,"Доля категорий"],[30,"Средняя цена по категориям"],[31,"Топ-10 товаров по выручке"],[32,"Топ-10 товаров по количеству"],[33,"ABC-анализ"],[34,"Перестали продаваться"],[35,"Оправа + линзы в одном чеке"],[58,"Самые продаваемые по ценовым группам"]]],
     ["Прибыль",[[36,"Валовая прибыль"],[37,"Маржа"],[38,"Маржа по категориям"],[39,"Маржа по точкам"],[59,"Прибыль собственнику (по отчёту, только месяцы отчёта)"]]],
     ["Скидки",[[40,"Сумма скидок"],[41,"Скидка в % от выручки"],[42,"Доля продаж со скидкой"]]],
-    ["Время",[[43,"По дням недели"],[44,"По неделям"],[45,"По месяцам"],[46,"Тепловая карта точка × день недели"],[47,"Лучший день недели каждой точки"]]],
-    ["Новая партия",[[48,"Продано из партии, шт и %"],[49,"Осталось, шт и сумма"],[50,"Продажи партии по точкам"],[51,"Продажи партии по группам"],[52,"Темп продаж партии в день"],[53,"Прогноз распродажи остатка"],[54,"Модели без единой продажи"],[55,"Модели на дозаказ"],[56,"Выручка и маржа по партии"],[57,"Доля партии в общих продажах"]]]
+    ["Время",[[43,"По дням недели"],[44,"По неделям"],[45,"По месяцам"],[46,"Тепловая карта точка × день недели"],[47,"Лучший день недели каждой точки"]]]
   ];
   const ALL_IDS=METRICS.flatMap(g=>g[1].map(x=>x[0]));
   let anSel=null;
@@ -3734,35 +3405,6 @@ window.SaifXL=(function(){
       const bestTxt=on(47)?`<div class="bestwd">${pts.map(p=>`<span><span class="sw" style="background:${pointColor(p)}"></span>${esc(p)}: <b>${WD[best[p]]}</b> · ${fmtM(avg(p,best[p]))} в среднем</span>`).join("")}</div>`:"";
       w+=W_(on(46)?"Точки × дни недели":"Лучший день недели каждой точки","Средняя выручка за один такой день. Чем темнее, тем больше"+(on(47)?"; лучший день точки обведён":""),heat+bestTxt,true);
     }
-    // ----- новая партия -----
-    const bb=curBatch();
-    if(bb&&(bb.items||[]).length&&[48,49,50,51,52,53,54,55,56,57].some(on)){
-      const {items}=batchStats(bb,F.point,r.from,r.to);
-      const Q=items.reduce((x,i)=>x+i.q,0),S=items.reduce((x,i)=>x+i.sold,0),L=items.reduce((x,i)=>x+i.left,0);
-      const PS=items.reduce((x,i)=>x+i.pSold,0),PR=items.reduce((x,i)=>x+i.pRev,0),pFrom=bb.date&&r.from<bb.date?bb.date:r.from,perTxt=pFrom===r.to?dLong(r.to):`${dShort(pFrom)}–${dShort(r.to)}`;
-      const start=bb.date||t,bd=Math.max(1,daysBetween(start,t)),rate=S/bd,fc=rate>0&&L>0?Math.ceil(L/rate):null;
-      const vl=items.reduce((x,i)=>x+i.left*(+i.p||0),0);
-      const wc=items.filter(i=>+i.cp>0&&i.pSold),cg=wc.reduce((x,i)=>x+i.pSold*i.cp,0),rc=wc.reduce((x,i)=>x+i.pRev,0);
-      const totPer=sales.filter(x=>x.date>=pFrom&&x.date<=r.to&&(F.point==="all"||x.point===F.point)).reduce((q,x)=>q+(+x.sum||0),0);
-      const ro=reorderList(items),uns=items.filter(i=>!i.sold).length;
-      const nm=`«${bb.name||"Партия"}»`;
-      let bc="";
-      if(on(48))bc+=CARD("Продано из партии",fmt(PS)+" шт",`за ${perTxt} · ${nm}: из ${fmt(Q)} шт`,C.ring(Q?PS/Q:0));
-      if(on(49))bc+=CARD("Осталось из партии",fmt(L)+" шт",`на сегодня`+(vl?` · на ${fmt(vl)} сум по цене продажи`:""));
-      if(on(52))bc+=CARD("Темп продаж партии",(rate>=10?fmt(rate):rate.toFixed(1).replace(".",","))+" шт/день",`на сегодня: в среднем за ${bd} дн. с ${dShort(start)}`);
-      if(on(53))bc+=CARD("Прогноз распродажи",L===0?"распродано":fc!=null?`~${fmt(fc)} дн.`:"—",fc!=null?`примерно к ${dLong(addD(t,fc))}`:"");
-      if(on(54))bc+=CARD("Модели без продаж",fmt(uns),`на сегодня · из ${items.length} моделей партии`);
-      if(on(56))bc+=CARD("Выручка с партии",fmt(PR)+" сум",`за ${perTxt}`+(rc?` · маржа ${pctF((rc-cg)/rc)} · прибыль ${fmt(rc-cg)}`:""));
-      if(on(57))bc+=CARD("Доля партии в продажах",pctF(totPer?PR/totPer:0),`от всей выручки за ${perTxt}`);
-      $("anCards").innerHTML+=bc;
-      let bw="";
-      if(on(50)){const bp={};items.forEach(i=>Object.entries(i.pByPt).forEach(([k,v])=>bp[k]=(bp[k]||0)+v));bw+=W_("Партия: продажи по точкам",`${nm} · за ${perTxt}`,!Object.keys(bp).length?`<div class="empty">За этот период продаж из партии нет</div>`:C.hbars(Object.entries(bp).sort((x,y)=>y[1]-x[1]).map(([k,v])=>({label:k,value:v,valTxt:v+" шт",color:pointColor(k)}))))}
-      if(on(51)){const gm={};items.forEach(i=>{const k=i.g||i.c||"Без группы";const o=gm[k]||(gm[k]={k,q:0,s:0});o.q+=i.q;o.s+=Math.min(i.pSold,i.q)});bw+=W_("Партия: продажи по группам",`Процент от пришедшего, проданный за ${perTxt}`,C.hbars(Object.values(gm).sort((x,y)=>(y.s/(y.q||1))-(x.s/(x.q||1))).slice(0,12).map(o=>({label:o.k,value:o.q?o.s/o.q*100:0,valTxt:pctF(o.q?o.s/o.q:0),color:"var(--p3)",sub:`${o.s} из ${o.q} шт`}))))}
-      if(on(55))bw+=W_("Партия: на дозаказ","Закончились или осталось 20% и меньше",ro.length?`<div class="tbl"><table><thead><tr><th>Модель</th><th class="r">Пришло</th><th class="r">Продано</th><th class="r">Осталось</th></tr></thead><tbody>${ro.slice(0,15).map(i=>`<tr><td>${esc(itemLabel(i))}</td><td class="r num">${i.q}</td><td class="r num"><b>${i.sold}</b></td><td class="r num">${i.left===0?'<span class="down">0</span>':i.left}</td></tr>`).join("")}</tbody></table></div>`:`<p class="note">Пока ничего не заканчивается.</p>`);
-      w+=bw;
-    }else if([48,49,50,51,52,53,54,55,56,57].some(on)){
-      w+=W_("Новая партия","",`<p class="note">Список партии ещё не загружен. Загрузите его на вкладке «Склад» → «Проданные из новой партии», и здесь появятся показатели 48–57.</p>`);
-    }
     $("anWidgets").innerHTML=w;
     $("anWidgets").querySelectorAll("[data-pg]").forEach(b=>b.onclick=()=>{anPgCat=b.dataset.pg;renderAnalytics()});
   }
@@ -3778,7 +3420,7 @@ window.SaifXL=(function(){
     if(tab!=="lens")return;
     const {all,list,rows,a}=lensData(), r=rangeOf(all);
     const empty=!list.length;$("lnEmpty").hidden=!empty;["lnCards","lnWidgets","lnTablePanel"].forEach(id=>$(id).hidden=empty);
-    $("lnPeriod").textContent=all.length?`Период ${dLong(r.from)} — ${dLong(r.to)}`:"Виды, индексы, покрытия, бренды и точки";
+    $("lnPeriod").textContent=all.length?`Период ${dLong(r.from)} — ${dLong(r.to)}`:"Виды, бренды и точки";
     if(empty)return;
     const la=agg(list);
     const chk={};all.forEach(s=>{const o=chk[checkKey(s)]||(chk[checkKey(s)]={f:0,l:0});if(isFrame(s))o.f=1;if(isLens(s))o.l=1});
@@ -3797,13 +3439,8 @@ window.SaifXL=(function(){
     const TC={"Однофокальные":"var(--p1)","Прогрессивные":"var(--p4)","Бифокальные":"var(--p3)","Офисные":"var(--p5)","Замена линз":"var(--op)"};
     let w="";
     w+=W_("Наши линзы по видам","ET, Блок, 4в1, Star, Essilor, Seiko и другие — по количеству",C.hbars(byKind.map(o=>({label:o.k,value:o.u,valTxt:o.u+" шт",color:o.k==="Тип не указан"?"var(--line)":"var(--accent)",sub:`${fmtM(o.r)} · ср. ${fmtM(o.u?o.r/o.u:0)}`}))),true);
-    w+=W_("Виды линз","По количеству",C.donut(byType.map(o=>({label:o.k,value:o.u,valTxt:o.u+" шт",color:TC[o.k]||"var(--muted)"})),fmt(la.units),"шт"));
-    w+=W_("Индекс (толщина)","1.50 — стандарт, 1.67 и 1.74 — тонкие для сильных диоптрий",C.hbars(byIdx.map(o=>({label:o.k,value:o.u,valTxt:o.u+" шт",color:o.k==="не указан"?"var(--line)":"var(--p3)",sub:fmtM(o.r)}))));
-    w+=W_("Покрытия","",C.hbars(byCoat.map(o=>({label:o.k,value:o.u,valTxt:o.u+" шт",color:o.k==="не указано"?"var(--line)":"var(--p4)",sub:fmtM(o.r)}))));
     const pt={};rows.forEach(x=>{const o=pt[x.s.point]||(pt[x.s.point]={u:0,r:0});o.u+=+x.s.qty||0;o.r+=+x.s.sum||0});
     w+=W_("Линзы по точкам","",C.hbars(Object.entries(pt).sort((p,q)=>q[1].u-p[1].u).map(([k,o])=>({label:k,value:o.u,valTxt:o.u+" шт",color:pointColor(k),sub:fmtM(o.r)}))));
-    w+=W_("Средняя цена по видам","",C.hbars(byType.map(o=>({label:o.k,value:o.u?o.r/o.u:0,color:TC[o.k]||"var(--muted)",sub:o.u+" шт"}))));
-    if(byBrand.length)w+=W_("Бренды","",C.hbars(byBrand.map(o=>({label:o.k,value:o.u,valTxt:o.u+" шт",color:"var(--p5)",sub:fmtM(o.r)}))));
     const days=dayList(r),dm={};rows.forEach(x=>dm[x.s.date]=(dm[x.s.date]||0)+(+x.s.qty||0));
     w+=W_("Линзы по дням","Сколько штук продано каждый день",C.bars(days.map(dShort),days.map(d=>dm[d]||0),{color:"var(--p3)",lf:v=>String(v),vf:v=>v+" шт"}),true);
     $("lnWidgets").innerHTML=w;
@@ -3837,9 +3474,7 @@ window.SaifXL=(function(){
   }
 
   // ===================== вкладка «Новая партия» =====================
-  let bSelId=null, bView="all", bPt="all", bLimit=150, bPending=null;
-  function bMsg(t,bad){const m=$("bMsg");m.textContent=t;m.style.color=bad?"var(--minus)":"var(--plus)"}
-  const bxMsg=(t,b)=>flash("bxMsg",t,b);
+  let bSelId=null;
   function curBatch(){const s=[...batches].sort((a,b)=>(b.date||"").localeCompare(a.date||"")||(b.createdAt||0)-(a.createdAt||0));return s.find(b=>b.id===bSelId)||s[0]||null}
   const itemLabel=it=>[it.m||it.n||it.s,it.col].filter(Boolean).join(" · ");
   function batchStats(b,ptFilter,pf,pt){
@@ -3859,79 +3494,8 @@ window.SaifXL=(function(){
     items.forEach(it=>{it.q=+it.q||0;it.left=Math.max(0,it.q-it.sold);it.pct=it.q?Math.min(1,it.sold/it.q):0});
     return {items,used,byDay};
   }
-  function fillBatchSelects(){
-    const s=[...batches].sort((a,b)=>(b.date||"").localeCompare(a.date||""));const cb=curBatch();
-    $("bSel").innerHTML=s.map(b=>`<option value="${esc(b.id)}"${cb&&b.id===cb.id?" selected":""}>${esc(b.name||"Партия")} · ${dLong(b.date)}</option>`).join("")||`<option>Нет загруженных партий</option>`;
-    $("bPoint").innerHTML=`<option value="all">Все точки</option>`+settings.points.map(p=>`<option${p===bPt?" selected":""}>${esc(p)}</option>`).join("");
-  }
-  $("bSel").onchange=()=>{bSelId=$("bSel").value;bLimit=150;renderBatch()};
-  $("bPoint").onchange=()=>{bPt=$("bPoint").value;renderBatch()};
-  $("bSearch").addEventListener("input",()=>{bLimit=150;renderBatch()});
-  document.querySelectorAll("#bViewSeg button").forEach(b=>b.onclick=()=>{bView=b.dataset.v;document.querySelectorAll("#bViewSeg button").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));bLimit=150;renderBatch()});
-  $("bMore").onclick=()=>{bLimit+=300;renderBatch()};
   const reorderList=items=>items.filter(i=>i.sold>0&&(i.left===0||i.left/i.q<=0.2)).sort((x,y)=>x.left-y.left||y.sold-x.sold);
 
-  function renderBatch(){
-    if(tab!=="batch")return;
-    fillBatchSelects();
-    const b=curBatch();
-    const has=!!(b&&(b.items||[]).length);
-    ["bBar","bKpis","bWidgets","bReorderPanel","bItemsPanel"].forEach(id=>$(id).hidden=!has);
-    $("bEmpty").hidden=has;$("bXlsx").disabled=!has;
-    if(!has)return;
-    const {items,used,byDay}=batchStats(b,bPt);
-    const Q=items.reduce((a,i)=>a+i.q,0),S=items.reduce((a,i)=>a+i.sold,0),R=items.reduce((a,i)=>a+i.rev,0),L=items.reduce((a,i)=>a+i.left,0),SC=Q-L;
-    const withCost=items.filter(i=>+i.cp>0&&i.sold);const cogs=withCost.reduce((a,i)=>a+i.sold*i.cp,0),revC=withCost.reduce((a,i)=>a+i.rev,0);
-    const today=iso(new Date()), start=b.date||today, days=Math.max(1,daysBetween(start,today));
-    const rate=S/days, fc=rate>0&&L>0?Math.ceil(L/rate):null;
-    const valueLeft=items.reduce((a,i)=>a+i.left*(+i.p||0),0);
-    const totalSince=sales.filter(s=>s.date>=start&&(bPt==="all"||s.point===bPt)).reduce((a,s)=>a+(+s.sum||0),0);
-    const unsold=items.filter(i=>!i.sold).length, ro=reorderList(items);
-    $("bKpis").innerHTML=
-      CARD("Продано из партии",fmt(S)+" шт",`из ${fmt(Q)} шт`+(S>SC?` · ${fmt(S-SC)} шт сверх прихода: проверьте названия`:""),C.ring(Q?SC/Q:0),"main")+
-      CARD("Осталось",fmt(L)+" шт",valueLeft?`на ${fmt(valueLeft)} сум по цене продажи`:"")+
-      CARD("Темп продаж",(rate>=10?fmt(rate):rate.toFixed(1).replace(".",","))+" шт/день",`за ${days} ${pl(days,"день","дня","дней")} с прихода`)+
-      CARD("Прогноз распродажи",L===0?"распродано":fc!=null?`~${fmt(fc)} дн.`:"—",L===0?"остатка нет":fc!=null?`остаток уйдёт примерно к ${dLong(addD(today,fc))}`:"пока нет продаж")+
-      CARD("Без единой продажи",fmt(unsold)+" "+pl(unsold,"модель","модели","моделей"),`${pctF(items.length?unsold/items.length:0)} позиций партии`)+
-      CARD("На дозаказ",fmt(ro.length)+" "+pl(ro.length,"модель","модели","моделей"),"закончились или осталось ≤20%")+
-      CARD("Выручка с партии",fmt(R)+" сум",revC?`маржа ${pctF((revC-cogs)/revC)} · прибыль ${fmt(revC-cogs)}`:"нет цен покупки в списке")+
-      CARD("Доля партии в продажах",pctF(totalSince?R/totalSince:0),`от всей выручки с ${dShort(start)}`);
-    $("bMatchInfo").textContent=`${b.name||"Партия"}: ${fmt(items.length)} позиций, ${fmt(Q)} шт, приход ${dLong(b.date)}. Найдено продаж из партии: ${used.length}`+(bPt!=="all"?` (${bPt})`:"")+".";
-
-    let w="";
-    w+=W_("Продано и осталось","",C.donut([{label:"Продано",value:SC,valTxt:fmt(SC)+" шт",color:"var(--accent)"},{label:"Осталось",value:L,valTxt:fmt(L)+" шт",color:"var(--line)"}],pctF(Q?SC/Q:0),"продано"));
-    const byP={};items.forEach(i=>Object.entries(i.byPt).forEach(([k,v])=>byP[k]=(byP[k]||0)+v));
-    w+=W_("Продажи партии по точкам","",C.hbars(Object.entries(byP).sort((x,y)=>y[1]-x[1]).map(([k,v])=>({label:k,value:v,valTxt:v+" шт",color:pointColor(k)}))));
-    const gm={};items.forEach(i=>{const k=i.g||i.c||"Без группы";const o=gm[k]||(gm[k]={k,n:0,q:0,s:0,r:0});o.n++;o.q+=i.q;o.s+=Math.min(i.sold,i.q);o.r+=i.rev});
-    const gl=Object.values(gm).sort((x,y)=>(y.s/(y.q||1))-(x.s/(x.q||1))||y.s-x.s);
-    w+=W_("Группы: какая уходит быстрее","Процент проданного от пришедшего",C.hbars(gl.slice(0,14).map(o=>({label:o.k,value:o.q?o.s/o.q*100:0,valTxt:pctF(o.q?o.s/o.q:0),color:"var(--p3)",sub:`${o.s} из ${o.q} шт`}))));
-    const dl2=[];let d=start,gd=0;while(d<=today&&gd++<400){dl2.push(d);d=addD(d,1)}
-    let cum=0;const cumV=dl2.map(x=>cum+=byDay[x]||0);
-    w+=W_("Продажи партии по дням","Столбцы — штук за день",C.bars(dl2.map(dShort),dl2.map(x=>byDay[x]||0),{color:"var(--p2)",lf:v=>String(v),vf:v=>v+" шт"}),true);
-    // остаток во времени + прогноз
-    const restV=cumV.map(c=>Math.max(0,Q-c));let lbl=dl2.map(dShort),proj=null;
-    if(rate>0&&L>0){const ext=Math.min(fc,180),step=Math.max(1,Math.ceil(ext/30));const pl2=[],pv2=[];for(let k=step;k<=ext+step-1;k+=step){pl2.push(dShort(addD(today,Math.min(k,ext))));pv2.push(Math.max(0,L-rate*Math.min(k,ext)))}
-      lbl=lbl.concat(pl2);proj=restV.map(()=>null);proj[proj.length-1]=L;proj=proj.concat(pv2)}
-    const restFull=restV.concat(proj?new Array(lbl.length-restV.length).fill(null):[]);
-    const fix=a=>a.map(v=>v==null?NaN:v);
-    w+=W_("Остаток и прогноз распродажи","Сплошная — фактический остаток, пунктир — прогноз при текущем темпе",lineGaps(lbl,[{name:"Остаток",color:"var(--accent)",vals:fix(restFull)}].concat(proj?[{name:"Прогноз",color:"var(--muted)",vals:fix(proj),dash:true}]:[])),true);
-    w+=W_("Топ-10 моделей партии","По проданным штукам",C.hbars([...items].filter(i=>i.sold).sort((x,y)=>y.sold-x.sold).slice(0,10).map(i=>({label:itemLabel(i),value:i.sold,valTxt:i.sold+" шт",sub:`из ${i.q}`})),{rank:true}));
-    $("bWidgets").innerHTML=w;
-
-    $("bReorder").innerHTML=ro.length?`<thead><tr><th>Модель</th><th>Группа</th><th class="r">Пришло</th><th class="r">Продано</th><th class="r">Осталось</th><th class="r">Последняя продажа</th></tr></thead><tbody>`+ro.slice(0,40).map(i=>`<tr><td>${esc(itemLabel(i))}</td><td>${esc(i.g||i.c||"")}</td><td class="r num">${i.q}</td><td class="r num"><b>${i.sold}</b></td><td class="r num">${i.left===0?'<span class="down">0</span>':i.left}</td><td class="r num">${dShort(i.last)}</td></tr>`).join("")+`</tbody>`:`<tbody><tr><td class="srcs">Пока ничего не заканчивается</td></tr></tbody>`;
-
-    const qy=normS($("bSearch").value);
-    let list=items.filter(i=>!qy||normS([i.m,i.n,i.s,i.g,i.col].join(" ")).includes(qy));
-    if(bView==="selling")list=list.filter(i=>i.sold>0&&i.left>0);
-    if(bView==="none")list=list.filter(i=>!i.sold);
-    if(bView==="out")list=list.filter(i=>i.q&&i.left===0);
-    list.sort((x,y)=>y.sold-x.sold||y.pct-x.pct||String(itemLabel(x)).localeCompare(itemLabel(y)));
-    const pts=bPt==="all"?settings.points:[bPt];
-    const bar=p=>`<div class="bar" style="height:8px;background:var(--wash);border-radius:5px;overflow:hidden;min-width:70px"><span style="display:block;height:100%;width:${Math.round(p*100)}%;background:var(--accent);border-radius:5px"></span></div>`;
-    $("bItemsHead").innerHTML=`<tr><th>Модель</th><th>Группа</th><th class="r">Цена</th><th class="r">Пришло</th>${pts.map(p=>`<th class="r">${esc(p)}</th>`).join("")}<th class="r">Продано</th><th class="r">Осталось</th><th style="min-width:110px">Продано, %</th><th class="r">Последняя продажа</th></tr>`;
-    $("bItems").innerHTML=list.slice(0,bLimit).map(i=>`<tr><td>${esc(itemLabel(i))}${i.s&&i.s!==i.m?` <span class="srcs">${esc(i.s)}</span>`:""}</td><td>${esc(i.g||i.c||"")}</td><td class="r num">${+i.p?fmt(i.p):"—"}</td><td class="r num">${fmt(i.q)}</td>${pts.map(p=>`<td class="r num">${i.byPt[p]?fmt(i.byPt[p]):'<span class="srcs">—</span>'}</td>`).join("")}<td class="r num"><b>${fmt(i.sold)}</b></td><td class="r num">${i.left===0&&i.q?'<span class="down">0</span>':fmt(i.left)}</td><td><div style="display:flex;gap:8px;align-items:center">${bar(i.pct)}<span class="num srcs">${Math.round(i.pct*100)}%</span></div></td><td class="r num">${i.last?dShort(i.last):'<span class="srcs">—</span>'}</td></tr>`).join("")||`<tr><td colspan="${8+pts.length}" class="srcs" style="text-align:center;padding:16px">Нет позиций под этот фильтр</td></tr>`;
-    $("bMore").hidden=list.length<=bLimit;
-  }
   // ===================== вкладка «Склад» =====================
   const stockGroup=()=>{if(!stockParts.length)return [];const up=Math.max(...stockParts.map(p=>p.uploadedAt||0));return stockParts.filter(p=>(p.uploadedAt||0)===up).sort((a,b)=>(a.part||0)-(b.part||0))};
   const stockItems=()=>stockGroup().flatMap(p=>p.items||[]);
@@ -3941,15 +3505,14 @@ window.SaifXL=(function(){
   const NODET="Без детализации";
   function setStView(v){stView=v;document.querySelectorAll("#stViewSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.sv===v?"true":"false"));setTab("batch")}
   document.querySelectorAll("#stViewSeg button").forEach(b=>b.onclick=()=>setStView(b.dataset.sv));
-  document.querySelectorAll("#mProdSeg button").forEach(b=>b.onclick=()=>{mSort=b.dataset.ms;document.querySelectorAll("#mProdSeg button").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));renderMargin()});
   $("sSearch").addEventListener("input",()=>{sLimit=150;renderStockList()});
   $("sMore").onclick=()=>{sLimit+=300;renderStockList()};
 
   function renderStockTab(){
     if(tab!=="batch")return;
-    $("stMargin").hidden=stView!=="margin";$("stList").hidden=stView!=="stock";$("stBatch").hidden=stView!=="batch";
-    $("stXlsx").hidden=stView==="batch"||!dl;
-    if(stView==="margin")renderMargin();else if(stView==="stock")renderStockList();else renderBatch();
+    $("stMargin").hidden=stView!=="margin";$("stList").hidden=stView!=="stock";
+    $("stXlsx").hidden=stView==="margin"||!dl;
+    if(stView==="margin")renderMargin();else renderStockList();
   }
   function mGroup(list,keyFn){
     const m={};
@@ -3966,29 +3529,16 @@ window.SaifXL=(function(){
     const nodet=all.filter(s=>s.cat===NODET||s.cat==="Погашения долгов").reduce((x,s)=>x+(+s.sum||0),0);
     return {tot,pts:ptsOrd,cats,prods,miss,nodet};
   }
-  const mgCell=o=>o.mg==null?'<span class="srcs">—</span>':`<div style="display:flex;gap:8px;align-items:center;justify-content:flex-end"><div class="mbar" style="width:70px"><span style="width:${Math.max(0,Math.min(100,o.mg*100))}%"></span></div><b class="num">${pctF(o.mg)}</b></div>`;
   function renderMargin(){
     const d=marginData(), hasCost=stockItems().some(i=>+i.cp>0)||batches.some(b=>(b.items||[]).some(i=>+i.cp>0));
     const t=d.tot;
     $("mEmpty").hidden=hasCost;
-    ["mPointsPanel","mCatsPanel","mProdsPanel"].forEach(id=>$(id).hidden=!hasCost);
     const meta=stockMeta();
     $("stInfo").textContent=meta?`Склад загружен ${dLong(meta.date)}: ${fmt(stockItems().length)} позиций. Маржа считается за период фильтра.`:"Склад ещё не загружен — маржа считается только по ценам покупки из новой партии.";
     $("mKpis").innerHTML=CARD("Валовая прибыль",fmt(t.gp)+" сум",`выручка ${fmt(t.revC)} − себестоимость ${fmt(t.cogs)}`,"","main")+
       CARD("Маржа",pctF(t.mg),"по продажам с известной ценой покупки")+
       CARD("Покрытие",pctF(t.cov),`посчитано ${fmt(t.revC)} из ${fmt(t.rev)} сум`,C.ring(t.cov))+
       CARD("Без цены покупки",fmt(d.miss.length)+" "+pl(d.miss.length,"товар","товара","товаров"),`${fmt(t.rev-t.revC)} сум выручки`+(d.nodet?` · без детализации ещё ${fmt(d.nodet)}`:""));
-    const head=f=>`<thead><tr><th>${f}</th><th class="r">Выручка</th><th class="r">Посчитано</th><th class="r">Себестоимость</th><th class="r">Прибыль</th><th class="r" style="min-width:130px">Маржа</th><th class="r">Покрытие</th></tr></thead>`;
-    const tr=(o,lbl)=>`<tr><td>${lbl}</td><td class="r num">${fmt(o.rev)}</td><td class="r num">${fmt(o.revC)}</td><td class="r num">${fmt(o.cogs)}</td><td class="r num"><b>${fmt(o.gp)}</b></td><td class="r">${mgCell(o)}</td><td class="r num srcs">${pctF(o.cov)}</td></tr>`;
-    const foot=`<tfoot><tr><td><b>Итого</b></td><td class="r num"><b>${fmt(t.rev)}</b></td><td class="r num"><b>${fmt(t.revC)}</b></td><td class="r num"><b>${fmt(t.cogs)}</b></td><td class="r num"><b>${fmt(t.gp)}</b></td><td class="r num"><b>${pctF(t.mg)}</b></td><td class="r num"><b>${pctF(t.cov)}</b></td></tr></tfoot>`;
-    $("mPoints").innerHTML=d.pts.length?head("Точка")+`<tbody>${d.pts.map(o=>tr(o,`<span class="sw" style="background:${pointColor(o.k)}"></span>${esc(o.k)}`)).join("")}</tbody>`+foot:`<tbody><tr><td class="srcs">Нет продаж за период</td></tr></tbody>`;
-    const bars=d.pts.filter(o=>o.mg!=null);
-    $("mPointsChart").innerHTML=bars.length?C.hbars(bars.map(o=>({label:o.k,value:o.gp,valTxt:fmt(o.gp)+" · "+pctF(o.mg),color:pointColor(o.k),sub:`покрытие ${pctF(o.cov)}`}))):"";
-    $("mCats").innerHTML=d.cats.length?head("Категория")+`<tbody>${d.cats.map(o=>tr(o,esc(o.k))).join("")}</tbody>`+foot:"";
-    const pr=[...d.prods].sort(mSort==="low"?(a,b)=>(a.mg??9)-(b.mg??9)||b.rev-a.rev:(a,b)=>b.gp-a.gp).slice(0,25);
-    $("mProds").innerHTML=pr.length?`<thead><tr><th>#</th><th>Товар</th><th class="r">Шт</th><th class="r">Выручка</th><th class="r">Цена покупки</th><th class="r">Прибыль</th><th class="r" style="min-width:130px">Маржа</th></tr></thead><tbody>${pr.map((o,i)=>`<tr><td class="num srcs">${i+1}</td><td>${esc(o.k)}</td><td class="r num">${fmt(o.u)}</td><td class="r num">${fmt(o.rev)}</td><td class="r num">${fmt(o.cp||0)}</td><td class="r num"><b>${fmt(o.gp)}</b></td><td class="r">${mgCell(o)}</td></tr>`).join("")}</tbody>`:`<tbody><tr><td class="srcs">Пока ни одна продажа не сопоставилась со складом</td></tr></tbody>`;
-    $("mMissNote").textContent=`Не нашлись на складе: ${d.miss.length} ${pl(d.miss.length,"товар","товара","товаров")} на ${fmt(t.rev-t.revC)} сум. Проверьте, совпадает ли модель или артикул в продаже с файлом склада. Показаны первые 30 по выручке.`;
-    $("mMiss").innerHTML=d.miss.length?`<thead><tr><th>Товар в продаже</th><th class="r">Продаж</th><th class="r">Шт</th><th class="r">Выручка</th></tr></thead><tbody>${d.miss.slice(0,30).map(o=>`<tr><td>${esc(o.k)}</td><td class="r num">${o.n}</td><td class="r num">${fmt(o.u)}</td><td class="r num">${fmt(o.rev)}</td></tr>`).join("")}</tbody>`:`<tbody><tr><td class="srcs">Все продажи периода нашлись на складе</td></tr></tbody>`;
   }
   function stockSold(){
     const meta=stockMeta();const m=new Map();if(!meta)return m;const mt=batchMatcher();const from=meta.soldFrom||meta.date;
@@ -4077,15 +3627,6 @@ window.SaifXL=(function(){
       SaifXL.save({sheets:[{name:"Склад",title:"Товары по складу и точкам",subtitle:`Файл «${meta.file||""}» · продано считается с ${dLong(meta.soldFrom||meta.date)} · выгружено ${SaifXL.today()}`,columns:[{header:"Место",key:"pt",type:"text",width:11},{header:"Модель / наименование",key:"m",type:"text",width:28},{header:"Наименование",key:"n",type:"text",width:26},{header:"Артикул",key:"s",type:"text",width:14},{header:"Группа",key:"g",type:"text",width:18},{header:"Кол-во по файлу",key:"q",type:"int",width:11},{header:"Цена покупки",key:"cp",type:"money",width:13},{header:"Цена продажи",key:"p",type:"money",width:13},{header:"Маржа в цене",key:"mg",type:"pct",width:10},{header:"Стоимость по закупке",key:"vc",type:"money",width:16},{header:"Продано",key:"sold",type:"int",width:10},{header:"≈ Сейчас",key:"now",type:"int",width:10}],rows,total:{pt:"Итого",q:T("q"),vc:T("vc"),sold:T("sold"),now:T("now")}}]},"sklad_"+(meta.date||"")+".xlsx",stxMsg);
       return;
     }
-    const d=marginData();if(!d.tot.rev){stxMsg("Нет продаж за выбранный период.",true);return}
-    const cols=f=>[{header:f,key:"k",type:"text",width:26},{header:"Выручка, сум",key:"rev",type:"money",width:15},{header:"Посчитано, сум",key:"revC",type:"money",width:15},{header:"Себестоимость, сум",key:"cogs",type:"money",width:15},{header:"Прибыль, сум",key:"gp",type:"money",width:15},{header:"Маржа",key:"mg",type:"pct",width:9},{header:"Покрытие",key:"cov",type:"pct",width:10}];
-    const tot=Object.assign({k:"Итого"},d.tot);
-    SaifXL.save({sheets:[
-      {name:"Маржа по точкам",title:"Маржинальность точек",subtitle:sub,columns:cols("Точка"),rows:d.pts,total:tot,note:"Считаются продажи с найденной ценой покупки. Покрытие — доля выручки, для которой цена покупки нашлась. Строки «без детализации» не входят."},
-      {name:"Маржа по категориям",title:"Маржа по категориям",subtitle:sub,columns:cols("Категория"),rows:d.cats,total:tot},
-      {name:"Товары",title:"Прибыль и маржа по товарам",subtitle:sub,columns:[{header:"Товар",key:"k",type:"text",width:36},{header:"Шт",key:"u",type:"int",width:8},{header:"Выручка, сум",key:"rev",type:"money",width:15},{header:"Цена покупки, сум",key:"cp",type:"money",width:15},{header:"Себестоимость, сум",key:"cogs",type:"money",width:15},{header:"Прибыль, сум",key:"gp",type:"money",width:15},{header:"Маржа",key:"mg",type:"pct",width:9}],rows:[...d.prods].sort((a,b)=>b.gp-a.gp)},
-      {name:"Без цены покупки",title:"Продажи без цены покупки",subtitle:sub,columns:[{header:"Товар в продаже",key:"k",type:"text",width:40},{header:"Продаж",key:"n",type:"int",width:9},{header:"Шт",key:"u",type:"int",width:8},{header:"Выручка, сум",key:"rev",type:"money",width:15}],rows:d.miss}
-    ]},fname("marzha","xlsx"),stxMsg);
   };
 
   // линия с разрывами (NaN — пропуск)
@@ -4103,7 +3644,7 @@ window.SaifXL=(function(){
 
 
   // ===================== ОТЧЁТ ОПТИКА =====================
-  let repDocs={},rpMonth="",rpDay="",rpBank=null,rpBankFor="",rpSavedT=0,rpScrolled="",rpPicked=false,rpEditing=false;
+  let repDocs={},rpMonth="";
   const RP_PTS=["Премиум","Яшнабад","Сергели"];
   const RP_MF=["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
   const RP_WD=["вс","пн","вт","ср","чт","пт","сб"];
@@ -4115,15 +3656,13 @@ window.SaifXL=(function(){
   const RP_GN_FROM="2026-10-16";
   let rpGNc=null,rpGNk="";
   function rpTQ(d){let t=0,q=0;sales.forEach(s=>{if(s.date!==d)return;const add=(p,v)=>{if(p==="Терминал")t+=v;else if(p==="QR/Payme"||p==="QR"||p==="Payme")q+=v};if(s.pay==="Смешанная"&&s.pays)Object.entries(s.pays).forEach(([k,v])=>add(k,+v||0));else add(s.pay,+s.sum||0)});
-    const adj=(repDocs[d]||{}).adj;if(adj)Object.values(adj).forEach(v=>{t+=+(v&&v.t)||0;q+=+(v&&v.q)||0});return {t,q}}
+    return {t,q}}
   function rpGNmap(){const key=sales.length+"|"+Object.keys(repDocs).length+"|"+JSON.stringify(Object.values(repDocs).map(x=>x.grossNon));if(rpGNc&&rpGNk===key)return rpGNc;
     const t=iso(new Date()),ds=new Set(Object.keys(repDocs));sales.forEach(s=>{if(s.date&&s.date>=RP_GN_FROM&&s.date<=t)ds.add(s.date)});
     const m={};let prev=null;[...ds].sort().forEach(d=>{if(d<RP_GN_FROM){const v=(repDocs[d]||{}).grossNon;if(v!=null)prev=v;m[d]={v:v==null?null:v,auto:false};return}
       const x=rpTQ(d);if(prev==null){m[d]={v:null,auto:true,t:x.t,q:x.q};return}const v=prev+x.t+x.q;m[d]={v,auto:true,prev,t:x.t,q:x.q};prev=v});
     rpGNc=m;rpGNk=key;return m}
   const rpGN=d=>{const x=rpGNmap()[d];return x?x.v:null};
-  const rpReady=r=>["rsStart","rsEnd","grossCash","grossNon"].filter(k=>r&&(k==="grossNon"?(r.date>=RP_GN_FROM?rpGN(r.date):r[k])!=null:r[k]!=null)).length;
-  const rpStat=r=>{const n=rpReady(r);return n===4?"ok":n?"part":"none"};
   function rpAdd(o,pay,v){const k=pay==="Наличные"?"c":pay==="Терминал"?"t":pay==="Перечисление"?"e":"q";o[k]+=v}
   function rpMonthDays(m,withToday){const t=iso(new Date()),set=new Set();
     sales.forEach(s=>{if((s.date||"").startsWith(m)&&s.date<=t)set.add(s.date)});
@@ -4136,8 +3675,6 @@ window.SaifXL=(function(){
     const byDay={};days.forEach(d=>byDay[d]={pts:{},bc:[]});
     sales.forEach(s=>{if(!dset.has(s.date))return;const p=s.point||"—";if(!RP_PTS.includes(p))extra.add(p);const o=byDay[s.date].pts[p]||(byDay[s.date].pts[p]={c:0,t:0,q:0,e:0});
       if(s.pay==="Смешанная"&&s.pays)Object.entries(s.pays).forEach(([k,v])=>rpAdd(o,k,+v||0));else rpAdd(o,s.pay,+s.sum||0)});
-    // долги: деньги учитываются в день оплаты, а не в день продажи
-    days.forEach(d=>{const adj=(repDocs[d]||{}).adj;if(!adj)return;Object.entries(adj).forEach(([p,v])=>{if(!RP_PTS.includes(p))extra.add(p);const o=byDay[d].pts[p]||(byDay[d].pts[p]={c:0,t:0,q:0,e:0});["c","t","q","e"].forEach(k=>{o[k]+=+(v&&v[k])||0})})});
     dayExp.forEach(e=>{if(!dset.has(e.date))return;const a=rpExpAmt(e);if(a)byDay[e.date].bc.push({n:rpExpName(e),a,p:e.branch||""})});
     const pts=RP_PTS.concat([...extra]);
     const cum={c:0,t:0,q:0,e:0,bank:0,bc:0,pts:{}};
@@ -4148,99 +3685,21 @@ window.SaifXL=(function(){
       cum.bank+=bankSum;cum.bc+=bcSum;
       return {d,pts:x.pts,bc:x.bc,r,tot,bank,bankSum,bcSum,cum:{c:cum.c,t:cum.t,q:cum.q,e:cum.e,sum:cum.c+cum.t+cum.q+cum.e,bank:cum.bank,bc:cum.bc,pts:Object.assign({},cum.pts)}}});
     return {days,pts,rows}}
-  function rpPrevDoc(d,k){const ds=Object.keys(repDocs).filter(x=>x<d&&repDocs[x]&&repDocs[x][k]!=null).sort();const x=ds[ds.length-1];return x?{d:x,v:repDocs[x][k]}:null}
   const rpMonths=()=>{const t=iso(new Date()).slice(0,7);return [...new Set(sales.map(s=>(s.date||"").slice(0,7)).filter(Boolean).concat(Object.keys(repDocs).map(d=>d.slice(0,7))).concat([t]))].filter(m=>m<=t).sort()};
-  function renderReport(opt){
+  function renderReport(){
     const ms=rpMonths();if(!rpMonth||!ms.includes(rpMonth))rpMonth=ms[ms.length-1];
-    $("rpMonthSeg").innerHTML=ms.map(m=>`<button type="button" data-rm="${m}" aria-pressed="${m===rpMonth}">${RP_MF[+m.slice(5,7)-1]} ${m.slice(0,4)}</button>`).join("");
-    const M=rpCalc(rpMonth,true),mName=RP_MF[+rpMonth.slice(5,7)-1]+" "+rpMonth.slice(0,4);
-    const ex=rpMonthDays(rpMonth,false),saleDays=new Set(sales.map(s=>s.date));
-    if(!rpPicked||!M.days.includes(rpDay)){const withS=M.days.filter(d=>saleDays.has(d));rpDay=withS[withS.length-1]||M.days[M.days.length-1]||""}
-    const ready=ex.filter(d=>rpStat(repDocs[d])==="ok").length;
-    $("rpPeriod").textContent=ex.length?`${mName} · ${ex.length} ${pl(ex.length,"день","дня","дней")} в отчёте · выручка и расходы с Б/Ч подставляются сами`:`${mName} · дней с продажами пока нет`;
-    {const all=rpAllDays();const ms2=[...new Set(all.map(d=>d.slice(0,7)))];
-      $("rpDlSub").textContent=all.length?`${ms2.length>1?RP_MF[+ms2[0].slice(5,7)-1].toLowerCase()+" – "+RP_MF[+ms2[ms2.length-1].slice(5,7)-1].toLowerCase()+" "+ms2[ms2.length-1].slice(0,4):RP_MF[+ms2[0].slice(5,7)-1]+" "+ms2[0].slice(0,4)} · ${all.length} ${pl(all.length,"лист","листа","листов")}`:"";
-      $("rpXlsx").disabled=!all.length;if(!$("rpPick").hidden)rpRenderPick()}
-    $("rpProg").innerHTML=ex.length?`<span>Р/с и гросс заполнены: <b>${ready} из ${ex.length}</b></span><span class="bar"><i style="width:${(ready/ex.length*100).toFixed(1)}%"></i></span>`:"";
-    $("rpDays").innerHTML=M.days.map(d=>{const st=rpStat(repDocs[d]);return `<button type="button" class="rp-day" data-rd="${d}" aria-pressed="${d===rpDay}" title="${dLong(d)} · ${st==="ok"?"заполнено":st==="part"?"заполнено частично":"р/с и гросс не заполнены"}"><small>${RP_WD[pd(d).getDay()]}</small><b>${+d.slice(8)}</b><i class="${st}"></i></button>`}).join("");
-    requestAnimationFrame(()=>{const b=$("rpDays").querySelector('[aria-pressed="true"]');if(b&&rpScrolled!==rpDay&&b.offsetParent){rpScrolled=rpDay;const box=$("rpDays");box.scrollLeft=Math.max(0,b.offsetLeft-box.offsetLeft-(box.clientWidth-b.offsetWidth)/2)}});
-    const show=!!rpDay;["rpHero","rpRevPanel","rpRsPanel","rpGrPanel","rpBcPanel"].forEach(id=>$(id).hidden=!show);
-    if(!show){$("rpHero").innerHTML="";return}
-    const i=M.days.indexOf(rpDay),R=M.rows[i],r=R.r;
-    // плитки
-    const T=(cls,lab,big,small)=>`<div class="tile${cls?" "+cls:""}"><div class="eyebrow">${lab}</div><div class="big num">${big}</div><small>${small}</small></div>`;
-    $("rpHero").innerHTML=T("hero","Выручка "+dShort(rpDay),fmt(R.tot.sum),[["нал",R.tot.c],["терминал",R.tot.t],["QR",R.tot.q]].concat(R.tot.e?[["переч.",R.tot.e]]:[]).map(([a,b])=>`<span class="nw">${a} ${fmt(b)}</span>`).join(" · "))
-      +T("","С начала месяца",fmt(R.cum.sum),`<span class="nw">${i+1} ${pl(i+1,"день","дня","дней")}</span> · <span class="nw">по ${dShort(rpDay)} включительно</span>`)
-      +T("","Расходы дня",fmt(R.bankSum+R.bcSum),`<span class="nw">с р/с ${fmt(R.bankSum)}</span> · <span class="nw">с Б/Ч ${fmt(R.bcSum)}</span>`)
-      +(r.rsEnd!=null?T("","Р/с на конец дня",fmt2(r.rsEnd),r.rsStart!=null?`на начало ${fmt2(r.rsStart)}`:"начало дня не заполнено"):`<div class="tile"><div class="eyebrow">Р/с на конец дня</div><div class="big num" style="color:var(--muted)">—</div><span class="chip over">Не заполнено</span></div>`);
-    // выручка
-    const cell=v=>`<td class="${v?"":"z"}">${fmt(v)}</td>`;
-    $("rpRev").innerHTML=(r.adjNote?`<div class="rp-adj">${esc(r.adjNote)}</div>`:"")+`<div class="rp-tbl"><table><thead><tr><th>Точка</th><th>Б/Ч</th><th>Терминал</th><th>QR</th><th>Перечисления</th><th>Итого</th><th>С начала месяца</th></tr></thead><tbody>${
-      M.pts.map(p=>{const o=R.pts[p];return `<tr><td><span class="dot" style="background:${pointColor(p)}"></span>${esc(p)}</td>${cell(o.c)}${cell(o.t)}${cell(o.q)}${cell(o.e)}<td class="it${o.sum?"":" z"}">${fmt(o.sum)}</td><td class="mon">${fmt(R.cum.pts[p]||0)}</td></tr>`}).join("")
-    }<tr class="tot"><td>Итого</td><td>${fmt(R.tot.c)}</td><td>${fmt(R.tot.t)}</td><td>${fmt(R.tot.q)}</td><td>${fmt(R.tot.e)}</td><td>${fmt(R.tot.sum)}</td><td class="mon">${fmt(R.cum.sum)}</td></tr>
-      <tr class="cum"><td>С начала месяца</td><td>${fmt(R.cum.c)}</td><td>${fmt(R.cum.t)}</td><td>${fmt(R.cum.q)}</td><td>${fmt(R.cum.e)}</td><td class="it">${fmt(R.cum.sum)}</td><td></td></tr></tbody></table></div>`;
-    // расходы с Б/Ч
-    $("rpBc").innerHTML=(R.bc.length?`<div class="rp-bcl">${R.bc.map(b=>`<div class="rp-bci"><span class="dot" style="background:${pointColor(b.p)}"></span><span class="n" title="${esc(b.n)}">${esc(b.n)}</span><span class="num">${fmt(b.a)}</span></div>`).join("")}</div>`:`<div class="empty" style="margin-top:0">Расходов с Б/Ч в этот день нет</div>`)
-      +`<div class="rp-sum"><div><span>За день</span><b>${fmt(R.bcSum)}</b></div><div><span>За месяц</span><b>${fmt(R.cum.bc)}</b></div></div>`;
-    renderReportManual(R,opt);
+    const all=rpAllDays();const ms2=[...new Set(all.map(d=>d.slice(0,7)))];
+    $("rpDlSub").textContent=all.length?`${ms2.length>1?RP_MF[+ms2[0].slice(5,7)-1].toLowerCase()+" – "+RP_MF[+ms2[ms2.length-1].slice(5,7)-1].toLowerCase()+" "+ms2[ms2.length-1].slice(0,4):RP_MF[+ms2[0].slice(5,7)-1]+" "+ms2[0].slice(0,4)} · ${all.length} ${pl(all.length,"лист","листа","листов")}`:"";
+    $("rpXlsx").disabled=!all.length;if(!$("rpPick").hidden)rpRenderPick();
   }
-  function rpField(k,label,prev,ph){const r=repDocs[rpDay]||{},v=r[k];
-    return `<label class="rp-fld"><span>${label}</span><input class="rp-in${v==null?" empty":""}" data-rpf="${k}" inputmode="decimal" autocomplete="off" placeholder="${ph||"0"}" value="${v==null?"":fmt2(v)}">
-      <span class="rp-hint">${prev?`${prev.label} <span class="num">${fmt2(prev.v)}</span>${v==null||Math.abs(v-prev.v)>0.004?`<button type="button" class="rp-link" data-rpfill="${k}" data-v="${prev.v}">Подставить</button>`:""}`:""}</span></label>`}
-  function renderReportManual(R,opt){
-    opt=opt||{};
-    if(!opt.force&&rpEditing&&rpBankFor===rpDay)return;
-    const r=repDocs[rpDay]||{};
-    if(!opt.keep||rpBankFor!==rpDay||!rpBank)rpBank=(Array.isArray(r.bank)?r.bank:[]).map(b=>({n:b.n||"",a:b.a==null?null:+b.a}));
-    rpBankFor=rpDay;
-    const pe=rpPrevDoc(rpDay,"rsEnd"),pgc=rpPrevDoc(rpDay,"grossCash"),pgn=rpPrevDoc(rpDay,"grossNon");
-    const lab=x=>x?`Конец ${dShort(x.d)}:`:"";
-    let h=`<div class="rp-fields">${rpField("rsStart","Р/с на начало дня",pe?{label:lab(pe),v:pe.v}:null)}${rpField("rsEnd","Р/с на конец дня",null)}</div>`;
-    if(r.rsStart!=null&&r.rsEnd!=null){const dlt=r.rsEnd-r.rsStart;h+=`<div class="rp-delta"><span>Изменение за день</span><b style="color:${dlt>=0?"var(--plus)":"var(--minus)"}">${dlt>=0?"+":""}${fmt2(dlt)}</b></div>`}
-    if(pe&&r.rsStart!=null&&Math.abs(r.rsStart-pe.v)>0.004)h+=`<div class="rp-warn">Начало дня не совпадает с концом ${dShort(pe.d)} (<span class="nw">${fmt2(pe.v)}</span>) — разница <span class="nw">${fmt2(r.rsStart-pe.v)}</span>. Проверьте выписку.</div>`;
-    const freq={};Object.values(repDocs).forEach(x=>(Array.isArray(x.bank)?x.bank:[]).forEach(b=>{const n=String(b.n||"").trim();if(!n)return;const k=normS(n);(freq[k]||(freq[k]={n:n.charAt(0).toUpperCase()+n.slice(1),c:0})).c++}));
-    const used=new Set(rpBank.map(b=>normS(b.n)));
-    const chips=Object.entries(freq).filter(([k])=>!used.has(k)).sort((a,b)=>b[1].c-a[1].c).slice(0,5).map(([,v])=>v.n);
-    const bankSum=rpBank.reduce((a,b)=>a+(+b.a||0),0);
-    h+=`<div class="rp-sub"><h3>Расходы с р/с</h3><span class="rp-saved" id="rpSaved">Сохранено</span></div>
-      <div class="rp-rows" id="rpRows">${rpBank.map((b,j)=>`<div class="rp-row"><input data-bn="${j}" value="${esc(b.n)}" placeholder="Название, например: комиссия банка" autocomplete="off" aria-label="Название расхода"><input class="rp-in" data-ba="${j}" inputmode="decimal" value="${b.a==null?"":fmt2(b.a)}" placeholder="Сумма" autocomplete="off" aria-label="Сумма"><button type="button" class="rp-x" data-bdel="${j}" title="Удалить" aria-label="Удалить расход">×</button></div>`).join("")||`<div class="empty" style="margin-top:0">Расходов со счёта в этот день нет</div>`}</div>
-      <div class="rp-adds"><button type="button" class="sec rp-add" data-badd="">+ Добавить расход</button>${chips.map(n=>`<button type="button" class="rp-chip" data-badd="${esc(n)}">${esc(n)}</button>`).join("")}</div>
-      <div class="rp-sum"><div><span>Итого за день</span><b>${fmt2(bankSum)||"0"}</b></div><div><span>За месяц</span><b>${fmt2((R?R.cum.bank-R.bankSum:0)+bankSum)||"0"}</b></div></div>`;
-    $("rpRs").innerHTML=h;
-    const gx=rpGNmap()[rpDay];const gAuto=rpDay>=RP_GN_FROM;
-    const gnBox=gAuto?`<div class="rp-fld"><span>Итог гросс безнал <em class="rp-autotag">считается сам</em></span><div class="rp-in rp-ro">${gx&&gx.v!=null?fmt2(gx.v):"—"}</div><span class="rp-hint">${gx&&gx.prev!=null?`вчера <span class="num">${fmt2(gx.prev)}</span> + терминал <span class="num">${fmt(gx.t)}</span> + QR <span class="num">${fmt(gx.q)}</span>`:"нет гросса за прошлый день"}</span></div>`:rpField("grossNon","Итог гросс безнал",pgn?{label:lab(pgn),v:pgn.v}:null);
-    let g=`<div class="rp-fields">${rpField("grossCash","Итог гросс нал",pgc?{label:lab(pgc),v:pgc.v}:null)}${gnBox}</div>`;
-    const dc=r.grossCash!=null&&pgc?r.grossCash-pgc.v:null,dn=gAuto?(gx&&gx.prev!=null?gx.t+gx.q:null):(r.grossNon!=null&&pgn?r.grossNon-pgn.v:null);
-    if(dc!=null||dn!=null)g+=`<div class="rp-sum"><div><span>Нал за день</span><b>${dc==null?"—":(dc>0?"+":"")+(fmt2(dc)||"0")}</b></div><div><span>Безнал за день</span><b>${dn==null?"—":(dn>0?"+":"")+(fmt2(dn)||"0")}</b></div></div>`;
-    $("rpGr").innerHTML=g;
-  }
-  function rpFlash(t,bad){const el=$("rpSaved");if(el){el.textContent=t||"Сохранено";el.style.color=bad?"var(--minus)":"";el.classList.add("on");clearTimeout(rpSavedT);rpSavedT=setTimeout(()=>el.classList.remove("on"),1800)}if(bad)rpMsg(t,true)}
+  function rpFlash(t,bad){if(bad)rpMsg(t,true)}
   function rpMsg(t,bad){const m=$("rpMsg");m.textContent=t||"";m.style.color=bad?"var(--minus)":"var(--plus)";clearTimeout(rpMsg._t);if(t)rpMsg._t=setTimeout(()=>m.textContent="",7000)}
   async function rpSave(d,patch){
-    const cur=Object.assign({date:d,rsStart:null,rsEnd:null,grossCash:null,grossNon:null,bank:[],tr:{}},repDocs[d]||{},patch,{updatedAt:Date.now()});delete cur.id;
+    const cur=Object.assign({date:d,rsStart:null,rsEnd:null,bank:[]},repDocs[d]||{},patch,{updatedAt:Date.now()});delete cur.id;
     repDocs[d]=cur;
     try{if(mode==="db")await db.doc("report/"+d).set(cur);else lsSet("report",repDocs);rpFlash("Сохранено")}
     catch(e){rpFlash("Не сохранилось — проверьте связь",true)}
   }
-  const rpBankClean=()=>rpBank.filter(b=>String(b.n||"").trim()||b.a).map(b=>({n:String(b.n||"").trim(),a:b.a==null?0:b.a}));
-  $("page-report").addEventListener("click",e=>{
-    const m=e.target.closest("[data-rm]");if(m){rpMonth=m.dataset.rm;rpDay="";rpPicked=false;rpScrolled="";renderReport();return}
-    const d=e.target.closest("[data-rd]");if(d){rpDay=d.dataset.rd;rpPicked=true;renderReport();return}
-    const f=e.target.closest("[data-rpfill]");if(f){rpSave(rpDay,{[f.dataset.rpfill]:+f.dataset.v}).then(()=>renderReport({force:1,keep:1}));return}
-    const a=e.target.closest("[data-badd]");if(a){if(!rpBank||rpBankFor!==rpDay)rpBank=[];rpBank.push({n:a.dataset.badd,a:null});const j=rpBank.length-1;
-      renderReportManual(rpCalc(rpMonth,true).rows.find(x=>x.d===rpDay),{force:1,keep:1});
-      const inp=$("rpRs").querySelector(a.dataset.badd?`[data-ba="${j}"]`:`[data-bn="${j}"]`);if(inp)inp.focus();return}
-    const x=e.target.closest("[data-bdel]");if(x){rpBank.splice(+x.dataset.bdel,1);rpSave(rpDay,{bank:rpBankClean()}).then(()=>renderReport({force:1,keep:1}));return}
-  });
-  $("page-report").addEventListener("change",e=>{
-    const t=e.target;
-    if(t.dataset.rpf){const v=rpNum(t.value);t.value=v==null?"":fmt2(v);rpSave(rpDay,{[t.dataset.rpf]:v}).then(()=>renderReport());return}
-    if(t.dataset.bn!=null){rpBank[+t.dataset.bn].n=t.value.trim();rpSave(rpDay,{bank:rpBankClean()});return}
-    if(t.dataset.ba!=null){const v=rpNum(t.value);t.value=v==null?"":fmt2(v);rpBank[+t.dataset.ba].a=v;rpSave(rpDay,{bank:rpBankClean()}).then(()=>renderReport());return}
-  });
-  $("page-report").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.matches(".rp-man input")){e.preventDefault();e.target.blur()}});
-  $("page-report").addEventListener("focusin",e=>{if(e.target.closest&&e.target.closest(".rp-man"))rpEditing=true});
-  $("page-report").addEventListener("focusout",e=>{if(!e.target.closest||!e.target.closest(".rp-man"))return;const to=e.relatedTarget;if(to&&to.closest&&to.closest(".rp-man"))return;rpEditing=false;setTimeout(()=>{if(!rpEditing)renderReport({force:1})},150)});
   // ---------- выгрузка в формате «Отчёт оптика» ----------
   let rpXL=null;
   function rpLoadXL(){if(window.ExcelJS)return Promise.resolve();if(rpXL)return rpXL;rpXL=new Promise((res,rej)=>{const sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js";sc.onload=res;sc.onerror=()=>{rpXL=null;rej(new Error("load"))};document.head.appendChild(sc)});return rpXL}
@@ -4332,8 +3791,9 @@ window.SaifXL=(function(){
   $("rpPickGo").onclick=()=>rpExport([...rpSel],$("rpPickGo"),false);
 
   function renderAll(){
+    document.dispatchEvent(new CustomEvent("sales-updated"));
     C.fitW=0;lensDayCache=null;
-    if(tab==="kassa"||tab==="help")return;
+    if(tab==="kassa")return;
     fillMonths();
     const r=rangeOf(filtered());
     $("filterInfo").textContent=(F.from||F.to)?`Показано: ${dLong(F.from||r.from)} — ${dLong(F.to||r.to)}`+(F.point!=="all"?` · ${F.point}`:"")+(F.cat!=="all"?` · ${F.cat}`:""):"Показаны все продажи";
@@ -4344,6 +3804,10 @@ window.SaifXL=(function(){
     renderSales();renderAnalytics();renderLens();
   }
   document.addEventListener("kassa-updated",()=>{if(tab==="analytics")renderAnalytics()});
+  // данные продаж для блоков «Отчёт р/с», «Платежи», Billz (rs.js, fm.js, pay.js, bz.js)
+  window.__S={get sales(){return sales},get settings(){return settings},get planCfg(){return planCfg},get repDocs(){return repDocs},get batches(){return batches},F,
+    plCalc:m=>plCalc(m),plStats:(...a)=>plStats(...a),rpCalc:(m,w)=>rpCalc(m,w),rpGN:d=>rpGN(d),get RP_GN_FROM(){return RP_GN_FROM},rpSave:(d,p)=>rpSave(d,p),putSale:(i,d)=>putSale(i,d),delSale:i=>delSale(i),newId:()=>newId(),
+    lensData:()=>lensData(),lensKind:x=>lensKind(x),marginData:()=>marginData(),batchStats:(...a)=>batchStats(...a),stockItems:()=>stockItems(),stockMeta:()=>stockMeta()};
   // ---------- фото кассы ----------
   function phMsg(t,bad){const m=$("phMsg");m.textContent=t;m.style.color=bad?"var(--minus)":"var(--plus)";clearTimeout(phMsg._t);phMsg._t=setTimeout(()=>m.textContent="",6000)}
   const AUTO="__auto";
@@ -4467,39 +3931,6 @@ window.SaifXL=(function(){
     }
     return {items,map};
   }
-  $("bFile").addEventListener("change",async()=>{
-    const f=$("bFile").files[0];$("bFile").value="";if(!f)return;
-    if(typeof XLSX==="undefined"){bMsg("Модуль Excel не загрузился. Обновите страницу.",true);return}
-    try{
-      const wb=XLSX.read(await f.arrayBuffer(),{type:"array"});
-      let best=null;wb.SheetNames.forEach(n=>{const r=parseSheet(wb.Sheets[n]);if(!best||r.items.length>best.items.length)best=Object.assign(r,{sheet:n})});
-      if(!best||!best.items.length){bMsg(best&&best.err?best.err:"В файле не нашлось позиций с количеством.",true);$("bPrev").hidden=true;return}
-      bPending={items:best.items,file:f.name,sheet:best.sheet,sheets:wb.SheetNames,wb};
-      showPreview();
-    }catch(e){bMsg("Не удалось прочитать файл. Сохраните его как .xlsx и попробуйте снова.",true)}
-  });
-  function showPreview(){
-    const p=bPending;const Q=p.items.reduce((a,i)=>a+i.q,0);
-    const sheetSel=p.sheets.length>1?`<label class="f" style="max-width:260px">Лист<select id="bSheet">${p.sheets.map(n=>`<option${n===p.sheet?" selected":""}>${esc(n)}</option>`).join("")}</select></label>`:"";
-    $("bPrev").hidden=false;
-    $("bPrev").innerHTML=`${sheetSel}<p class="note" style="margin:10px 0">Файл «${esc(p.file)}», лист «${esc(p.sheet)}»: <b>${fmt(p.items.length)} позиций, ${fmt(Q)} шт.</b> Первые строки:</p>
-      <div class="tbl"><table><thead><tr><th>Модель / наименование</th><th>Цвет</th><th>Группа</th><th class="r">Кол-во</th><th class="r">Цена продажи</th><th class="r">Цена покупки</th></tr></thead><tbody>${p.items.slice(0,6).map(i=>`<tr><td>${esc(i.m||i.n||i.s)}</td><td>${esc(i.col||"")}</td><td>${esc(i.g||i.c||"")}</td><td class="r num">${fmt(i.q)}</td><td class="r num">${i.p?fmt(i.p):"—"}</td><td class="r num">${i.cp?fmt(i.cp):"—"}</td></tr>`).join("")}</tbody></table></div>
-      <div class="actions" style="margin-top:12px"><button type="button" id="bSave">Сохранить партию</button><button type="button" class="sec" id="bCancel">Отмена</button></div>`;
-    if($("bSheet"))$("bSheet").onchange=()=>{const r=parseSheet(p.wb.Sheets[$("bSheet").value]);if(!r.items.length){bMsg(r.err||"На этом листе нет позиций.",true);return}p.items=r.items;p.sheet=$("bSheet").value;showPreview()};
-    $("bCancel").onclick=()=>{bPending=null;$("bPrev").hidden=true;bMsg("")};
-    $("bSave").onclick=saveBatch;
-    bMsg("");
-  }
-  async function saveBatch(){
-    const p=bPending;if(!p)return;
-    if(mode!=="db"){bMsg("Сохранение партии доступно только в опубликованной странице.",true);return}
-    const doc={name:$("bName").value.trim()||p.file.replace(/\.[^.]+$/,""),date:$("bDate").value||iso(new Date()),file:p.file,createdAt:Date.now(),items:p.items};
-    if(JSON.stringify(doc).length>240000){bMsg("Список слишком большой для одной партии. Разделите файл на 2 части и загрузите по очереди.",true);return}
-    $("bSave").disabled=true;
-    try{const id=newId();await db.doc("batches/"+id).set(doc);bSelId=id;bPending=null;$("bPrev").hidden=true;$("bName").value="";bMsg(`Партия сохранена: ${fmt(doc.items.length)} позиций.`)}
-    catch(e){bMsg("Не удалось сохранить партию. Попробуйте ещё раз.",true);$("bSave").disabled=false}
-  }
-
 
   // ===================== выгрузка =====================
   const expMsg=(t,b)=>flash("expMsg",t,b), anMsg=(t,b)=>flash("anMsg",t,b), lnMsg=(t,b)=>flash("lnMsg",t,b);
@@ -4584,32 +4015,15 @@ window.SaifXL=(function(){
       {name:"Все продажи линз",title:"Все продажи линз",subtitle:periodTxt(),columns:[{header:"Дата",key:"d",type:"text",width:12},{header:"Точка",key:"p",type:"text",width:11},{header:"Товар",key:"pr",type:"text",width:30},{header:"Вид",key:"t",type:"text",width:15},{header:"Индекс",key:"i",type:"text",width:9},{header:"Покрытие",key:"c",type:"text",width:18},{header:"Бренд",key:"b",type:"text",width:11},{header:"Штук",key:"q",type:"int",width:7},{header:"Цена, сум",key:"pc",type:"money",width:13},{header:"Оплачено, сум",key:"sm",type:"money",width:14}],rows:det,total:{d:"Итого",q:T(det,"q"),sm:T(det,"sm")}}
     ]},fname("linzy","xlsx"),lnMsg);
   };
-  $("bXlsx").onclick=()=>{
-    const b=curBatch();if(!b)return;
-    const {items}=batchStats(b,bPt);const pts=bPt==="all"?settings.points:[bPt];
-    const sub=`${b.name||"Партия"} · приход ${dLong(b.date)}`+(bPt!=="all"?` · ${bPt}`:"")+` · выгружено ${SaifXL.today()}`;
-    const mk=i=>{const r={m:i.m||i.n||i.s,col:i.col||"",s:i.s&&i.s!==i.m?i.s:"",g:i.g||i.c||"",p:+i.p||null,cp:+i.cp||null,q:i.q,sold:i.sold,left:i.left,pct:i.pct,rev:i.rev,last:i.last?dLong(i.last):""};pts.forEach((p,k)=>r["p"+k]=i.byPt[p]||0);return r};
-    const rows=[...items].sort((x,y)=>y.sold-x.sold).map(mk);
-    const Tt=k=>rows.reduce((a,r)=>a+(+r[k]||0),0);
-    const total={m:"Итого",q:Tt("q"),sold:Tt("sold"),left:Tt("left"),rev:Tt("rev"),pct:Tt("q")?Tt("sold")/Tt("q"):0};pts.forEach((p,k)=>total["p"+k]=Tt("p"+k));
-    const gm={};items.forEach(i=>{const k=i.g||i.c||"Без группы";const o=gm[k]||(gm[k]={k,n:0,q:0,s:0,r:0});o.n++;o.q+=i.q;o.s+=i.sold;o.r+=i.rev});
-    const groups=Object.values(gm).sort((x,y)=>y.s-x.s).map(o=>Object.assign(o,{l:o.q-o.s,pct:o.q?o.s/o.q:0}));
-    const cols=[{header:"Модель / наименование",key:"m",type:"text",width:26},{header:"Цвет",key:"col",type:"text",width:9},{header:"Артикул",key:"s",type:"text",width:13},{header:"Группа",key:"g",type:"text",width:18},{header:"Цена продажи",key:"p",type:"money",width:13},{header:"Цена покупки",key:"cp",type:"money",width:13},{header:"Пришло, шт",key:"q",type:"int",width:10}].concat(pts.map((p,k)=>({header:"Продано "+p,key:"p"+k,type:"int",width:11}))).concat([{header:"Продано всего",key:"sold",type:"int",width:11},{header:"Осталось, шт",key:"left",type:"int",width:11},{header:"Продано, %",key:"pct",type:"pct",width:10},{header:"Выручка, сум",key:"rev",type:"money",width:15},{header:"Последняя продажа",key:"last",type:"text",width:13}]);
-    SaifXL.save({sheets:[
-      {name:"Товары партии",title:"Продажи товаров из новой партии",subtitle:sub,columns:cols,rows,total},
-      {name:"На дозаказ",title:"Новая партия — на дозаказ",subtitle:sub+" · закончились или осталось ≤20%",columns:cols,rows:reorderList(items).map(mk)},
-      {name:"По группам",title:"Новая партия по группам",subtitle:sub,columns:[{header:"Группа",key:"k",type:"text",width:26},{header:"Моделей",key:"n",type:"int",width:10},{header:"Пришло, шт",key:"q",type:"int",width:11},{header:"Продано, шт",key:"s",type:"int",width:11},{header:"Осталось, шт",key:"l",type:"int",width:11},{header:"Продано, %",key:"pct",type:"pct",width:10},{header:"Выручка, сум",key:"r",type:"money",width:15}],rows:groups,total:{k:"Итого",n:items.length,q:total.q,s:total.sold,l:total.left,pct:total.pct,r:total.rev}}
-    ]},"partiya_"+(b.date||"")+".xlsx",bxMsg);
-  };
 
   // ===================== старт =====================
   async function init(){
-    ["phDate","dxDate","bDate","sDate","sDateIn"].forEach(id=>$(id).value=iso(new Date()));
+    ["phDate","dxDate","sDate","sDateIn"].forEach(id=>$(id).value=iso(new Date()));
     applyPreset("month");fillSelects();
     const h=(location.hash||"").replace("#","");setTab(PAGES.includes(h)?h:"home");
     const c=window.claude;
     if(c&&c.use){try{dl=await c.use("downloads")}catch(e){dl=null}}
-    if(!dl){["exportBtns","anXlsx","lnXlsx","bXlsx","stXlsx","rpDlBox"].forEach(id=>$(id).hidden=true)}
+    if(!dl){["exportBtns","anXlsx","lnXlsx","stXlsx","rpDlBox"].forEach(id=>$(id).hidden=true)}
     if(!c||!c.use){toLocal();return}
     try{db=await c.use("db")}catch(e){db=null}
     if(!db){toLocal();return}
@@ -4629,6 +4043,8 @@ window.SaifXL=(function(){
     db.collection("cashlog").onSnapshot(s=>{cashlog=docs(s);if(tab==="analytics")renderAnalytics()},()=>{});
     db.doc("settings/sales").onSnapshot(s=>{if(mode!=="db")return;if(s.exists){const d=s.data();if(Array.isArray(d.points)&&d.points.length)settings={points:d.points.slice(),cats:(Array.isArray(d.cats)&&d.cats.length?d.cats:DEF_CATS).slice(),plan:+d.plan||0}}fillSelects();renderAll()},()=>{});
     db.doc("settings/plan").onSnapshot(s=>{if(s.exists){const d=s.data();planCfg={months:d.months||{},sellers:Object.assign({},PL_DEF_SELLERS,d.sellers||{}),off:Array.isArray(d.off)?d.off:[0]}}if(tab==="plan")renderPlan();if(tab==="home")renderHome();if(tab==="sales")renderCal()},()=>{});
+    db.collection("report").onSnapshot(()=>setTimeout(()=>document.dispatchEvent(new CustomEvent("sales-updated")),0),()=>{});
+    db.doc("settings/plan").onSnapshot(()=>setTimeout(()=>document.dispatchEvent(new CustomEvent("sales-updated")),0),()=>{});
     db.doc("settings/analytics3").onSnapshot(s=>{if(s.exists&&Array.isArray(s.data().off)){anSel=s.data().off;if(tab==="analytics")renderAnalytics()}},()=>{});
   }
   init();
@@ -4702,18 +4118,18 @@ window.SaifXL=(function(){
   }
   const pending=new Set();let raf=0;
   const queue=g=>{pending.add(g);if(!raf)raf=requestAnimationFrame(()=>{raf=0;pending.forEach(lay);pending.clear()})};
-  const ro=new ResizeObserver(es=>es.forEach(e=>{const g=e.target.closest(".wgrid,.hx-cards,#anCards");if(!g)return;if(e.target._lh!=null&&Math.abs(e.target.offsetHeight-e.target._lh)<2)return;const w=Date.now()-(g._t||0);if(w>250)queue(g);else{clearTimeout(g._rt);g._rt=setTimeout(()=>queue(g),260-w)}}));
+  const ro=new ResizeObserver(es=>es.forEach(e=>{const g=e.target.closest(".wgrid,#anCards");if(!g)return;if(e.target._lh!=null&&Math.abs(e.target.offsetHeight-e.target._lh)<2)return;const w=Date.now()-(g._t||0);if(w>250)queue(g);else{clearTimeout(g._rt);g._rt=setTimeout(()=>queue(g),260-w)}}));
   function watch(g){
     if(g._mas)return;g._mas=1;
     new MutationObserver(()=>{[...g.children].forEach(c=>{if(!c._ro){c._ro=1;ro.observe(c)}});queue(g);clearTimeout(g._st);g._st=setTimeout(()=>{queue(g);g._st=setTimeout(()=>queue(g),500)},900)}).observe(g,{childList:true});
     [...g.children].forEach(c=>{c._ro=1;ro.observe(c)});queue(g);
   }
-  function scan(){document.querySelectorAll(".wgrid,.hx-cards,#anCards").forEach(watch)}
+  function scan(){document.querySelectorAll(".wgrid,#anCards").forEach(watch)}
   window.__relay=g=>{g._sig=null;queue(g)};
   window.__layNow=g=>lay(g);
   scan();
-  new MutationObserver(()=>{document.querySelectorAll(".wgrid,.hx-cards,#anCards").forEach(g=>{if(!g._mas)watch(g);else queue(g)})}).observe(document.body,{attributes:true,attributeFilter:["hidden"],subtree:true});
-  window.addEventListener("resize",()=>document.querySelectorAll(".wgrid,.hx-cards,#anCards").forEach(queue));
+  new MutationObserver(()=>{document.querySelectorAll(".wgrid,#anCards").forEach(g=>{if(!g._mas)watch(g);else queue(g)})}).observe(document.body,{attributes:true,attributeFilter:["hidden"],subtree:true});
+  window.addEventListener("resize",()=>document.querySelectorAll(".wgrid,#anCards").forEach(queue));
 })();
 
 
@@ -4730,7 +4146,7 @@ window.SaifXL=(function(){
   const Z={s:.9,m:1,l:1.1},ORD=["s","m","l"];
   let cur=r.getAttribute("data-size")||"m";
   const mark=()=>{box.style.setProperty("--i",ORD.indexOf(cur));box.querySelectorAll("[data-sz]").forEach(b=>b.setAttribute("aria-checked",b.dataset.sz===cur?"true":"false"))};
-  function relayout(){window.dispatchEvent(new Event("resize"));document.querySelectorAll(".wgrid,.hx-cards,#anCards").forEach(g=>{if(window.__relay)window.__relay(g)})}
+  function relayout(){window.dispatchEvent(new Event("resize"));document.querySelectorAll(".wgrid,#anCards").forEach(g=>{if(window.__relay)window.__relay(g)})}
   function apply(v){if(v===cur)return;cur=v;try{localStorage.setItem("kassa.size",v)}catch(e){}
     const set=()=>{if(v==="m")r.removeAttribute("data-size");else r.setAttribute("data-size",v);window.__uiZ=Z[v];relayout()};
     mark();
@@ -4782,11 +4198,11 @@ window.SaifXL=(function(){
   document.addEventListener("click",e=>{if(e.target.closest('[aria-expanded],.tog,[data-st],[data-mo],[data-dc],summary')){document.documentElement.classList.add("ios-expanding");clearTimeout(expT);expT=setTimeout(()=>document.documentElement.classList.remove("ios-expanding"),600)}},true);
   document.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.closest&&e.target.closest('[aria-expanded]')){document.documentElement.classList.add("ios-expanding");clearTimeout(expT);expT=setTimeout(()=>document.documentElement.classList.remove("ios-expanding"),600)}},true);
   /* 4. карточки ниже экрана проявляются при прокрутке */
-  const SEL=".page .panel,.page .tile,.page .kpi,.wgrid>*,.hx-cards>*";
+  const SEL=".page .panel,.page .tile,.page .kpi,.wgrid>*>*";
   const seen=new WeakSet();
   const io="IntersectionObserver" in window?new IntersectionObserver(es=>{let i=0;es.forEach(en=>{if(en.isIntersecting){const el=en.target;io.unobserve(el);el.style.setProperty("--d",(Math.min(i++,6)*0.06)+"s");el.classList.remove("ios-pre");el.classList.add("ios-in");setTimeout(()=>{el.classList.remove("ios-in");el.style.removeProperty("--d")},1200)}})},{rootMargin:"0px 0px -6% 0px",threshold:.05}):null;
   const scan=()=>{if(!io||calm())return;const pg=document.querySelector(".page:not([hidden])");if(!pg)return;pg.querySelectorAll(SEL.replace(/\.page /g,"")).forEach(el=>{if(seen.has(el))return;seen.add(el);if(el.closest("[hidden]"))return;
-    if(el.parentElement&&el.parentElement.closest(".panel,.tile,.kpi")&&!el.parentElement.matches(".wgrid,.hx-cards,#anCards"))return;
+    if(el.parentElement&&el.parentElement.closest(".panel,.tile,.kpi")&&!el.parentElement.matches(".wgrid,#anCards"))return;
     const r=el.getBoundingClientRect();if(r.height&&r.top>innerHeight*0.92){el.classList.add("ios-pre");io.observe(el)}})};
   /* 5. счётчики */
   const prev=new Map();
@@ -4916,13 +4332,13 @@ window.SaifXL=(function(){
 (function(){
   const KEY="kassa.collapsed";let st={};try{st=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){}
   const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}};
-  const SKIP="#addPanel,#saleFormPanel,#sImport,#bImport,#rpPick,.filterbar,.hx-sec,.kpi";
+  const SKIP="#addPanel,#saleFormPanel,#sImport,#rpPick,.filterbar,.kpi";
   const ICON='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>';
   function keyOf(p){const h=p.querySelector(".cl-t")||p.querySelector("h2");const pg=p.closest("[id^=page-]");return (pg?pg.id:"")+"|"+(h?h.textContent.trim().slice(0,80):"")}
   function deco(p){
     if(p._cl||p.matches(SKIP)||p.querySelector("form"))return;
     let keep=[...p.children].find(c=>c.tagName==="H2"),t=keep;
-    if(!keep){keep=[...p.children].find(c=>c.tagName!=="BUTTON"&&c.querySelector&&c.querySelector("h2")&&!c.matches(".wbody,.wgrid,.hx-cards"));if(!keep)return;t=[...keep.children].find(c=>c.tagName==="H2"||c.querySelector("h2"))}
+    if(!keep){keep=[...p.children].find(c=>c.tagName!=="BUTTON"&&c.querySelector&&c.querySelector("h2")&&!c.matches(".wbody,.wgrid"));if(!keep)return;t=[...keep.children].find(c=>c.tagName==="H2"||c.querySelector("h2"))}
     if(!t)return;p._cl=1;keep.classList.add("cl-keep");t.classList.add("cl-t");p.classList.add("cl-has");
     const b=document.createElement("button");b.type="button";b.className="cl-btn";b.innerHTML=ICON;p.appendChild(b);
     const k=keyOf(p),off=!!st[k];p.classList.toggle("cl-off",off);b.setAttribute("aria-expanded",off?"false":"true");b.title=off?"Развернуть":"Свернуть";
@@ -4932,7 +4348,7 @@ window.SaifXL=(function(){
     const tg=e.target.closest(".art-tg");if(tg){const a=tg.closest("#articles");const on=a.classList.toggle("all");tg.setAttribute("aria-expanded",on);return}
     const b=e.target.closest(".cl-btn");if(!b)return;e.stopPropagation();
     const p=b.parentElement,off=!p.classList.contains("cl-off");
-    const g=p.parentElement&&p.parentElement.closest(".wgrid,.hx-cards,#anCards");
+    const g=p.parentElement&&p.parentElement.closest(".wgrid,#anCards");
     const h0=p.offsetHeight;
     if(g)g._t=Date.now()+700; // пока идёт анимация, кладка не пересчитывается сама
     p.classList.toggle("cl-off",off);
@@ -5015,12 +4431,11 @@ addEventListener("scroll",()=>{if(!t)t=requestAnimationFrame(chk)},{passive:true
     plan:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/>',
     lens:'<circle cx="7" cy="14" r="3.6"/><circle cx="17" cy="14" r="3.6"/><path d="M10.6 14h2.8M3.4 13 5 7.5M20.6 13 19 7.5"/>',
     batch:'<path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9"/>',
-    help:'<circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.4a2.5 2.5 0 0 1 4.8 1c0 1.7-2.4 2.1-2.4 3.6M12 17h.01"/>',
     more:'<circle cx="5.5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="18.5" cy="12" r="1.4"/>'
   };
   const svg=k=>`<svg class="tab-ic" viewBox="0 0 24 24" aria-hidden="true">${IC[k]}</svg>`;
-  const EXTRA=["analytics","plan","lens","batch","help"];
-  const LBL={analytics:"Аналитика",plan:"План",lens:"Линзы",batch:"Склад",help:"Инструкция"};
+  const EXTRA=["analytics","plan","lens","batch"];
+  const LBL={analytics:"Аналитика",plan:"План",lens:"Линзы",batch:"Склад"};
   nav.querySelectorAll(".tab[data-tab]").forEach(b=>{if(!b.querySelector(".tab-ic"))b.insertAdjacentHTML("afterbegin",svg(b.dataset.tab))});
   // кнопка «Ещё» — сразу после «Продаж», чтобы капля вставала на неё раньше скрытых вкладок
   const more=document.createElement("button");more.type="button";more.className="tab-more";more.setAttribute("aria-haspopup","dialog");more.setAttribute("aria-selected","false");
@@ -5080,4 +4495,5 @@ addEventListener("scroll",()=>{if(!t)t=requestAnimationFrame(chk)},{passive:true
   new MutationObserver(q).observe(document.body,{childList:true,subtree:true});
   label();
 })();
+
 

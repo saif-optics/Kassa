@@ -56,7 +56,7 @@
     const pg=$("page-report");if(!pg)return;const fm=F.view==="fm";
     $("fmRsView").innerHTML=seg("data-fmv",[["rs","Расчётный счёт"],["fm","Фискальные модули"]],F.view,true);
     const h=pg.querySelector(".head");const [e,t,p]=RS_HEAD[F.view];h.querySelector(".eyebrow").textContent=e;h.querySelector("h1").textContent=t;h.querySelector("p").textContent=p;
-    ["rsXlsx","rsAdd"].forEach(id=>{const b=$(id);if(b)b.hidden=fm});["fmImport","fmAdd"].forEach(id=>{const b=$(id);if(b)b.hidden=!fm});
+    ["rsXlsx"].forEach(id=>{const b=$(id);if(b)b.hidden=fm});["fmImport","fmAdd"].forEach(id=>{const b=$(id);if(b)b.hidden=!fm});
     ["rsSeg","rsBody","rsOld"].forEach(id=>{const b=$(id);if(b)b.hidden=fm});$("fmBody").hidden=!fm;
   }
   function renderFm(){

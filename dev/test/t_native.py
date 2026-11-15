@@ -16,10 +16,9 @@ with sync_playwright() as pw:
     def chk(name):
         p.wait_for_timeout(700);r=p.evaluate(CHK)
         if r:rep[name]=r
-    for t in ["home","kassa","report","pay","sales","recon","analytics","plan","lens","batch"]:
+    for t in ["home","kassa","report","pay","sales","recon","analytics","plan","lens"]:
         p.evaluate(f'document.querySelector(\'.tab[data-tab="{t}"]\').click()');chk(t)
         if t=="report":
-            p.evaluate('document.getElementById("rsAdd").click()');chk("report/открыт ввод")
             p.evaluate("const r=document.querySelector(\"tr[data-rsd]\");r&&r.click()");chk("report/день")
         if t=="kassa":
             for sel in ["#addPanel button","[data-st]"]:
@@ -27,6 +26,6 @@ with sync_playwright() as pw:
         if t=="recon":
             p.evaluate('const r=document.querySelector("tr[data-day]");r&&r.click()');chk("recon/день")
         if t=="batch":
-            for v in ["bzst","bztr","margin","stock","batch"]:
+            for v in ["bzst","bztr","margin","stock"]:
                 p.evaluate(f'document.querySelector(\'#stViewSeg [data-sv="{v}"]\').click()');chk("batch/"+v)
     print(json.dumps(rep,ensure_ascii=False,indent=1));b.close()

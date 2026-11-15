@@ -73,10 +73,6 @@ rep('  function renderStockList(){\n    const all=stockItems(), meta=stockMeta()
 rep('    db.collection("stock").onSnapshot(s=>{stockParts=docs(s);matcherCache=null;renderAll()},()=>{});',
     '    db.collection("stock").onSnapshot(s=>{stockParts=docs(s);matcherCache=null;renderAll()},()=>{});\n    db.doc("sync/billz-c1").onSnapshot(s=>{bzC1=s.exists?s.data():null;renderBz()},()=>{});\n    db.doc("sync/billz-sergeli").onSnapshot(s=>{bzSync=s.exists?s.data():null;renderBz();setTimeout(()=>document.dispatchEvent(new CustomEvent("sales-updated")),0)},()=>{});')
 
-# 6. для телефона
-rep('stockItems:()=>stockItems(),stockMeta:()=>stockMeta(),',
-    'stockItems:()=>stockItems(),stockMeta:()=>stockMeta(),bzSync:()=>bzSync,bzState:p=>bzState(p),bzRun:p=>bzRun(p),bzBusy:p=>bzIsBusy(p||"Сергели"),bzNext:p=>bzNext(p),bzTime:ms=>bzTime(ms),bzOf:p=>bzOf(p),')
-
 # 7. стили
 CSS = '''
 .bz-st{border-radius:10px;padding:8px 12px;font-size:13px;font-weight:600;margin:4px 0 12px}

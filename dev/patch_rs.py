@@ -19,14 +19,14 @@ NEW = '''<header class="head">
         <h1>Отчёт по расчётному счёту</h1>
         <p>Остаток, поступления и расходы со счёта — по дням и месяцам</p>
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button type="button" class="sec" id="rsXlsx">Выгрузить Excel</button><button type="button" id="rsAdd">＋ Внести выписку за день</button></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button type="button" class="sec" id="rsXlsx">Выгрузить Excel</button></div>
     </header>
     <div class="seg big" role="group" aria-label="Месяц" id="rsSeg"></div>
     <div id="rsBody" class="stack"></div>
     <section class="panel" id="rsOld" style="margin-top:16px">
-      <div class="rs-oldh"><div><h2>Выписка за день и ежедневный отчёт оптика</h2><p class="note">Ввод остатков и расходов по р/с, выручка по точкам, гросс нал/безнал, расходы с Б/Ч и Excel «Отчёт оптика»</p></div><button type="button" class="sec rs-tg" id="rsOldTg" aria-expanded="false"><span>Развернуть</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button></div>
+      <div class="rs-oldh"><div><h2>Excel «Отчёт оптика»</h2><p class="note">Выбор дней и выгрузка дневного отчёта: выручка по точкам и расходы дня</p></div><button type="button" class="sec rs-tg" id="rsOldTg" aria-expanded="false"><span>Развернуть</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button></div>
       <div id="rsOldBody" hidden>
-      <div class="head" style="margin:0 0 12px;align-items:flex-start"><p id="rpPeriod" class="note"></p>''' + dlbox + '''</div>'''
+      <div class="head" style="margin:0 0 12px;align-items:flex-start">''' + dlbox + '''</div>'''
 h = h[:a] + NEW + h[b:]
 rep('''<p class="note rp-foot">''', '''<p class="note rp-foot">''')
 j = h.index('<p class="note rp-foot">'); k = h.index('</p>', j) + 4
@@ -37,5 +37,5 @@ rep('    if(tab==="report"){renderReport();return}', '    if(tab==="report"){ren
 rep('if(tab==="report")renderReport()},()=>{});', 'if(tab==="report"){renderReport();window.__RS&&window.__RS.render()}},()=>{});')
 css = io.open(D + 'rs.css', encoding='utf-8').read(); js = io.open(D + 'rs.js', encoding='utf-8').read()
 rep('</style>', css + '</style>')
-rep('<div id="mApp" aria-label="Касса — мобильная версия"></div>', '<script>\n' + js + '\n</script>\n<div id="mApp" aria-label="Касса — мобильная версия"></div>')
+rep('<!--patch-scripts-->', '<script>\n' + js + '\n</script>\n<!--patch-scripts-->')
 io.open(SRC, "w", encoding="utf-8").write(h); print("ok")

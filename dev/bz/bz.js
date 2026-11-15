@@ -293,7 +293,7 @@
   let curView=null;
   function rerender(){if(curView==="recon")renderRecon();else if(curView==="bzst")renderStock();else if(curView==="bztr")renderTransfers()}
   function render(view){curView=view;rerender()}
-  // для телефона
+  // читают сверки web/scripts/*_old.py
   async function mobileRecon(f,t,pt){const ch=await loadChecks(f,t);const c2=ch.filter(c=>POINTS.includes(c.point)&&(pt==="all"||c.point===pt));const ks=kassaRows(f,t).filter(s=>pt==="all"||s.point===pt);return {days:dayTable(c2,ks),checks:c2,ks,match:(d,p)=>matchDay(c2.filter(c=>c.d===d&&c.point===p),ks.filter(s=>s.date===d&&s.point===p))}}
   async function mobileStock(){const D=await stockData();if(!D)return null;const mv=movements(D);return {D,mv}}
   window.__BZ={render,refresh,xlsx,collectState,periodOf,mobileRecon,mobileStock,loadTransfers,bzQty,bzSum,kSum,isLens,isRet,POINTS,PLACES,resetCache};

@@ -36,5 +36,5 @@ rep('    if(tab==="recon"){', '    if(tab==="pay"){window.__PAY&&window.__PAY.re
 
 css = io.open(D + 'pay.css', encoding='utf-8').read(); js = io.open(D + 'pay.js', encoding='utf-8').read()
 rep('</style>', css + '</style>')
-rep('<div id="mApp" aria-label="Касса — мобильная версия"></div>', '<script>\n' + js + '\n</script>\n<div id="mApp" aria-label="Касса — мобильная версия"></div>')
+rep('<!--patch-scripts-->', '<script>\n' + js + '\n</script>\n<!--patch-scripts-->')
 io.open(SRC, "w", encoding="utf-8").write(h); print("ok")

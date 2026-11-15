@@ -15,7 +15,7 @@ CHECK='''()=>{
  // элементы шире экрана
  document.querySelectorAll(".page:not([hidden]) *").forEach(e=>{if(!vis(e))return;const r=e.getBoundingClientRect();const clip=x=>{for(let q=x.parentElement;q&&q!==document.body;q=q.parentElement){if(getComputedStyle(q).overflowX!=="visible")return true}return false};if(r.right>W+2&&!e.closest(".tbl,.seg,.tabs,.m-chips,table")&&!clip(e))out.push("выходит за экран: "+e.tagName+"."+String(e.className).slice(0,30)+" "+Math.round(r.right))});
  return [...new Set(out)].slice(0,12)}'''
-TABS=["home","kassa","report","pay","sales","recon","analytics","plan","lens","batch"]
+TABS=["home","kassa","report","pay","sales","recon","analytics","plan","lens"]
 with sync_playwright() as pw:
     b=pw.chromium.launch();rep={}
     for name,vw in [("desk",(1440,950)),("lap",(1280,800)),("tab",(820,1180))]:
@@ -32,28 +32,11 @@ with sync_playwright() as pw:
         for t in TABS:
             p.evaluate(f'document.querySelector(\'.tab[data-tab="{t}"]\').click()');p.wait_for_timeout(900)
             views=[None]
-            if t=="batch":views=["bzst","bztr","margin","stock","batch"]
+            if t=="batch":views=["bzst","bztr","margin","stock"]
             for v in views:
                 if v:p.evaluate(f'document.querySelector(\'#stViewSeg [data-sv="{v}"]\').click()');p.wait_for_timeout(900)
                 r=p.evaluate(CHECK)
                 if r:rep[f"{name}/{theme}/{t}{'/'+v if v else ''}"]=r
         if errs:rep[f"{name}/{theme}/ОШИБКИ"]=list(dict.fromkeys(errs))[:8]
         ctx.close()
-    # телефон
-    errs=[];ctx=b.new_context(viewport={'width':375,'height':812},is_mobile=True,has_touch=True);p=ctx.new_page()
-    p.on('pageerror',lambda e:errs.append(str(e)[:150]))
-    p.route("https://fonts.googleapis.com/**",lambda r:r.abort())
-    p.route("**/supabase.js",lambda r:r.fulfill(path=D+"/fakesb_synth.js",content_type="application/javascript"))
-    p.goto("file://"+os.path.abspath(D+"/../../index.html"));p.wait_for_timeout(1000)
-    p.fill('#sbEmail','o@x.uz');p.fill('#sbPass','pass12345');p.click('#sbGo');p.wait_for_timeout(2500);p.evaluate(STUB+';window.__installBz()')
-    for t in ["today","kassa","sales","report"]:
-        p.evaluate(f'document.querySelector(\'#mApp [data-tab="{t}"]\').click()');p.wait_for_timeout(700)
-        w=p.evaluate('document.documentElement.scrollWidth-document.documentElement.clientWidth')
-        if w>1:rep["phone/"+t]=["горизонтальная прокрутка "+str(w)]
-    for s in ["analytics","plan","lens","batch","billz","recon"]:
-        p.evaluate('document.querySelector(\'#mApp [data-tab="more"]\').click()');p.wait_for_timeout(400)
-        p.evaluate(f'document.querySelector(\'[data-sub="{s}"]\').click()');p.wait_for_timeout(1200)
-        w=p.evaluate('document.documentElement.scrollWidth-document.documentElement.clientWidth')
-        if w>1:rep["phone/"+s]=["горизонтальная прокрутка "+str(w)]
-    if errs:rep["phone/ОШИБКИ"]=errs[:8]
     print(json.dumps(rep,ensure_ascii=False,indent=1));b.close()
