@@ -1,2 +1,2 @@
-/* «Приход» — iframe с админкой прихода */
-#attFrame{display:block;width:100%;height:calc(100vh - 190px);min-height:560px;border:1px solid var(--line);border-radius:22px;background:transparent}
+/* «Приход» — iframe с админкой прихода; высоту задаёт att.js по содержимому */
+#attFrame{display:block;width:100%;min-height:420px;border:0;background:transparent}

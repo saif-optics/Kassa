@@ -1808,8 +1808,8 @@ tr.fm-dim>td{color:var(--muted)}
 .py-xs{padding:2px 7px!important;font-size:12px;border-radius:8px}
 .py-dft{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:14px 18px;border-top:1px solid var(--line)}
 .py-msg{font-size:13px;color:var(--minus)}
-/* «Приход» — iframe с админкой прихода */
-#attFrame{display:block;width:100%;height:calc(100vh - 190px);min-height:560px;border:1px solid var(--line);border-radius:22px;background:transparent}
+/* «Приход» — iframe с админкой прихода; высоту задаёт att.js по содержимому */
+#attFrame{display:block;width:100%;min-height:420px;border:0;background:transparent}
 /* ===== Показ больших таблиц по страницам ===== */
 .pgbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
 .pg-size{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
@@ -6279,6 +6279,13 @@ addEventListener("scroll",()=>{if(!t)t=requestAnimationFrame(chk)},{passive:true
     frame.addEventListener("load",send);
     box.appendChild(frame);
   }
+  // высота iframe — по содержимому (admin.html сообщает attHeight)
+  addEventListener("message",e=>{
+    if(!frame||e.origin!==location.origin||e.source!==frame.contentWindow)return;
+    if(e.data&&e.data.attScroll){window.scrollTo({top:frame.getBoundingClientRect().top+window.scrollY-120,behavior:"smooth"});return}
+    const h=e.data&&typeof e.data==="object"?+e.data.attHeight:0;
+    if(h>0)frame.style.height=Math.max(420,h+8)+"px";
+  });
   new MutationObserver(send).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
   window.__ATT={render};
 })();

@@ -5,56 +5,94 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Приход сотрудников — Saif-Optics</title>
 <style>
-:root{color-scheme:light;--bg:#f2f2f7;--card:rgba(255,255,255,.75);--line:rgba(60,60,67,.14);--tx:#1c1c1e;--mut:#8e8e93;--acc:#007aff;--ok:#34c759;--warn:#ff9500;--bad:#ff3b30;--fill:rgba(120,120,128,.12)}
-@media (prefers-color-scheme:dark){:root{color-scheme:dark;--bg:#000;--card:rgba(44,44,46,.75);--line:rgba(84,84,88,.5);--tx:#f2f2f7;--mut:#98989f;--fill:rgba(120,120,128,.24)}}
-:root[data-theme="dark"]{color-scheme:dark;--bg:#000;--card:rgba(44,44,46,.75);--line:rgba(84,84,88,.5);--tx:#f2f2f7;--mut:#98989f;--fill:rgba(120,120,128,.24)}
-:root[data-theme="light"]{color-scheme:light;--bg:#f2f2f7;--card:rgba(255,255,255,.75);--line:rgba(60,60,67,.14);--tx:#1c1c1e;--mut:#8e8e93;--fill:rgba(120,120,128,.12)}
+:root{color-scheme:light;--bg:#f2f2f7;--card:rgba(255,255,255,.75);--line:rgba(60,60,67,.14);--tx:#1c1c1e;--mut:#8e8e93;--acc:#007aff;--ok:#34c759;--warn:#ff9500;--bad:#ff3b30;--fill:rgba(120,120,128,.12);--seg-on:#fff;
+ --gbg:rgba(52,199,89,.18);--gtx:#1a7f37;--rbg:rgba(255,59,48,.14);--rtx:#d70015;--ybg:rgba(255,204,0,.24);--ytx:#8a6100;
+ --avb0:#dbeafe;--avt0:#1d4ed8;--avb1:#d7f5e0;--avt1:#15803d;--avb2:#ffe8cc;--avt2:#b45309;--avb3:#eadcff;--avt3:#7e22ce;--avb4:#ffdbe6;--avt4:#be185d;--avb5:#d0f3f2;--avt5:#0f766e}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#000;--card:rgba(44,44,46,.75);--line:rgba(84,84,88,.5);--tx:#f2f2f7;--mut:#98989f;--fill:rgba(120,120,128,.24);--seg-on:#636366;
+ --gbg:rgba(48,209,88,.22);--gtx:#5ee08a;--rbg:rgba(255,69,58,.24);--rtx:#ff8a82;--ybg:rgba(255,214,10,.22);--ytx:#ffd60a;
+ --avb0:rgba(10,132,255,.30);--avt0:#8ec5ff;--avb1:rgba(48,209,88,.26);--avt1:#7fe3a0;--avb2:rgba(255,159,10,.26);--avt2:#ffc266;--avb3:rgba(191,90,242,.30);--avt3:#d9a6ff;--avb4:rgba(255,55,95,.26);--avt4:#ff9db8;--avb5:rgba(100,210,255,.24);--avt5:#8fe0f5}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#000;--card:rgba(44,44,46,.75);--line:rgba(84,84,88,.5);--tx:#f2f2f7;--mut:#98989f;--fill:rgba(120,120,128,.24);--seg-on:#636366;
+ --gbg:rgba(48,209,88,.22);--gtx:#5ee08a;--rbg:rgba(255,69,58,.24);--rtx:#ff8a82;--ybg:rgba(255,214,10,.22);--ytx:#ffd60a;
+ --avb0:rgba(10,132,255,.30);--avt0:#8ec5ff;--avb1:rgba(48,209,88,.26);--avt1:#7fe3a0;--avb2:rgba(255,159,10,.26);--avt2:#ffc266;--avb3:rgba(191,90,242,.30);--avt3:#d9a6ff;--avb4:rgba(255,55,95,.26);--avt4:#ff9db8;--avb5:rgba(100,210,255,.24);--avt5:#8fe0f5}
 *{box-sizing:border-box}body{margin:0;font:15px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;color:var(--tx);background:var(--bg);min-height:100vh;
  background-image:radial-gradient(1200px 600px at 0% -10%,rgba(0,122,255,.14),transparent),radial-gradient(900px 500px at 110% 110%,rgba(52,199,89,.10),transparent);-webkit-font-smoothing:antialiased}
 .glass{background:var(--card);backdrop-filter:blur(30px) saturate(1.6);-webkit-backdrop-filter:blur(30px) saturate(1.6);border:1px solid var(--line);border-radius:22px}
-.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;padding:12px 18px;border-radius:0;border-width:0 0 1px}
-.top h1{font-size:18px;margin:0 auto 0 0}
-.seg{display:flex;background:var(--fill);border-radius:12px;padding:3px;gap:2px;flex-wrap:wrap}
-.seg button{background:none;padding:7px 14px;border-radius:9px;font-weight:600;color:var(--tx)}
-.seg button.on{background:var(--card);box-shadow:0 1px 4px rgba(0,0,0,.12)}
-main{max-width:1100px;margin:18px auto;padding:0 14px}
+.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:0;border-width:0 0 1px}
+.top h1{font-size:18px;margin:0 auto 0 0;white-space:nowrap}
+.tabsw{min-width:0}
+@media (max-width:760px){.top{flex-wrap:wrap}.tabsw{order:3;flex:1 0 100%}.seg{display:flex}}
+.seg{display:inline-flex;background:var(--fill);border-radius:16px;padding:3px;gap:2px;max-width:100%;overflow-x:auto;white-space:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.seg::-webkit-scrollbar{display:none}
+.seg button{flex:none;background:none;height:32px;padding:0 16px;border-radius:13px;font-weight:600;font-size:14px;color:var(--tx);white-space:nowrap}
+.seg button.on{background:var(--seg-on);box-shadow:0 1px 4px rgba(0,0,0,.14)}
+main{max-width:1100px;margin:16px auto;padding:0 16px}
 .card{padding:18px;margin-bottom:16px}
+.ch{margin-bottom:12px}.ch h3{margin:0;font-size:15px;font-weight:600}.sub{color:var(--mut);font-size:13px;margin-top:2px}
 .bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.bar.one{flex-wrap:nowrap}.bar.one input,.bar.one select{min-width:0}
+@media (max-width:640px){.bar.one{flex-wrap:wrap}}
 button{font:inherit;border:0;cursor:pointer;border-radius:12px;transition:transform .12s,opacity .12s}
 button:active{transform:scale(.97)}button:disabled{opacity:.45;cursor:default}
-.btn{background:var(--acc);color:#fff;padding:9px 16px;font-weight:600}
-.btn2{background:var(--fill);color:var(--tx);padding:9px 14px;font-weight:600}
-.btn2.red{color:var(--bad)}
-input,select{font:inherit;padding:9px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--tx)}
-table{width:100%;border-collapse:collapse}
-th{text-align:left;color:var(--mut);font-weight:600;font-size:13px;padding:8px 8px;border-bottom:1px solid var(--line)}
-td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle;font-variant-numeric:tabular-nums}
+.btn,.btn2,.btn3{height:36px;padding:0 16px;font-weight:600;font-size:14px;white-space:nowrap}
+.btn{background:var(--acc);color:#fff}
+.btn2{background:var(--fill);color:var(--tx)}
+.btn3{background:var(--rbg);color:var(--rtx)}
+.sm{padding:0 12px}
+.lnk{background:none;color:var(--acc);font-size:13px;font-weight:600;padding:4px 6px}
+input,select{font:inherit;font-size:14px;height:36px;padding:0 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--tx)}
+table{width:100%;border-collapse:collapse;min-width:620px}
+th{text-align:left;color:var(--mut);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.03em;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:6px 10px;height:46px;border-bottom:1px solid var(--line);vertical-align:middle;font-variant-numeric:tabular-nums}
+tr:not(:first-child):hover td{background:var(--fill)}
 tr:last-child td{border:0}
-.late{color:var(--bad);font-weight:600}.ok{color:var(--ok)}.mut{color:var(--mut)}
-.ph{width:38px;height:38px;border-radius:50%;object-fit:cover;cursor:zoom-in;vertical-align:middle;margin-right:4px;border:2px solid var(--line)}
-.pill{display:inline-block;padding:2px 9px;border-radius:99px;background:var(--fill);font-size:12px;font-weight:600}
-.pill.g{background:rgba(52,199,89,.18);color:var(--ok)}.pill.r{background:rgba(255,59,48,.15);color:var(--bad)}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
-.kpi{padding:14px 16px}.kpi b{display:block;font-size:26px}.kpi span{color:var(--mut);font-size:13px}
+tr.abs td,tr.off td{color:var(--mut)}tr.off .av{filter:grayscale(1);opacity:.7}
+.mut{color:var(--mut)}.ok{color:var(--gtx);font-weight:600}.late{color:var(--rtx);font-weight:600}
+.who{display:flex;align-items:center;gap:10px;font-weight:600;white-space:nowrap}
+.av{width:32px;height:32px;border-radius:50%;flex:none;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;letter-spacing:.02em}
+.av0{background:var(--avb0);color:var(--avt0)}.av1{background:var(--avb1);color:var(--avt1)}.av2{background:var(--avb2);color:var(--avt2)}
+.av3{background:var(--avb3);color:var(--avt3)}.av4{background:var(--avb4);color:var(--avt4)}.av5{background:var(--avb5);color:var(--avt5)}
+.ph{width:36px;height:36px;border-radius:10px;object-fit:cover;cursor:zoom-in;vertical-align:middle;margin-right:6px;border:1px solid var(--line)}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;background:var(--fill);color:var(--mut);font-size:12px;font-weight:600;white-space:nowrap}
+.pill.g{background:var(--gbg);color:var(--gtx)}.pill.r{background:var(--rbg);color:var(--rtx)}.pill.y{background:var(--ybg);color:var(--ytx)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.kpi{padding:12px 16px}.kpi b{display:block;font-size:24px;line-height:1.2}.kpi span{color:var(--mut);font-size:12px}
+.empty{text-align:center;padding:28px 12px}.empty i{display:block;font-style:normal;font-size:28px;margin-bottom:6px}
+.empty b{display:block;font-weight:600}.empty span{color:var(--mut);font-size:13px}
 .login{max-width:380px;margin:12vh auto;padding:28px;display:flex;flex-direction:column;gap:12px;text-align:center}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:20}
-.modal .glass{padding:20px;max-width:560px;width:92vw;text-align:center}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-start;justify-content:center;padding-top:40px;overflow-y:auto;z-index:20}
+.modal .glass{padding:20px;max-width:560px;width:92vw;text-align:center;margin-bottom:20px}
 .cam{position:relative;width:100%;aspect-ratio:4/3;border-radius:18px;overflow:hidden;background:#000;margin:10px 0}
 .cam video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
 .prog{height:6px;border-radius:3px;background:var(--fill);overflow:hidden}.prog i{display:block;height:100%;background:var(--ok);width:0;transition:width .3s}
-code{background:var(--fill);padding:3px 8px;border-radius:8px;font-size:15px;letter-spacing:.1em}
+code{background:var(--fill);padding:3px 8px;border-radius:8px;font-size:14px;letter-spacing:.1em}
 .hide{display:none!important}
 .scroll{overflow-x:auto}
 a{color:var(--acc);text-decoration:none}
 .mapbtn{background:var(--fill);color:var(--acc);padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;margin-left:4px;vertical-align:middle}
 #mapModal .glass{max-width:640px}
 #mapModal iframe{width:100%;height:360px;border:0;border-radius:16px;display:block}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.steps li{display:flex;gap:12px;align-items:flex-start}
+.steps .n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--acc);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.steps .n+div{padding-top:2px}
+.memo-note{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);color:var(--mut);font-size:13px}
+.formrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.formrow .grow{flex:1;min-width:180px}
 /* встраивание в сайт: без шапки-дубля и внешних отступов */
-html.embed body{min-height:0;background:transparent}
+html.embed body{min-height:0;background:transparent;display:flow-root}
 html.embed .top{position:static;background:none;backdrop-filter:none;-webkit-backdrop-filter:none;border:0;padding:0 0 12px}
 html.embed .top h1,html.embed #logout{display:none}
 html.embed main{margin:0 auto;padding:0}
 html.embed .login{margin:24px auto}
+@media print{
+ .top,.noprint{display:none!important}
+ body{background:#fff;color:#000}
+ main{max-width:none;margin:0;padding:0}
+ #app section{display:none!important}#app #t-memo{display:block!important}
+ .glass{background:#fff;backdrop-filter:none;-webkit-backdrop-filter:none;border:1px solid #ccc;break-inside:avoid}
+ :root,:root[data-theme],:root:not([data-theme="light"]){--tx:#000;--mut:#555;--bg:#fff;--card:#fff;--line:#ddd;color-scheme:light}
+ .glass{color:#000}
+}
 </style>
 </head>
 <body>
@@ -71,41 +109,73 @@ html.embed .login{margin:24px auto}
 <div id="app" class="hide">
   <div class="glass top">
     <h1>🕘 Приход сотрудников</h1>
-    <div class="seg" id="tabs">
-      <button data-t="log" class="on">Журнал</button><button data-t="sum">Сводка</button>
-      <button data-t="emp">Сотрудники</button><button data-t="pts">Точки</button>
-    </div>
+    <div class="tabsw"><div class="seg" id="tabs">
+      <button data-t="log" class="on">Журнал</button><button data-t="sum">Сводка</button><button data-t="emp">Сотрудники</button><button data-t="pts">Точки</button><button data-t="memo">Памятка</button>
+    </div></div>
     <button class="btn2" id="logout">Выйти</button>
   </div>
   <main>
     <section id="t-log">
-      <div class="bar">
+      <div class="bar one">
         <button class="btn2" id="dPrev">‹</button><input type="date" id="day"><button class="btn2" id="dNext">›</button>
         <select id="logPt"></select>
         <button class="btn2" id="reload">Обновить</button>
       </div>
       <div class="kpis" id="logKpi"></div>
-      <div class="glass card scroll"><table id="logTbl"></table></div>
+      <div class="glass card"><div class="ch"><h3>Отметки за день</h3><div class="sub">Первый приход и последний уход каждого сотрудника</div></div>
+        <div class="scroll"><table id="logTbl"></table></div><div id="logEmpty"></div></div>
     </section>
     <section id="t-sum" class="hide">
-      <div class="bar"><input type="month" id="month"><select id="sumPt"></select></div>
-      <div class="glass card scroll"><table id="sumTbl"></table></div>
+      <div class="bar one"><input type="month" id="month"><select id="sumPt"></select></div>
+      <div class="kpis" id="sumKpi"></div>
+      <div class="glass card"><div class="ch"><h3>Сводка за месяц</h3><div class="sub">Опоздания считаются от времени начала работы точки</div></div>
+        <div class="scroll"><table id="sumTbl"></table></div><div id="sumEmpty"></div></div>
     </section>
     <section id="t-emp" class="hide">
       <div class="glass card">
-        <div class="bar" style="margin:0">
-          <input id="newName" placeholder="Имя сотрудника" style="flex:1;min-width:180px">
-          <select id="newPt"></select>
-          <button class="btn" id="addEmp">Добавить и снять лицо</button>
+        <div class="ch"><h3>Новый сотрудник</h3></div>
+        <div class="formrow">
+          <input id="newName" class="grow" placeholder="Имя и фамилия">
+          <select id="newPt" aria-label="Точка работы"></select>
+          <button class="btn" id="addEmp">Добавить</button>
+          <button class="btn2" id="addEmpFace">Добавить и снять лицо</button>
         </div>
+        <div class="sub" style="margin-top:10px">Лицо можно снять позже — пока оно не снято, киоск сотрудника не узнает</div>
       </div>
-      <div class="glass card scroll"><table id="empTbl"></table></div>
+      <div class="glass card"><div class="ch"><h3>Сотрудники</h3><div class="sub">Точка работы, лицо и статус</div></div>
+        <div class="scroll"><table id="empTbl"></table></div><div id="empEmpty"></div></div>
     </section>
     <section id="t-pts" class="hide">
-      <div class="glass card scroll"><table id="ptsTbl"></table></div>
+      <div class="glass card"><div class="ch"><h3>Точки и киоски</h3><div class="sub">Время начала работы и ссылка для компьютера точки</div></div>
+        <div class="scroll"><table id="ptsTbl"></table></div></div>
       <div class="glass card">
-        <div class="bar" style="margin:0"><input id="newPoint" placeholder="Новая точка"><input id="newStart" type="time" value="10:00"><button class="btn2" id="addPt">Добавить точку</button></div>
-        <div class="mut" style="margin-top:10px">На компьютере точки откройте ссылку киоска в Chrome — точка запомнится. Код можно ввести и вручную.</div>
+        <div class="ch"><h3>Новая точка</h3></div>
+        <div class="formrow"><input id="newPoint" class="grow" placeholder="Название точки"><input id="newStart" type="time" value="10:00" aria-label="Начало работы"><button class="btn" id="addPt">Добавить точку</button></div>
+        <div class="sub" style="margin-top:10px">На компьютере точки откройте ссылку киоска в Chrome — точка запомнится. Код можно ввести и вручную.</div>
+      </div>
+    </section>
+    <section id="t-memo" class="hide">
+      <div class="glass card">
+        <div class="ch" style="display:flex;align-items:flex-start;gap:10px"><div style="flex:1"><h3>Как отмечаться</h3><div class="sub">Для сотрудников</div></div><button class="btn2 noprint" id="print">Распечатать</button></div>
+        <ol class="steps">
+          <li><span class="n">1</span><div><b>Пришли на работу</b> — на компьютере точки открыт экран «Отметиться». Нажмите кнопку или пробел.</div></li>
+          <li><span class="n">2</span><div>Посмотрите в камеру 2–3 секунды. Снимите солнцезащитные очки и маску, лицо должно быть освещено.</div></li>
+          <li><span class="n">3</span><div>Экран покажет ваше имя и через 4 секунды сам поставит «Пришёл». Если нужно другое — нажмите нужную кнопку. Если показал не вас — «Это не я».</div></li>
+          <li><span class="n">4</span><div>Уходя домой — то же самое: нажмите «Отметиться», экран предложит «Ушёл».</div></li>
+          <li><span class="n">5</span><div>«Не узнаю» — подойдите ближе, уберите волосы с лица, попробуйте ещё раз. Не помогло — скажите управляющему, лицо переснимут.</div></li>
+          <li><span class="n">6</span><div>Повторно нажимать не нужно: вторая такая же отметка за 3 минуты не записывается. Нет интернета — отметка сохранится и отправится сама.</div></li>
+        </ol>
+        <div class="memo-note">Опоздание считается от времени начала работы точки</div>
+      </div>
+      <div class="glass card">
+        <div class="ch"><h3>Как настроить</h3><div class="sub">Для управляющего</div></div>
+        <ol class="steps">
+          <li><span class="n">1</span><div>«Точки»: задайте время начала работы и скопируйте ссылку киоска.</div></li>
+          <li><span class="n">2</span><div>На компьютере точки откройте ссылку в Chrome, разрешите камеру, оставьте страницу открытой. Точка запомнится.</div></li>
+          <li><span class="n">3</span><div>«Сотрудники»: добавьте людей и точку работы. Снимите лицо на том же компьютере при обычном освещении — 6 образцов, около 10 секунд.</div></li>
+          <li><span class="n">4</span><div>Проверка: «Журнал» за сегодня — приход, опоздание, уход, фото и «где».</div></li>
+          <li><span class="n">5</span><div>Уволился — «Отключить», история останется. Плохо узнаёт — «Переснять».</div></li>
+        </ol>
       </div>
     </section>
   </main>
@@ -121,7 +191,7 @@ html.embed .login{margin:24px auto}
   </div>
 </div>
 <div id="mapModal" class="modal hide"><div class="glass">
-  <iframe id="mapFrame" title="Карта" loading="lazy"></iframe>
+  <iframe id="mapFrame" title="Карта"></iframe>
   <div id="mapCap" style="margin-top:10px;font-weight:600"></div>
   <div style="margin-top:6px"><a id="mapGoogle" target="_blank" rel="noopener">Открыть в Google Maps</a></div>
 </div></div>
@@ -138,8 +208,9 @@ html.embed .login{margin:24px auto}
 })();
 </script>
 <script type="module">
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-const sb = createClient("https://qvblxhyftwivkzxucfak.supabase.co", "sb_publishable_-ceoJkpmAZ7Y8osbPHaOlg_3nqUsdB7",
+// демо-режим (?demo=1): выдуманные данные, база не используется и ничего не пишется
+const DEMO = new URLSearchParams(location.search).get("demo") === "1";
+const sb = DEMO ? null : (await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm")).createClient("https://qvblxhyftwivkzxucfak.supabase.co", "sb_publishable_-ceoJkpmAZ7Y8osbPHaOlg_3nqUsdB7",
   { auth: { persistSession: true, autoRefreshToken: true } });
 const MODELS = "https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/model/";
 const TZ = "Asia/Tashkent", SAMPLES = 6;
@@ -150,50 +221,106 @@ const dayOf = d => new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(new
 const mins = s => { const [h, m] = s.split(":").map(Number); return h * 60 + m; };
 const fmtMin = n => n >= 60 ? `${Math.floor(n / 60)} ч ${n % 60} мин` : `${n} мин`;
 const fmtH = n => `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`;
+const plural = (n, a, b, c) => { const m = n % 100, d = n % 10; return m > 10 && m < 20 ? c : d === 1 ? a : d > 1 && d < 5 ? b : c; };
+const demoWarn = () => { alert("Демо-режим: изменения не сохраняются"); return true; };
 
 let points = [], emps = [];
 
+// ---------- высота iframe по содержимому ----------
+if (document.documentElement.classList.contains("embed") && parent !== window) {
+  let last = 0;
+  const post = () => {
+    let h = Math.ceil(document.body.getBoundingClientRect().height);
+    const m = document.querySelector(".modal:not(.hide)"), g = m && (m.querySelector(".glass") || m.firstElementChild);
+    if (g) h = Math.max(h, Math.ceil(g.getBoundingClientRect().height) + 100);
+    if (h !== last) { last = h; parent.postMessage({ attHeight: h }, location.origin); } };
+  new ResizeObserver(post).observe(document.body);
+  window.__postH = post;
+}
+const postH = () => window.__postH?.();
+// модалки: в embed просим сайт прокрутить к iframe и растим его под окно
+const openModal = id => {
+  $(id).classList.remove("hide");
+  if (window.__postH) parent.postMessage({ attScroll: true }, location.origin);
+  requestAnimationFrame(postH);
+};
+const closeModal = id => { $(id).classList.add("hide"); requestAnimationFrame(postH); };
+
+// ---------- демо-данные ----------
+const demoEvents = () => {
+  const d = dayOf(new Date()), t = (h, m) => new Date(`${d}T${h}:${m}:00+05:00`).toISOString();
+  const ph = c => "data:image/svg+xml," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72"><rect width="72" height="72" fill="${c}"/><circle cx="36" cy="28" r="12" fill="#fff" opacity=".8"/><rect x="16" y="46" width="40" height="30" rx="16" fill="#fff" opacity=".8"/></svg>`);
+  return [
+    { id: 1, employee_id: "d1", point: "Точка А", kind: "in", ts: t("09", "58"), score: .5, lat: 41.3111, lng: 69.2797, acc: 20, photo: ph("#8ab4f8") },
+    { id: 2, employee_id: "d1", point: "Точка А", kind: "out", ts: t("18", "05"), score: .5, lat: 41.3112, lng: 69.2798, acc: 35, photo: ph("#8ab4f8") },
+    { id: 3, employee_id: "d2", point: "Точка Б", kind: "in", ts: t("10", "12"), score: .5, lat: null, lng: null, acc: null, photo: ph("#f6a97a") },
+    { id: 4, employee_id: "d2", point: "Точка Б", kind: "out", ts: t("14", "00"), score: .5, lat: null, lng: null, acc: null, photo: ph("#f6a97a") },
+    { id: 5, employee_id: "d2", point: "Точка Б", kind: "in", ts: t("14", "30"), score: .5, lat: 41.3, lng: 69.27, acc: 60, photo: ph("#f6a97a") },
+  ];
+};
+
 // ---------- вход ----------
 async function boot() {
-  const { data: { session } } = await sb.auth.getSession();
+  const session = DEMO ? true : (await sb.auth.getSession()).data.session;
   if (!session) { $("login").classList.remove("hide"); return; }
   $("login").classList.add("hide"); $("app").classList.remove("hide");
   $("day").value = dayOf(new Date()); $("month").value = dayOf(new Date()).slice(0, 7);
   await loadRefs(); renderLog();
 }
 $("doLogin").onclick = async () => {
+  if (DEMO) return;
   const { error } = await sb.auth.signInWithPassword({ email: $("email").value.trim(), password: $("pass").value });
   if (error) { $("loginErr").textContent = "Неверный email или пароль"; return; } boot();
 };
 $("pass").onkeydown = e => { if (e.key === "Enter") $("doLogin").click(); };
-$("logout").onclick = async () => { await sb.auth.signOut(); location.reload(); };
+$("logout").onclick = async () => { if (!DEMO) await sb.auth.signOut(); location.reload(); };
 
 async function loadRefs() {
-  const [p, e] = await Promise.all([
-    sb.from("att_points").select("*").order("point"),
-    sb.from("att_employees").select("id,name,point,active,descriptors,created_at").order("name"),
-  ]);
-  if (p.error) { alert("Нет доступа: " + p.error.message); return; }
-  points = p.data; emps = e.data || [];
+  if (DEMO) {
+    if (!points.length) {
+      points = [["Точка А", "10:00"], ["Точка Б", "10:00"], ["Точка В", "09:30"], ["Точка Г", "11:00"]].map(([point, start_time], i) => ({ point, start_time: start_time + ":00", code: "DEMO000" + (i + 1) }));
+      emps = [
+        { id: "d1", name: "Анна Петрова", point: "Точка А", active: true, descriptors: Array(6).fill([0]) },
+        { id: "d2", name: "Иван Сидоров", point: "Точка Б", active: true, descriptors: Array(6).fill([0]) },
+        { id: "d3", name: "Мария Орлова", point: "Точка В", active: true, descriptors: [] },
+      ];
+    }
+  } else {
+    const [p, e] = await Promise.all([
+      sb.from("att_points").select("*").order("point"),
+      sb.from("att_employees").select("id,name,point,active,descriptors,created_at").order("name"),
+    ]);
+    if (p.error) { alert("Нет доступа: " + p.error.message); return; }
+    points = p.data; emps = e.data || [];
+  }
   const opts = points.map(x => `<option>${esc(x.point)}</option>`).join("");
+  const keep = [$("logPt").value, $("sumPt").value];
   $("logPt").innerHTML = `<option value="">Все точки</option>` + opts;
   $("sumPt").innerHTML = `<option value="">Все точки</option>` + opts;
+  $("logPt").value = keep[0]; $("sumPt").value = keep[1];
   $("newPt").innerHTML = opts;
 }
 const startOf = pt => points.find(p => p.point === pt)?.start_time?.slice(0, 5) || "10:00";
 
+// ---------- общие куски вида ----------
+const initials = n => String(n || "?").trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() || "").join("") || "?";
+const avatar = (name, pt) => `<span class="av av${Math.max(0, points.findIndex(p => p.point === pt)) % 6}">${esc(initials(name))}</span>`;
+const empty = (icon, title, hint) => `<div class="empty"><i>${icon}</i><b>${title}</b><span>${hint}</span></div>`;
+
 // ---------- вкладки ----------
 $("tabs").onclick = e => {
-  const t = e.target.dataset.t; if (!t) return;
+  const t = e.target.closest("button")?.dataset.t; if (!t) return;
   document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.t === t));
-  ["log", "sum", "emp", "pts"].forEach(x => $("t-" + x).classList.toggle("hide", x !== t));
-  ({ log: renderLog, sum: renderSum, emp: renderEmp, pts: renderPts })[t]();
+  ["log", "sum", "emp", "pts", "memo"].forEach(x => $("t-" + x).classList.toggle("hide", x !== t));
+  ({ log: renderLog, sum: renderSum, emp: renderEmp, pts: renderPts, memo: () => {} })[t]();
+  postH();
 };
 
 // ---------- события за период ----------
 async function events(fromDay, toDay, withPhoto) {
   const from = new Date(fromDay + "T00:00:00+05:00").toISOString();
   const to = new Date(new Date(toDay + "T00:00:00+05:00").getTime() + 86400000).toISOString();
+  if (DEMO) return demoEvents().filter(e => e.ts >= from && e.ts < to);
   const cols = "id,employee_id,point,kind,ts,score,lat,lng,acc" + (withPhoto ? ",photo" : "");
   const all = []; let off = 0;
   for (;;) {
@@ -228,14 +355,14 @@ function showMap(e, who) {
   $("mapFrame").src = `https://www.openstreetmap.org/export/embed.html?bbox=${ln - 0.004},${la - 0.0025},${ln + 0.004},${la + 0.0025}&layer=mapnik&marker=${la},${ln}`;
   $("mapCap").textContent = `${who} · ${e.kind === "in" ? "Приход" : "Уход"} ${hm(e.ts)} · точность ±${Math.round(e.acc || 0)} м`;
   $("mapGoogle").href = `https://maps.google.com/?q=${la},${ln}`;
-  $("mapModal").classList.remove("hide");
+  openModal("mapModal");
 }
-const photo = e => e?.photo ? `<img class="ph" src="${e.photo}" data-big>` : "";
+const photo = e => typeof e?.photo === "string" && e.photo.startsWith("data:image/") ? `<img class="ph" src="${esc(e.photo)}" data-big>` : "";
 
 // ---------- журнал дня ----------
 async function renderLog() {
   const day = $("day").value, pt = $("logPt").value;
-  $("logTbl").innerHTML = `<tr><td class="mut">Загрузка…</td></tr>`;
+  $("logEmpty").innerHTML = ""; $("logTbl").innerHTML = `<tr><td class="mut">Загрузка…</td></tr>`;
   const sh = shifts(await events(day, day, true)).filter(s => !pt || s.point === pt);
   const active = emps.filter(e => e.active && (!pt || e.point === pt));
   const came = new Set(sh.map(s => s.emp));
@@ -245,33 +372,37 @@ async function renderLog() {
     [absent.length, "не отметились"], [sh.filter(s => s.out).length, "ушли"],
   ].map(([n, t]) => `<div class="glass kpi"><b>${n}</b><span>${t}</span></div>`).join("");
   sh.sort((a, b) => (a.in?.ts || "z").localeCompare(b.in?.ts || "z"));
+  if (!sh.length && !absent.length) {
+    $("logTbl").innerHTML = ""; $("logEmpty").innerHTML = empty("🕘", "Пока нет отметок", "Отметки появятся, когда сотрудники нажмут «Отметиться» на киоске точки");
+    return postH();
+  }
   $("logTbl").innerHTML = `<tr><th>Сотрудник</th><th>Точка</th><th>Приход</th><th>Опоздание</th><th>Уход</th><th>Где</th><th>Часов</th><th>Отметок</th></tr>` +
     sh.map(s => `<tr>
-      <td><b>${esc(empName(s.emp))}</b></td>
+      <td><div class="who">${avatar(empName(s.emp), s.point)}${esc(empName(s.emp))}</div></td>
       <td>${esc(s.point)} <span class="mut">(с ${startOf(s.point)})</span></td>
-      <td>${photo(s.in)}${s.in ? hm(s.in.ts) : "—"}</td>
-      <td>${s.in ? (s.late ? `<span class="late">${fmtMin(s.late)}</span>` : `<span class="ok">вовремя</span>`) : ""}</td>
-      <td>${photo(s.out)}${s.out ? hm(s.out.ts) : "—"}</td>
-      <td>${[["in", s.in], ["out", s.out]].filter(([, x]) => x?.lat).map(([, x]) => (mapFor.set(String(x.id), x), mapLink(x, empName(s.emp)))).join("") || `<span class="mut">без места</span>`}</td>
+      <td style="white-space:nowrap">${photo(s.in)}${s.in ? hm(s.in.ts) : "—"}</td>
+      <td>${s.in ? (s.late ? `<span class="pill r">опоздал ${fmtMin(s.late)}</span>` : `<span class="pill g">вовремя</span>`) : ""}</td>
+      <td style="white-space:nowrap">${photo(s.out)}${s.out ? hm(s.out.ts) : "—"}</td>
+      <td style="white-space:nowrap">${[s.in, s.out].filter(x => x?.lat).map(x => (mapFor.set(String(x.id), x), mapLink(x, empName(s.emp)))).join("") || `<span class="mut">без места</span>`}</td>
       <td>${s.work ? fmtH(s.work) : "—"}</td>
-      <td class="mut">${s.evs.map(e => (e.kind === "in" ? "↘" : "↗") + hm(e.ts)).join(" ")}</td></tr>`).join("") +
-    absent.map(e => `<tr><td><b>${esc(e.name)}</b></td><td>${esc(e.point || "")}</td><td colspan="6"><span class="pill r">не отметился</span></td></tr>`).join("") +
-    (!sh.length && !absent.length ? `<tr><td class="mut" colspan="8">Нет отметок</td></tr>` : "");
+      <td class="mut" style="white-space:nowrap">${s.evs.map(e => (e.kind === "in" ? "↘" : "↗") + hm(e.ts)).join(" ")}</td></tr>`).join("") +
+    absent.map(e => `<tr class="abs"><td><div class="who">${avatar(e.name, e.point)}${esc(e.name)}</div></td><td>${esc(e.point || "")}</td><td colspan="6"><span class="pill r">не отметился</span></td></tr>`).join("");
+  postH();
 }
 const shiftDay = n => { const d = new Date($("day").value + "T12:00:00+05:00"); d.setDate(d.getDate() + n); $("day").value = dayOf(d); renderLog(); };
 $("dPrev").onclick = () => shiftDay(-1); $("dNext").onclick = () => shiftDay(1);
 $("day").onchange = $("logPt").onchange = $("reload").onclick = renderLog;
-document.addEventListener("click", e => { if (e.target.dataset.big !== undefined) { $("bigImg").src = e.target.src; $("imgModal").classList.remove("hide"); } });
+document.addEventListener("click", e => { if (e.target.dataset.big !== undefined) { $("bigImg").src = e.target.src; openModal("imgModal"); } });
 document.addEventListener("click", e => { const b = e.target.closest?.("[data-map]"); if (b && mapFor.has(b.dataset.map)) showMap(mapFor.get(b.dataset.map), b.dataset.who); });
-$("mapModal").onclick = e => { if (e.target === $("mapModal")) { $("mapModal").classList.add("hide"); $("mapFrame").src = "about:blank"; } };
-$("imgModal").onclick = () => $("imgModal").classList.add("hide");
+$("mapModal").onclick = e => { if (e.target === $("mapModal")) { closeModal("mapModal"); $("mapFrame").src = "about:blank"; } };
+$("imgModal").onclick = () => closeModal("imgModal");
 
 // ---------- сводка месяца ----------
 async function renderSum() {
   const m = $("month").value, pt = $("sumPt").value;
   const [y, mo] = m.split("-").map(Number);
   const last = new Date(y, mo, 0).getDate();
-  $("sumTbl").innerHTML = `<tr><td class="mut">Загрузка…</td></tr>`;
+  $("sumEmpty").innerHTML = ""; $("sumTbl").innerHTML = `<tr><td class="mut">Загрузка…</td></tr>`;
   const sh = shifts(await events(`${m}-01`, `${m}-${String(last).padStart(2, "0")}`, false)).filter(s => !pt || s.point === pt);
   const by = {};
   for (const s of sh) {
@@ -283,41 +414,61 @@ async function renderSum() {
     if (s.in && !s.out) r.noOut++;
   }
   const rows = Object.entries(by).sort((a, b) => b[1].lateMin - a[1].lateMin);
+  const tot = rows.reduce((a, [, r]) => ({ late: a.late + r.late, lateMin: a.lateMin + r.lateMin, inSum: a.inSum + r.inSum, inN: a.inN + r.inN }), { late: 0, lateMin: 0, inSum: 0, inN: 0 });
+  $("sumKpi").innerHTML = [
+    [rows.length, "сотрудников отмечалось"], [tot.late, "опозданий"],
+    [fmtH(tot.lateMin), "всего опоздали (ч:мм)"], [tot.inN ? fmtH(Math.round(tot.inSum / tot.inN)) : "—", "средний приход"],
+  ].map(([n, t]) => `<div class="glass kpi"><b>${n}</b><span>${t}</span></div>`).join("");
+  if (!rows.length) {
+    $("sumTbl").innerHTML = ""; $("sumEmpty").innerHTML = empty("📅", "Пока нет отметок", "Выберите другой месяц или точку");
+    return postH();
+  }
   $("sumTbl").innerHTML = `<tr><th>Сотрудник</th><th>Точки</th><th>Дней</th><th>Опозданий</th><th>Всего опоздал</th><th>Средний приход</th><th>Часов</th><th>Без ухода</th></tr>` +
-    (rows.length ? rows.map(([id, r]) => { const avg = r.inN ? Math.round(r.inSum / r.inN) : 0;
-      return `<tr><td><b>${esc(empName(id))}</b></td><td>${esc([...r.pts].join(", "))}</td><td>${r.days}</td>
-      <td>${r.late ? `<span class="late">${r.late}</span>` : `<span class="ok">0</span>`}</td>
+    rows.map(([id, r]) => { const avg = r.inN ? Math.round(r.inSum / r.inN) : 0, pt0 = [...r.pts][0];
+      return `<tr><td><div class="who">${avatar(empName(id), pt0)}${esc(empName(id))}</div></td><td>${esc([...r.pts].join(", "))}</td><td>${r.days}</td>
+      <td>${r.late ? `<span class="pill r">${r.late}</span>` : `<span class="pill g">0</span>`}</td>
       <td>${r.lateMin ? fmtMin(r.lateMin) : "—"}</td><td>${r.inN ? fmtH(avg) : "—"}</td>
-      <td>${fmtH(r.work)}</td><td>${r.noOut ? `<span class="pill">${r.noOut}</span>` : "—"}</td></tr>`; }).join("")
-      : `<tr><td class="mut" colspan="8">Нет отметок за месяц</td></tr>`);
+      <td>${fmtH(r.work)}</td><td>${r.noOut ? `<span class="pill y">без ухода · ${r.noOut}</span>` : "—"}</td></tr>`; }).join("");
+  postH();
 }
 $("month").onchange = $("sumPt").onchange = renderSum;
 
 // ---------- сотрудники ----------
 function renderEmp() {
-  $("empTbl").innerHTML = `<tr><th>Имя</th><th>Основная точка</th><th>Лицо</th><th>Статус</th><th></th></tr>` +
-    (emps.length ? emps.map(e => `<tr>
-      <td><b>${esc(e.name)}</b></td>
-      <td><select data-pt="${e.id}">${points.map(p => `<option ${p.point === e.point ? "selected" : ""}>${esc(p.point)}</option>`).join("")}</select></td>
-      <td>${e.descriptors?.length ? `<span class="pill g">снято (${e.descriptors.length})</span>` : `<span class="pill r">нет</span>`}</td>
+  if (!emps.length) { $("empTbl").innerHTML = ""; $("empEmpty").innerHTML = empty("👤", "Пока нет сотрудников", "Добавьте первого в форме выше"); return postH(); }
+  $("empEmpty").innerHTML = "";
+  const list = [...emps].sort((a, b) => (b.active - a.active) || a.name.localeCompare(b.name, "ru"));
+  $("empTbl").innerHTML = `<tr><th>Сотрудник</th><th>Точка работы</th><th>Лицо</th><th>Статус</th><th></th></tr>` +
+    list.map(e => { const n = e.descriptors?.length || 0; return `<tr class="${e.active ? "" : "off"}">
+      <td><div class="who">${avatar(e.name, e.point)}${esc(e.name)}</div></td>
+      <td><select data-pt="${e.id}" aria-label="Точка работы">${points.map(p => `<option ${p.point === e.point ? "selected" : ""}>${esc(p.point)}</option>`).join("")}</select></td>
+      <td>${n ? `<span class="pill g">снято · ${n} ${plural(n, "образец", "образца", "образцов")}</span>` : `<span class="pill y">не снято</span>`}</td>
       <td>${e.active ? `<span class="pill g">работает</span>` : `<span class="pill">отключён</span>`}</td>
-      <td style="text-align:right;white-space:nowrap"><button class="btn2" data-face="${e.id}">Переснять лицо</button>
-        <button class="btn2 ${e.active ? "red" : ""}" data-act="${e.id}">${e.active ? "Отключить" : "Включить"}</button></td></tr>`).join("")
-      : `<tr><td class="mut" colspan="5">Добавьте сотрудников выше</td></tr>`);
+      <td style="text-align:right;white-space:nowrap"><button class="${n ? "btn2" : "btn"} sm" data-face="${e.id}">${n ? "Переснять" : "Снять лицо"}</button>
+        <button class="${e.active ? "btn3" : "btn2"} sm" data-act="${e.id}">${e.active ? "Отключить" : "Включить"}</button></td></tr>`; }).join("");
+  postH();
 }
 $("empTbl").onclick = async e => {
   const f = e.target.dataset.face, a = e.target.dataset.act;
-  if (f) { const emp = emps.find(x => x.id === f); const d = await capture(emp.name); if (d) { await sb.from("att_employees").update({ descriptors: d }).eq("id", f); await loadRefs(); renderEmp(); } }
-  if (a) { const emp = emps.find(x => x.id === a); await sb.from("att_employees").update({ active: !emp.active }).eq("id", a); await loadRefs(); renderEmp(); }
+  if (f) {
+    const emp = emps.find(x => x.id === f); const d = await capture(emp.name);
+    if (d) { if (!DEMO) await sb.from("att_employees").update({ descriptors: d }).eq("id", f); else demoWarn(); await loadRefs(); renderEmp(); }
+  }
+  if (a) { const emp = emps.find(x => x.id === a); if (!DEMO) await sb.from("att_employees").update({ active: !emp.active }).eq("id", a); else demoWarn(); await loadRefs(); renderEmp(); }
 };
-$("empTbl").onchange = async e => { const id = e.target.dataset.pt; if (id) { await sb.from("att_employees").update({ point: e.target.value }).eq("id", id); await loadRefs(); } };
-$("addEmp").onclick = async () => {
+$("empTbl").onchange = async e => { const id = e.target.dataset.pt; if (id) { if (DEMO) return demoWarn(); await sb.from("att_employees").update({ point: e.target.value }).eq("id", id); await loadRefs(); } };
+async function addEmp(withFace) {
   const name = $("newName").value.trim(); if (!name) return $("newName").focus();
-  const d = await capture(name); if (!d) return;
-  const { error } = await sb.from("att_employees").insert({ name, point: $("newPt").value, descriptors: d });
+  const point = $("newPt").value; if (!point) return alert("Сначала добавьте точку");
+  let d = [];
+  if (withFace) { d = await capture(name); if (!d) return; }
+  if (DEMO) return demoWarn();
+  const { error } = await sb.from("att_employees").insert({ name, point, descriptors: d });
   if (error) return alert(error.message);
   $("newName").value = ""; await loadRefs(); renderEmp();
-};
+}
+$("addEmp").onclick = () => addEmp(false);
+$("addEmpFace").onclick = () => addEmp(true);
 
 // ---------- съёмка лица ----------
 let faceapi = null, camStream = null, camCancel = false;
@@ -329,7 +480,7 @@ async function models() {
   return faceapi = fa;
 }
 async function capture(name) {
-  $("camModal").classList.remove("hide"); $("camTitle").textContent = name; $("camProg").style.width = "0";
+  openModal("camModal"); $("camTitle").textContent = name; $("camProg").style.width = "0";
   $("camHint").textContent = "Загрузка распознавания…"; camCancel = false;
   try {
     const fa = await models();
@@ -345,33 +496,43 @@ async function capture(name) {
     }
     return camCancel ? null : out;
   } catch (err) { alert("Камера: " + err.message); return null; }
-  finally { camStream?.getTracks().forEach(t => t.stop()); camStream = null; $("camModal").classList.add("hide"); }
+  finally { camStream?.getTracks().forEach(t => t.stop()); camStream = null; closeModal("camModal"); }
 }
 $("camCancel").onclick = () => { camCancel = true; };
 
 // ---------- точки ----------
 const kioskUrl = c => new URL(`./?code=${c}`, location.href).href;
+const shown = new Set();
 function renderPts() {
-  $("ptsTbl").innerHTML = `<tr><th>Точка</th><th>Начало работы</th><th>Код киоска</th><th></th></tr>` +
-    points.map(p => `<tr><td><b>${esc(p.point)}</b></td>
-      <td><input type="time" value="${p.start_time.slice(0, 5)}" data-st="${esc(p.point)}"></td>
-      <td><code>${esc(p.code)}</code></td>
-      <td style="text-align:right;white-space:nowrap"><button class="btn2" data-copy="${esc(p.code)}">Скопировать ссылку</button>
-        <button class="btn2" data-new="${esc(p.point)}">Новый код</button></td></tr>`).join("");
+  $("ptsTbl").innerHTML = `<tr><th>Точка</th><th>Начало работы</th><th>Код киоска</th><th>Ссылка киоска</th><th></th></tr>` +
+    points.map((p, i) => `<tr><td><div class="who"><span class="av av${i % 6}">${esc(initials(p.point))}</span>${esc(p.point)}</div></td>
+      <td><input type="time" value="${(p.start_time || "10:00").slice(0, 5)}" data-st="${esc(p.point)}" aria-label="Начало работы"></td>
+      <td><code>${shown.has(p.point) ? esc(p.code) : "••••••••"}</code> <button class="lnk" data-show="${esc(p.point)}">${shown.has(p.point) ? "скрыть" : "показать"}</button></td>
+      <td><button class="btn2 sm" data-copy="${esc(p.code)}">Копировать ссылку</button></td>
+      <td style="text-align:right"><button class="btn3 sm" data-new="${esc(p.point)}">Новый код</button></td></tr>`).join("");
+  postH();
 }
-$("ptsTbl").onchange = async e => { const p = e.target.dataset.st; if (p) { await sb.from("att_points").update({ start_time: e.target.value }).eq("point", p); await loadRefs(); } };
+$("ptsTbl").onchange = async e => { const p = e.target.dataset.st; if (p) { if (DEMO) return demoWarn(); await sb.from("att_points").update({ start_time: e.target.value }).eq("point", p); await loadRefs(); } };
 $("ptsTbl").onclick = async e => {
-  if (e.target.dataset.copy) { await navigator.clipboard.writeText(kioskUrl(e.target.dataset.copy)); e.target.textContent = "Скопировано ✓"; setTimeout(renderPts, 1500); }
-  if (e.target.dataset.new && confirm("Старый код перестанет работать — киоск этой точки нужно будет настроить заново. Продолжить?")) {
-    await sb.from("att_points").update({ code: newCode() }).eq("point", e.target.dataset.new); await loadRefs(); renderPts();
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.show) { shown.has(b.dataset.show) ? shown.delete(b.dataset.show) : shown.add(b.dataset.show); renderPts(); }
+  if (b.dataset.copy) {
+    try { await navigator.clipboard.writeText(kioskUrl(b.dataset.copy)); b.textContent = "Скопировано ✓"; } catch { b.textContent = "Не удалось"; }
+    setTimeout(() => { b.textContent = "Копировать ссылку"; }, 1500);
+  }
+  if (b.dataset.new && confirm("Старая ссылка перестанет работать. Выпустить новый код?")) {
+    if (DEMO) return demoWarn();
+    await sb.from("att_points").update({ code: newCode() }).eq("point", b.dataset.new); await loadRefs(); renderPts();
   }
 };
 const newCode = () => Array.from(crypto.getRandomValues(new Uint8Array(8)), b => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[b % 32]).join("");
 $("addPt").onclick = async () => {
-  const point = $("newPoint").value.trim(); if (!point) return;
+  const point = $("newPoint").value.trim(); if (!point) return $("newPoint").focus();
+  if (DEMO) return demoWarn();
   const { error } = await sb.from("att_points").insert({ point, code: newCode(), start_time: $("newStart").value || "10:00" });
   if (error) return alert(error.message); $("newPoint").value = ""; await loadRefs(); renderPts();
 };
+$("print").onclick = () => window.print();
 
 boot();
 </script>

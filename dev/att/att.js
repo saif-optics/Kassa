@@ -17,6 +17,13 @@
     frame.addEventListener("load",send);
     box.appendChild(frame);
   }
+  // высота iframe — по содержимому (admin.html сообщает attHeight)
+  addEventListener("message",e=>{
+    if(!frame||e.origin!==location.origin||e.source!==frame.contentWindow)return;
+    if(e.data&&e.data.attScroll){window.scrollTo({top:frame.getBoundingClientRect().top+window.scrollY-120,behavior:"smooth"});return}
+    const h=e.data&&typeof e.data==="object"?+e.data.attHeight:0;
+    if(h>0)frame.style.height=Math.max(420,h+8)+"px";
+  });
   new MutationObserver(send).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
   window.__ATT={render};
 })();
