@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Приход сотрудников — Saif-Optics</title>
+<style>
+:root{--bg:#f2f2f7;--card:rgba(255,255,255,.75);--line:rgba(60,60,67,.14);--tx:#1c1c1e;--mut:#8e8e93;--acc:#007aff;--ok:#34c759;--warn:#ff9500;--bad:#ff3b30;--fill:rgba(120,120,128,.12)}
+@media (prefers-color-scheme:dark){:root{--bg:#000;--card:rgba(44,44,46,.75);--line:rgba(84,84,88,.5);--tx:#f2f2f7;--mut:#98989f;--fill:rgba(120,120,128,.24)}}
+*{box-sizing:border-box}body{margin:0;font:15px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;color:var(--tx);background:var(--bg);min-height:100vh;
+ background-image:radial-gradient(1200px 600px at 0% -10%,rgba(0,122,255,.14),transparent),radial-gradient(900px 500px at 110% 110%,rgba(52,199,89,.10),transparent);-webkit-font-smoothing:antialiased}
+.glass{background:var(--card);backdrop-filter:blur(30px) saturate(1.6);-webkit-backdrop-filter:blur(30px) saturate(1.6);border:1px solid var(--line);border-radius:22px}
+.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;padding:12px 18px;border-radius:0;border-width:0 0 1px}
+.top h1{font-size:18px;margin:0 auto 0 0}
+.seg{display:flex;background:var(--fill);border-radius:12px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{background:none;padding:7px 14px;border-radius:9px;font-weight:600;color:var(--tx)}
+.seg button.on{background:var(--card);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+main{max-width:1100px;margin:18px auto;padding:0 14px}
+.card{padding:18px;margin-bottom:16px}
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+button{font:inherit;border:0;cursor:pointer;border-radius:12px;transition:transform .12s,opacity .12s}
+button:active{transform:scale(.97)}button:disabled{opacity:.45;cursor:default}
+.btn{background:var(--acc);color:#fff;padding:9px 16px;font-weight:600}
+.btn2{background:var(--fill);color:var(--tx);padding:9px 14px;font-weight:600}
+.btn2.red{color:var(--bad)}
+input,select{font:inherit;padding:9px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--tx)}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;color:var(--mut);font-weight:600;font-size:13px;padding:8px 8px;border-bottom:1px solid var(--line)}
+td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle;font-variant-numeric:tabular-nums}
+tr:last-child td{border:0}
+.late{color:var(--bad);font-weight:600}.ok{color:var(--ok)}.mut{color:var(--mut)}
+.ph{width:38px;height:38px;border-radius:50%;object-fit:cover;cursor:zoom-in;vertical-align:middle;margin-right:4px;border:2px solid var(--line)}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;background:var(--fill);font-size:12px;font-weight:600}
+.pill.g{background:rgba(52,199,89,.18);color:var(--ok)}.pill.r{background:rgba(255,59,48,.15);color:var(--bad)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.kpi{padding:14px 16px}.kpi b{display:block;font-size:26px}.kpi span{color:var(--mut);font-size:13px}
+.login{max-width:380px;margin:12vh auto;padding:28px;display:flex;flex-direction:column;gap:12px;text-align:center}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:20}
+.modal .glass{padding:20px;max-width:560px;width:92vw;text-align:center}
+.cam{position:relative;width:100%;aspect-ratio:4/3;border-radius:18px;overflow:hidden;background:#000;margin:10px 0}
+.cam video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.prog{height:6px;border-radius:3px;background:var(--fill);overflow:hidden}.prog i{display:block;height:100%;background:var(--ok);width:0;transition:width .3s}
+code{background:var(--fill);padding:3px 8px;border-radius:8px;font-size:15px;letter-spacing:.1em}
+.hide{display:none!important}
+.scroll{overflow-x:auto}
+a{color:var(--acc);text-decoration:none}
+</style>
+</head>
+<body>
+<div id="login" class="glass login hide">
+  <div style="font-size:40px">🕘</div>
+  <h2 style="margin:0">Приход сотрудников</h2>
+  <div class="mut">Вход — тот же, что в «Кассе Оптики»</div>
+  <input id="email" type="email" placeholder="Email" autocomplete="username">
+  <input id="pass" type="password" placeholder="Пароль" autocomplete="current-password">
+  <button class="btn" id="doLogin">Войти</button>
+  <div id="loginErr" class="late"></div>
+</div>
+
+<div id="app" class="hide">
+  <div class="glass top">
+    <h1>🕘 Приход сотрудников</h1>
+    <div class="seg" id="tabs">
+      <button data-t="log" class="on">Журнал</button><button data-t="sum">Сводка</button>
+      <button data-t="emp">Сотрудники</button><button data-t="pts">Точки</button>
+    </div>
+    <button class="btn2" id="logout">Выйти</button>
+  </div>
+  <main>
+    <section id="t-log">
+      <div class="bar">
+        <button class="btn2" id="dPrev">‹</button><input type="date" id="day"><button class="btn2" id="dNext">›</button>
+        <select id="logPt"></select>
+        <button class="btn2" id="reload">Обновить</button>
+      </div>
+      <div class="kpis" id="logKpi"></div>
+      <div class="glass card scroll"><table id="logTbl"></table></div>
+    </section>
+    <section id="t-sum" class="hide">
+      <div class="bar"><input type="month" id="month"><select id="sumPt"></select></div>
+      <div class="glass card scroll"><table id="sumTbl"></table></div>
+    </section>
+    <section id="t-emp" class="hide">
+      <div class="glass card">
+        <div class="bar" style="margin:0">
+          <input id="newName" placeholder="Имя сотрудника" style="flex:1;min-width:180px">
+          <select id="newPt"></select>
+          <button class="btn" id="addEmp">Добавить и снять лицо</button>
+        </div>
+      </div>
+      <div class="glass card scroll"><table id="empTbl"></table></div>
+    </section>
+    <section id="t-pts" class="hide">
+      <div class="glass card scroll"><table id="ptsTbl"></table></div>
+      <div class="glass card">
+        <div class="bar" style="margin:0"><input id="newPoint" placeholder="Новая точка"><input id="newStart" type="time" value="10:00"><button class="btn2" id="addPt">Добавить точку</button></div>
+        <div class="mut" style="margin-top:10px">На компьютере точки откройте ссылку киоска в Chrome — точка запомнится. Код можно ввести и вручную.</div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="camModal" class="modal hide">
+  <div class="glass">
+    <h3 style="margin:0" id="camTitle">Снимок лица</h3>
+    <div class="mut" id="camHint">Смотрите в камеру, слегка поворачивайте голову</div>
+    <div class="cam"><video id="video" playsinline muted></video></div>
+    <div class="prog"><i id="camProg"></i></div>
+    <div style="margin-top:12px;display:flex;gap:10px;justify-content:center"><button class="btn2" id="camCancel">Отмена</button></div>
+  </div>
+</div>
+<div id="imgModal" class="modal hide"><img id="bigImg" style="max-width:92vw;max-height:80vh;border-radius:18px"></div>
+
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+const sb = createClient("https://qvblxhyftwivkzxucfak.supabase.co", "sb_publishable_-ceoJkpmAZ7Y8osbPHaOlg_3nqUsdB7",
+  { auth: { persistSession: true, storageKey: "kassa-web-auth" } });
+const MODELS = "https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/model/";
+const TZ = "Asia/Tashkent", SAMPLES = 6;
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const hm = d => new Intl.DateTimeFormat("ru-RU", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(new Date(d));
+const dayOf = d => new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(new Date(d));
+const mins = s => { const [h, m] = s.split(":").map(Number); return h * 60 + m; };
+const fmtMin = n => n >= 60 ? `${Math.floor(n / 60)} ч ${n % 60} мин` : `${n} мин`;
+const fmtH = n => `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`;
+
+let points = [], emps = [];
+
+// ---------- вход ----------
+async function boot() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { $("login").classList.remove("hide"); return; }
+  $("login").classList.add("hide"); $("app").classList.remove("hide");
+  $("day").value = dayOf(new Date()); $("month").value = dayOf(new Date()).slice(0, 7);
+  await loadRefs(); renderLog();
+}
+$("doLogin").onclick = async () => {
+  const { error } = await sb.auth.signInWithPassword({ email: $("email").value.trim(), password: $("pass").value });
+  if (error) { $("loginErr").textContent = "Неверный email или пароль"; return; } boot();
+};
+$("pass").onkeydown = e => { if (e.key === "Enter") $("doLogin").click(); };
+$("logout").onclick = async () => { await sb.auth.signOut(); location.reload(); };
+
+async function loadRefs() {
+  const [p, e] = await Promise.all([
+    sb.from("att_points").select("*").order("point"),
+    sb.from("att_employees").select("id,name,point,active,descriptors,created_at").order("name"),
+  ]);
+  if (p.error) { alert("Нет доступа: " + p.error.message); return; }
+  points = p.data; emps = e.data || [];
+  const opts = points.map(x => `<option>${esc(x.point)}</option>`).join("");
+  $("logPt").innerHTML = `<option value="">Все точки</option>` + opts;
+  $("sumPt").innerHTML = `<option value="">Все точки</option>` + opts;
+  $("newPt").innerHTML = opts;
+}
+const startOf = pt => points.find(p => p.point === pt)?.start_time?.slice(0, 5) || "10:00";
+
+// ---------- вкладки ----------
+$("tabs").onclick = e => {
+  const t = e.target.dataset.t; if (!t) return;
+  document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.t === t));
+  ["log", "sum", "emp", "pts"].forEach(x => $("t-" + x).classList.toggle("hide", x !== t));
+  ({ log: renderLog, sum: renderSum, emp: renderEmp, pts: renderPts })[t]();
+};
+
+// ---------- события за период ----------
+async function events(fromDay, toDay, withPhoto) {
+  const from = new Date(fromDay + "T00:00:00+05:00").toISOString();
+  const to = new Date(new Date(toDay + "T00:00:00+05:00").getTime() + 86400000).toISOString();
+  const cols = "id,employee_id,point,kind,ts,score,lat,lng,acc" + (withPhoto ? ",photo" : "");
+  const all = []; let off = 0;
+  for (;;) {
+    const { data, error } = await sb.from("att_events").select(cols).gte("ts", from).lt("ts", to).order("ts").range(off, off + 999);
+    if (error) throw error; all.push(...data); if (data.length < 1000) break; off += 1000;
+  }
+  return all;
+}
+// день сотрудника: первый приход, последний уход
+function shifts(evs) {
+  const m = new Map();
+  for (const e of evs) {
+    const k = e.employee_id + "|" + dayOf(e.ts);
+    const s = m.get(k) || { emp: e.employee_id, day: dayOf(e.ts), in: null, out: null, evs: [] };
+    s.evs.push(e);
+    if (e.kind === "in" && !s.in) s.in = e;
+    if (e.kind === "out") s.out = e;
+    m.set(k, s);
+  }
+  for (const s of m.values()) {
+    s.point = (s.in || s.evs[0]).point;
+    s.late = s.in ? Math.max(0, mins(hm(s.in.ts)) - mins(startOf(s.point))) : 0;
+    s.work = s.in && s.out && s.out.ts > s.in.ts ? Math.round((new Date(s.out.ts) - new Date(s.in.ts)) / 60000) : 0;
+  }
+  return [...m.values()];
+}
+const empName = id => emps.find(e => e.id === id)?.name || "—";
+const mapLink = e => e?.lat ? ` <a href="https://maps.google.com/?q=${e.lat},${e.lng}" target="_blank" title="±${Math.round(e.acc || 0)} м">📍</a>` : "";
+const photo = e => e?.photo ? `<img class="ph" src="${e.photo}" data-big>` : "";
+
+// ---------- журнал дня ----------
+async function renderLog() {
+  const day = $("day").value, pt = $("logPt").value;
+  $("logTbl").innerHTML = `<tr><td class="mut">Загрузка…</td></tr>`;
+  const sh = shifts(await events(day, day, true)).filter(s => !pt || s.point === pt);
+  const active = emps.filter(e => e.active && (!pt || e.point === pt));
+  const came = new Set(sh.map(s => s.emp));
+  const absent = day <= dayOf(new Date()) ? active.filter(e => !came.has(e.id)) : [];
+  $("logKpi").innerHTML = [
+    [sh.filter(s => s.in).length, "пришли"], [sh.filter(s => s.late).length, "опоздали"],
+    [absent.length, "не отметились"], [sh.filter(s => s.out).length, "ушли"],
+  ].map(([n, t]) => `<div class="glass kpi"><b>${n}</b><span>${t}</span></div>`).join("");
+  sh.sort((a, b) => (a.in?.ts || "z").localeCompare(b.in?.ts || "z"));
+  $("logTbl").innerHTML = `<tr><th>Сотрудник</th><th>Точка</th><th>Приход</th><th>Опоздание</th><th>Уход</th><th>Часов</th><th>Отметок</th></tr>` +
+    sh.map(s => `<tr>
+      <td><b>${esc(empName(s.emp))}</b></td>
+      <td>${esc(s.point)} <span class="mut">(с ${startOf(s.point)})</span></td>
+      <td>${photo(s.in)}${s.in ? hm(s.in.ts) : "—"}${mapLink(s.in)}</td>
+      <td>${s.in ? (s.late ? `<span class="late">${fmtMin(s.late)}</span>` : `<span class="ok">вовремя</span>`) : ""}</td>
+      <td>${photo(s.out)}${s.out ? hm(s.out.ts) : "—"}${mapLink(s.out)}</td>
+      <td>${s.work ? fmtH(s.work) : "—"}</td>
+      <td class="mut">${s.evs.map(e => (e.kind === "in" ? "↘" : "↗") + hm(e.ts)).join(" ")}</td></tr>`).join("") +
+    absent.map(e => `<tr><td><b>${esc(e.name)}</b></td><td>${esc(e.point || "")}</td><td colspan="5"><span class="pill r">не отметился</span></td></tr>`).join("") +
+    (!sh.length && !absent.length ? `<tr><td class="mut" colspan="7">Нет отметок</td></tr>` : "");
+}
+const shiftDay = n => { const d = new Date($("day").value + "T12:00:00+05:00"); d.setDate(d.getDate() + n); $("day").value = dayOf(d); renderLog(); };
+$("dPrev").onclick = () => shiftDay(-1); $("dNext").onclick = () => shiftDay(1);
+$("day").onchange = $("logPt").onchange = $("reload").onclick = renderLog;
+document.addEventListener("click", e => { if (e.target.dataset.big !== undefined) { $("bigImg").src = e.target.src; $("imgModal").classList.remove("hide"); } });
+$("imgModal").onclick = () => $("imgModal").classList.add("hide");
+
+// ---------- сводка месяца ----------
+async function renderSum() {
+  const m = $("month").value, pt = $("sumPt").value;
+  const [y, mo] = m.split("-").map(Number);
+  const last = new Date(y, mo, 0).getDate();
+  $("sumTbl").innerHTML = `<tr><td class="mut">Загрузка…</td></tr>`;
+  const sh = shifts(await events(`${m}-01`, `${m}-${String(last).padStart(2, "0")}`, false)).filter(s => !pt || s.point === pt);
+  const by = {};
+  for (const s of sh) {
+    const r = by[s.emp] ??= { days: 0, late: 0, lateMin: 0, work: 0, inSum: 0, inN: 0, noOut: 0, pts: new Set() };
+    r.days++; r.pts.add(s.point);
+    if (s.late) { r.late++; r.lateMin += s.late; }
+    r.work += s.work;
+    if (s.in) { r.inSum += mins(hm(s.in.ts)); r.inN++; }
+    if (s.in && !s.out) r.noOut++;
+  }
+  const rows = Object.entries(by).sort((a, b) => b[1].lateMin - a[1].lateMin);
+  $("sumTbl").innerHTML = `<tr><th>Сотрудник</th><th>Точки</th><th>Дней</th><th>Опозданий</th><th>Всего опоздал</th><th>Средний приход</th><th>Часов</th><th>Без ухода</th></tr>` +
+    (rows.length ? rows.map(([id, r]) => { const avg = r.inN ? Math.round(r.inSum / r.inN) : 0;
+      return `<tr><td><b>${esc(empName(id))}</b></td><td>${esc([...r.pts].join(", "))}</td><td>${r.days}</td>
+      <td>${r.late ? `<span class="late">${r.late}</span>` : `<span class="ok">0</span>`}</td>
+      <td>${r.lateMin ? fmtMin(r.lateMin) : "—"}</td><td>${r.inN ? fmtH(avg) : "—"}</td>
+      <td>${fmtH(r.work)}</td><td>${r.noOut ? `<span class="pill">${r.noOut}</span>` : "—"}</td></tr>`; }).join("")
+      : `<tr><td class="mut" colspan="8">Нет отметок за месяц</td></tr>`);
+}
+$("month").onchange = $("sumPt").onchange = renderSum;
+
+// ---------- сотрудники ----------
+function renderEmp() {
+  $("empTbl").innerHTML = `<tr><th>Имя</th><th>Основная точка</th><th>Лицо</th><th>Статус</th><th></th></tr>` +
+    (emps.length ? emps.map(e => `<tr>
+      <td><b>${esc(e.name)}</b></td>
+      <td><select data-pt="${e.id}">${points.map(p => `<option ${p.point === e.point ? "selected" : ""}>${esc(p.point)}</option>`).join("")}</select></td>
+      <td>${e.descriptors?.length ? `<span class="pill g">снято (${e.descriptors.length})</span>` : `<span class="pill r">нет</span>`}</td>
+      <td>${e.active ? `<span class="pill g">работает</span>` : `<span class="pill">отключён</span>`}</td>
+      <td style="text-align:right;white-space:nowrap"><button class="btn2" data-face="${e.id}">Переснять лицо</button>
+        <button class="btn2 ${e.active ? "red" : ""}" data-act="${e.id}">${e.active ? "Отключить" : "Включить"}</button></td></tr>`).join("")
+      : `<tr><td class="mut" colspan="5">Добавьте сотрудников выше</td></tr>`);
+}
+$("empTbl").onclick = async e => {
+  const f = e.target.dataset.face, a = e.target.dataset.act;
+  if (f) { const emp = emps.find(x => x.id === f); const d = await capture(emp.name); if (d) { await sb.from("att_employees").update({ descriptors: d }).eq("id", f); await loadRefs(); renderEmp(); } }
+  if (a) { const emp = emps.find(x => x.id === a); await sb.from("att_employees").update({ active: !emp.active }).eq("id", a); await loadRefs(); renderEmp(); }
+};
+$("empTbl").onchange = async e => { const id = e.target.dataset.pt; if (id) { await sb.from("att_employees").update({ point: e.target.value }).eq("id", id); await loadRefs(); } };
+$("addEmp").onclick = async () => {
+  const name = $("newName").value.trim(); if (!name) return $("newName").focus();
+  const d = await capture(name); if (!d) return;
+  const { error } = await sb.from("att_employees").insert({ name, point: $("newPt").value, descriptors: d });
+  if (error) return alert(error.message);
+  $("newName").value = ""; await loadRefs(); renderEmp();
+};
+
+// ---------- съёмка лица ----------
+let faceapi = null, camStream = null, camCancel = false;
+async function models() {
+  if (faceapi) return faceapi;
+  const fa = await import("https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/dist/face-api.esm.js");
+  await fa.tf.setBackend("webgl").catch(() => {}); await fa.tf.ready();
+  await Promise.all([fa.nets.tinyFaceDetector.loadFromUri(MODELS), fa.nets.faceLandmark68Net.loadFromUri(MODELS), fa.nets.faceRecognitionNet.loadFromUri(MODELS)]);
+  return faceapi = fa;
+}
+async function capture(name) {
+  $("camModal").classList.remove("hide"); $("camTitle").textContent = name; $("camProg").style.width = "0";
+  $("camHint").textContent = "Загрузка распознавания…"; camCancel = false;
+  try {
+    const fa = await models();
+    camStream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: "user" } });
+    const v = $("video"); v.srcObject = camStream; await v.play();
+    $("camHint").textContent = "Смотрите в камеру, слегка поворачивайте голову";
+    const opts = new fa.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.6 });
+    const out = []; let lastAt = 0;
+    while (out.length < SAMPLES && !camCancel) {
+      const r = await fa.detectSingleFace(v, opts).withFaceLandmarks().withFaceDescriptor();
+      if (r && Date.now() - lastAt > 450) { out.push(Array.from(r.descriptor, x => +x.toFixed(5))); lastAt = Date.now(); $("camProg").style.width = (out.length / SAMPLES * 100) + "%"; }
+      else if (!r) $("camHint").textContent = "Лицо не видно — подойдите ближе, хороший свет";
+    }
+    return camCancel ? null : out;
+  } catch (err) { alert("Камера: " + err.message); return null; }
+  finally { camStream?.getTracks().forEach(t => t.stop()); camStream = null; $("camModal").classList.add("hide"); }
+}
+$("camCancel").onclick = () => { camCancel = true; };
+
+// ---------- точки ----------
+const kioskUrl = c => new URL(`./?code=${c}`, location.href).href;
+function renderPts() {
+  $("ptsTbl").innerHTML = `<tr><th>Точка</th><th>Начало работы</th><th>Код киоска</th><th></th></tr>` +
+    points.map(p => `<tr><td><b>${esc(p.point)}</b></td>
+      <td><input type="time" value="${p.start_time.slice(0, 5)}" data-st="${esc(p.point)}"></td>
+      <td><code>${esc(p.code)}</code></td>
+      <td style="text-align:right;white-space:nowrap"><button class="btn2" data-copy="${esc(p.code)}">Скопировать ссылку</button>
+        <button class="btn2" data-new="${esc(p.point)}">Новый код</button></td></tr>`).join("");
+}
+$("ptsTbl").onchange = async e => { const p = e.target.dataset.st; if (p) { await sb.from("att_points").update({ start_time: e.target.value }).eq("point", p); await loadRefs(); } };
+$("ptsTbl").onclick = async e => {
+  if (e.target.dataset.copy) { await navigator.clipboard.writeText(kioskUrl(e.target.dataset.copy)); e.target.textContent = "Скопировано ✓"; setTimeout(renderPts, 1500); }
+  if (e.target.dataset.new && confirm("Старый код перестанет работать — киоск этой точки нужно будет настроить заново. Продолжить?")) {
+    await sb.from("att_points").update({ code: newCode() }).eq("point", e.target.dataset.new); await loadRefs(); renderPts();
+  }
+};
+const newCode = () => Array.from(crypto.getRandomValues(new Uint8Array(8)), b => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[b % 32]).join("");
+$("addPt").onclick = async () => {
+  const point = $("newPoint").value.trim(); if (!point) return;
+  const { error } = await sb.from("att_points").insert({ point, code: newCode(), start_time: $("newStart").value || "10:00" });
+  if (error) return alert(error.message); $("newPoint").value = ""; await loadRefs(); renderPts();
+};
+
+boot();
+</script>
+</body>
+</html>

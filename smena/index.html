@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Отметка — Saif-Optics</title>
+<meta name="theme-color" content="#f2f2f7">
+<style>
+:root{--bg:#f2f2f7;--card:rgba(255,255,255,.72);--line:rgba(60,60,67,.14);--tx:#1c1c1e;--mut:#8e8e93;--acc:#007aff;--ok:#34c759;--warn:#ff9500;--bad:#ff3b30}
+@media (prefers-color-scheme:dark){:root{--bg:#000;--card:rgba(44,44,46,.72);--line:rgba(84,84,88,.5);--tx:#f2f2f7;--mut:#98989f}}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{font:16px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;color:var(--tx);background:var(--bg);
+ background-image:radial-gradient(1200px 600px at 10% -10%,rgba(0,122,255,.18),transparent),radial-gradient(900px 500px at 110% 110%,rgba(52,199,89,.14),transparent);
+ display:flex;align-items:center;justify-content:center;-webkit-font-smoothing:antialiased;user-select:none}
+.glass{background:var(--card);backdrop-filter:blur(30px) saturate(1.6);-webkit-backdrop-filter:blur(30px) saturate(1.6);border:1px solid var(--line);border-radius:28px;box-shadow:0 20px 60px rgba(0,0,0,.08)}
+.wrap{width:min(980px,94vw);display:grid;grid-template-columns:1.2fr 1fr;gap:20px}
+@media (max-width:760px){.wrap{grid-template-columns:1fr}}
+.main{padding:32px;display:flex;flex-direction:column;align-items:center;text-align:center;min-height:540px;justify-content:center}
+.pt{font-size:15px;color:var(--mut);letter-spacing:.02em}.pt b{color:var(--tx)}
+.clock{font-size:92px;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1;margin:10px 0 4px}
+.date{color:var(--mut);margin-bottom:28px;text-transform:capitalize}
+button{font:inherit;border:0;cursor:pointer;border-radius:16px;transition:transform .12s,opacity .12s}
+button:active{transform:scale(.97)}button:disabled{opacity:.45;cursor:default}
+.big{background:var(--acc);color:#fff;font-size:24px;font-weight:600;padding:22px 54px;border-radius:22px;box-shadow:0 10px 30px rgba(0,122,255,.35)}
+.sec{background:rgba(120,120,128,.16);color:var(--tx);padding:12px 20px;font-weight:600}
+.hint{color:var(--mut);font-size:14px;margin-top:14px}
+.cam{position:relative;width:100%;max-width:520px;aspect-ratio:4/3;border-radius:24px;overflow:hidden;background:#000}
+.cam video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.cam .ring{position:absolute;inset:12% 22%;border:3px solid rgba(255,255,255,.7);border-radius:50%;transition:border-color .2s}
+.cam.found .ring{border-color:var(--ok)}
+.status{margin-top:14px;font-size:18px;font-weight:600;min-height:26px}
+.who{display:flex;flex-direction:column;align-items:center;gap:10px}
+.who img{width:150px;height:150px;border-radius:50%;object-fit:cover;border:4px solid var(--ok)}
+.who .nm{font-size:30px;font-weight:700}
+.row{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;justify-content:center}
+.kind{padding:18px 34px;font-size:20px;font-weight:700;background:rgba(120,120,128,.16);color:var(--tx);position:relative;overflow:hidden}
+.kind.on{background:var(--ok);color:#fff}.kind.on.out{background:var(--warn)}
+.kind .bar{position:absolute;left:0;bottom:0;height:4px;background:rgba(255,255,255,.8);width:0}
+.done{font-size:64px;color:var(--ok);line-height:1}.done.out{color:var(--warn)}
+.side{padding:22px 20px;max-height:540px;overflow:auto}
+.side h3{margin:0 0 12px;font-size:17px}
+.li{display:flex;justify-content:space-between;align-items:center;padding:10px 4px;border-bottom:1px solid var(--line);font-size:15px}
+.li:last-child{border:0}.li .t{font-variant-numeric:tabular-nums;color:var(--mut)}.late{color:var(--bad)!important}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;background:var(--ok)}.dot.out{background:var(--mut)}
+input{font:inherit;font-size:28px;text-align:center;letter-spacing:.2em;text-transform:uppercase;padding:14px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.6);color:var(--tx);width:260px}
+.err{color:var(--bad);margin-top:12px;min-height:22px}
+.q{position:fixed;left:16px;bottom:14px;font-size:13px;color:var(--warn)}
+.gear{position:fixed;right:14px;bottom:10px;background:none;color:var(--mut);font-size:13px;padding:6px 10px}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<div id="setup" class="glass main hide" style="width:min(520px,92vw)">
+  <div style="font-size:44px">📷</div>
+  <h2 style="margin:8px 0 4px">Настройка точки</h2>
+  <div class="hint" style="margin:0 0 22px">Введите код точки из админки (раздел «Точки»)</div>
+  <input id="code" maxlength="12" autocomplete="off" spellcheck="false">
+  <div class="err" id="setupErr"></div>
+  <button class="big" id="saveCode" style="margin-top:8px">Сохранить</button>
+</div>
+
+<div id="app" class="wrap hide">
+  <div class="glass main">
+    <div id="idle">
+      <div class="pt">Saif-Optics · <b id="ptName"></b></div>
+      <div class="clock" id="clock">--:--</div>
+      <div class="date" id="date"></div>
+      <button class="big" id="go" disabled>Загрузка…</button>
+      <div class="hint">Нажмите и посмотрите в камеру · или клавиша «пробел»</div>
+    </div>
+    <div id="scan" class="hide" style="width:100%;display:flex;flex-direction:column;align-items:center">
+      <div class="cam" id="camBox"><video id="video" playsinline muted></video><div class="ring"></div></div>
+      <div class="status" id="status">Смотрите в камеру</div>
+      <button class="sec" id="cancelScan" style="margin-top:10px">Отмена</button>
+    </div>
+    <div id="confirm" class="hide who">
+      <img id="snap" alt="">
+      <div class="nm" id="whoName"></div>
+      <div class="hint" style="margin:0" id="whoHint"></div>
+      <div class="row">
+        <button class="kind" data-k="in">Пришёл<span class="bar"></span></button>
+        <button class="kind out" data-k="out">Ушёл<span class="bar"></span></button>
+      </div>
+      <button class="sec" id="notMe" style="margin-top:10px">Это не я</button>
+    </div>
+    <div id="result" class="hide who">
+      <div class="done" id="doneIcon">✓</div>
+      <div class="nm" id="doneTitle"></div>
+      <div class="hint" style="font-size:18px;margin:0" id="doneSub"></div>
+    </div>
+  </div>
+  <div class="glass side">
+    <h3>Сегодня на точке</h3>
+    <div id="today"><div class="hint">Пока никто не отметился</div></div>
+  </div>
+</div>
+<div class="q hide" id="queue"></div>
+<button class="gear hide" id="reset">Сменить точку</button>
+
+<script type="module">
+const SB = "https://qvblxhyftwivkzxucfak.supabase.co";
+const KEY = "sb_publishable_-ceoJkpmAZ7Y8osbPHaOlg_3nqUsdB7";
+const MODELS = "https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/model/";
+const TZ = "Asia/Tashkent";
+const MATCH = 0.5;          // порог расстояния: меньше — тот же человек
+const NEED = 3;             // подряд кадров с одним и тем же человеком
+const $ = id => document.getElementById(id);
+const show = (id, on = true) => $(id).classList.toggle("hide", !on);
+
+let code = new URLSearchParams(location.search).get("code") || localStorage.getItem("att_code") || "";
+let data = null, faceapi = null, ready = false, stream = null, busy = false;
+
+async function rpc(fn, args) {
+  const r = await fetch(`${SB}/rest/v1/rpc/${fn}`, { method: "POST",
+    headers: { apikey: KEY, Authorization: `Bearer ${KEY}`, "Content-Type": "application/json" }, body: JSON.stringify(args) });
+  const j = await r.json().catch(() => null);
+  if (!r.ok) { const e = new Error(j?.message || r.statusText); e.server = true; throw e; }
+  return j;
+}
+const hm = d => new Intl.DateTimeFormat("ru-RU", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(new Date(d));
+const mins = s => { const [h, m] = s.split(":").map(Number); return h * 60 + m; };
+const lateMin = ts => { const n = mins(hm(ts)) - mins(data.start_time); return n > 0 ? n : 0; };
+
+// ---------- часы ----------
+function tick() {
+  const n = new Date();
+  $("clock").textContent = hm(n);
+  $("date").textContent = new Intl.DateTimeFormat("ru-RU", { timeZone: TZ, weekday: "long", day: "numeric", month: "long" }).format(n);
+}
+setInterval(tick, 1000); tick();
+
+// ---------- настройка ----------
+async function start() {
+  if (!code) { show("setup"); $("code").focus(); return; }
+  try { data = await rpc("att_kiosk_load", { p_code: code }); }
+  catch (e) {
+    if (e.server) { localStorage.removeItem("att_code"); code = ""; show("setup"); $("setupErr").textContent = "Неверный код точки"; return; }
+    data = JSON.parse(localStorage.getItem("att_cache") || "null");
+    if (!data) { show("setup"); $("setupErr").textContent = "Нет интернета"; return; }
+  }
+  localStorage.setItem("att_code", code); localStorage.setItem("att_cache", JSON.stringify(data));
+  if (location.search.includes("code=")) history.replaceState(null, "", location.pathname);
+  show("setup", false); show("app"); show("reset");
+  $("ptName").textContent = data.point;
+  renderToday(); loadModels();
+  setInterval(refresh, 5 * 60 * 1000);
+}
+$("saveCode").onclick = () => { code = $("code").value.trim().toUpperCase(); $("setupErr").textContent = ""; start(); };
+$("code").onkeydown = e => { if (e.key === "Enter") $("saveCode").click(); };
+$("reset").onclick = () => { if (confirm("Сменить точку на этом компьютере?")) { localStorage.removeItem("att_code"); location.reload(); } };
+
+async function refresh() {
+  try { data = await rpc("att_kiosk_load", { p_code: code }); localStorage.setItem("att_cache", JSON.stringify(data)); renderToday(); } catch {}
+  flushQueue();
+}
+
+function renderToday() {
+  const names = Object.fromEntries(data.employees.map(e => [e.id, e.name]));
+  const by = {};
+  for (const ev of data.today) {
+    if (!names[ev.e]) continue;
+    const r = by[ev.e] ??= { name: names[ev.e], first: null, last: null };
+    if (ev.k === "in" && !r.first) r.first = ev.t;
+    r.last = ev;
+  }
+  const rows = Object.values(by).sort((a, b) => (a.first || "z").localeCompare(b.first || "z"));
+  $("today").innerHTML = rows.length ? rows.map(r => {
+    const out = r.last.k === "out";
+    const late = r.first && lateMin(r.first) > 0;
+    return `<div class="li"><span><span class="dot ${out ? "out" : ""}"></span>${r.name}</span>
+      <span class="t ${late ? "late" : ""}">${r.first ? hm(r.first) : "—"}${out ? " – " + hm(r.last.t) : ""}</span></div>`;
+  }).join("") : `<div class="hint">Пока никто не отметился</div>`;
+}
+
+// ---------- модели ----------
+async function loadModels() {
+  try {
+    faceapi = await import("https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/dist/face-api.esm.js");
+    await faceapi.tf.setBackend("webgl").catch(() => {});
+    await faceapi.tf.ready();
+    await Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri(MODELS),
+      faceapi.nets.faceLandmark68Net.loadFromUri(MODELS),
+      faceapi.nets.faceRecognitionNet.loadFromUri(MODELS),
+    ]);
+    ready = true; $("go").disabled = false; $("go").textContent = "Отметиться";
+  } catch (e) { $("go").textContent = "Ошибка загрузки — обновите страницу"; console.error(e); }
+}
+
+// ---------- распознавание ----------
+function best(desc) {
+  let b = { id: null, d: 9 }, second = 9;
+  for (const e of data.employees) for (const s of e.d) {
+    let sum = 0; for (let i = 0; i < 128; i++) { const x = desc[i] - s[i]; sum += x * x; }
+    const d = Math.sqrt(sum);
+    if (d < b.d) { if (b.id !== e.id) second = b.d; b = { id: e.id, d }; }
+    else if (e.id !== b.id && d < second) second = d;
+  }
+  return { ...b, second };
+}
+
+async function scan() {
+  if (!ready || busy) return;
+  busy = true;
+  show("idle", false); show("scan"); $("camBox").classList.remove("found");
+  $("status").textContent = "Смотрите в камеру";
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: "user" }, audio: false });
+  } catch { $("status").textContent = "Нет доступа к камере — разрешите в настройках Chrome"; setTimeout(home, 4000); return; }
+  const v = $("video"); v.srcObject = stream; await v.play();
+  const opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 });
+  let streak = 0, lastId = null, t0 = Date.now();
+  while (stream) {
+    if (Date.now() - t0 > 20000) { $("status").textContent = "Не удалось узнать. Попробуйте ещё раз"; stopCam(); setTimeout(home, 2500); return; }
+    const r = await faceapi.detectSingleFace(v, opts).withFaceLandmarks().withFaceDescriptor();
+    if (!stream) return;
+    if (!r) { streak = 0; $("camBox").classList.remove("found"); $("status").textContent = "Смотрите в камеру"; continue; }
+    const m = best(r.descriptor);
+    if (m.id && m.d < MATCH && m.second - m.d > 0.04) {
+      streak = m.id === lastId ? streak + 1 : 1; lastId = m.id;
+      $("camBox").classList.add("found"); $("status").textContent = "Узнаю…";
+      if (streak >= NEED) { const photo = grab(v); stopCam(); return ask(m.id, 1 - m.d, photo); }
+    } else {
+      streak = 0; $("camBox").classList.remove("found");
+      $("status").textContent = data.employees.length ? "Не узнаю — подойдите ближе" : "Сотрудники ещё не добавлены";
+    }
+  }
+}
+function grab(v) {
+  const c = document.createElement("canvas"); c.width = 320; c.height = 240;
+  const g = c.getContext("2d"); g.translate(320, 0); g.scale(-1, 1); g.drawImage(v, 0, 0, 320, 240);
+  return c.toDataURL("image/jpeg", 0.7);
+}
+function stopCam() { if (stream) stream.getTracks().forEach(t => t.stop()); stream = null; }
+$("cancelScan").onclick = () => { stopCam(); home(); };
+
+// ---------- подтверждение ----------
+let timer = null, pending = null;
+function ask(id, score, photo) {
+  const emp = data.employees.find(e => e.id === id);
+  const evs = data.today.filter(e => e.e === id);
+  const last = evs[evs.length - 1];
+  const sug = last?.k === "in" ? "out" : "in";
+  pending = { id, score, photo, name: emp.name };
+  show("scan", false); show("confirm");
+  $("snap").src = photo; $("whoName").textContent = emp.name;
+  $("whoHint").textContent = last ? `${last.k === "in" ? "Приход" : "Уход"} сегодня в ${hm(last.t)}` : "Сегодня ещё не отмечался";
+  document.querySelectorAll(".kind").forEach(b => {
+    b.classList.toggle("on", b.dataset.k === sug);
+    const bar = b.querySelector(".bar"); bar.style.transition = "none"; bar.style.width = "0";
+    if (b.dataset.k === sug) requestAnimationFrame(() => requestAnimationFrame(() => { bar.style.transition = "width 4s linear"; bar.style.width = "100%"; }));
+  });
+  clearTimeout(timer); timer = setTimeout(() => mark(sug), 4000);
+}
+document.querySelectorAll(".kind").forEach(b => b.onclick = () => mark(b.dataset.k));
+$("notMe").onclick = () => { clearTimeout(timer); pending = null; home(); };
+
+function geo() {
+  return new Promise(res => {
+    if (!navigator.geolocation) return res(null);
+    navigator.geolocation.getCurrentPosition(p => res(p.coords), () => res(null), { timeout: 3000, maximumAge: 600000 });
+  });
+}
+
+async function mark(kind) {
+  clearTimeout(timer);
+  if (!pending) return;
+  const p = pending; pending = null;
+  const c = await geo();
+  const args = { p_code: code, p_emp: p.id, p_kind: kind, p_score: +p.score.toFixed(3), p_photo: p.photo,
+    p_lat: c?.latitude ?? null, p_lng: c?.longitude ?? null, p_acc: c?.accuracy ?? null, p_device: navigator.userAgent };
+  const now = new Date().toISOString();
+  let ts = now;
+  try { const r = await rpc("att_kiosk_mark", args); ts = r.ts; }
+  catch (e) {
+    if (e.server) { done(false, p.name, "Ошибка: " + e.message); return; }
+    const q = JSON.parse(localStorage.getItem("att_queue") || "[]"); q.push({ args, at: now });
+    localStorage.setItem("att_queue", JSON.stringify(q)); showQueue();
+  }
+  data.today.push({ e: p.id, k: kind, t: ts }); renderToday();
+  const late = kind === "in" ? lateMin(ts) : 0;
+  done(true, `${kind === "in" ? "Приход" : "Уход"} · ${hm(ts)}`,
+    kind === "in" ? (late ? `${p.name}, опоздание ${late} мин` : `${p.name}, хорошего дня!`) : `${p.name}, до завтра!`, kind);
+}
+
+function done(ok, title, sub, kind) {
+  show("confirm", false); show("result");
+  $("doneIcon").textContent = ok ? "✓" : "!"; $("doneIcon").className = "done" + (kind === "out" ? " out" : "");
+  if (!ok) $("doneIcon").style.color = "var(--bad)"; else $("doneIcon").style.color = "";
+  $("doneTitle").textContent = title; $("doneSub").textContent = sub;
+  setTimeout(home, 3500);
+}
+function home() { busy = false; ["scan", "confirm", "result"].forEach(i => show(i, false)); show("idle"); }
+
+// ---------- офлайн-очередь ----------
+function showQueue() {
+  const n = JSON.parse(localStorage.getItem("att_queue") || "[]").length;
+  $("queue").textContent = n ? `Нет связи: ${n} отметок ждут отправки` : ""; show("queue", n > 0);
+}
+async function flushQueue() {
+  const q = JSON.parse(localStorage.getItem("att_queue") || "[]"); if (!q.length) return;
+  const rest = [];
+  for (const it of q) { try { await rpc("att_kiosk_mark", it.args); } catch (e) { if (!e.server) rest.push(it); } }
+  localStorage.setItem("att_queue", JSON.stringify(rest)); showQueue();
+}
+setInterval(flushQueue, 30000); showQueue();
+
+$("go").onclick = scan;
+document.addEventListener("keydown", e => { if ((e.code === "Space" || e.key === "Enter") && !$("idle").classList.contains("hide") && !$("app").classList.contains("hide")) { e.preventDefault(); scan(); } });
+start();
+</script>
+</body>
+</html>
