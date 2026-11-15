@@ -5,8 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Приход сотрудников — Saif-Optics</title>
 <style>
-:root{--bg:#f2f2f7;--card:rgba(255,255,255,.75);--line:rgba(60,60,67,.14);--tx:#1c1c1e;--mut:#8e8e93;--acc:#007aff;--ok:#34c759;--warn:#ff9500;--bad:#ff3b30;--fill:rgba(120,120,128,.12)}
-@media (prefers-color-scheme:dark){:root{--bg:#000;--card:rgba(44,44,46,.75);--line:rgba(84,84,88,.5);--tx:#f2f2f7;--mut:#98989f;--fill:rgba(120,120,128,.24)}}
+:root{color-scheme:light;--bg:#f2f2f7;--card:rgba(255,255,255,.75);--line:rgba(60,60,67,.14);--tx:#1c1c1e;--mut:#8e8e93;--acc:#007aff;--ok:#34c759;--warn:#ff9500;--bad:#ff3b30;--fill:rgba(120,120,128,.12)}
+@media (prefers-color-scheme:dark){:root{color-scheme:dark;--bg:#000;--card:rgba(44,44,46,.75);--line:rgba(84,84,88,.5);--tx:#f2f2f7;--mut:#98989f;--fill:rgba(120,120,128,.24)}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#000;--card:rgba(44,44,46,.75);--line:rgba(84,84,88,.5);--tx:#f2f2f7;--mut:#98989f;--fill:rgba(120,120,128,.24)}
+:root[data-theme="light"]{color-scheme:light;--bg:#f2f2f7;--card:rgba(255,255,255,.75);--line:rgba(60,60,67,.14);--tx:#1c1c1e;--mut:#8e8e93;--fill:rgba(120,120,128,.12)}
 *{box-sizing:border-box}body{margin:0;font:15px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;color:var(--tx);background:var(--bg);min-height:100vh;
  background-image:radial-gradient(1200px 600px at 0% -10%,rgba(0,122,255,.14),transparent),radial-gradient(900px 500px at 110% 110%,rgba(52,199,89,.10),transparent);-webkit-font-smoothing:antialiased}
 .glass{background:var(--card);backdrop-filter:blur(30px) saturate(1.6);-webkit-backdrop-filter:blur(30px) saturate(1.6);border:1px solid var(--line);border-radius:22px}
@@ -44,6 +46,15 @@ code{background:var(--fill);padding:3px 8px;border-radius:8px;font-size:15px;let
 .hide{display:none!important}
 .scroll{overflow-x:auto}
 a{color:var(--acc);text-decoration:none}
+.mapbtn{background:var(--fill);color:var(--acc);padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;margin-left:4px;vertical-align:middle}
+#mapModal .glass{max-width:640px}
+#mapModal iframe{width:100%;height:360px;border:0;border-radius:16px;display:block}
+/* встраивание в сайт: без шапки-дубля и внешних отступов */
+html.embed body{min-height:0;background:transparent}
+html.embed .top{position:static;background:none;backdrop-filter:none;-webkit-backdrop-filter:none;border:0;padding:0 0 12px}
+html.embed .top h1,html.embed #logout{display:none}
+html.embed main{margin:0 auto;padding:0}
+html.embed .login{margin:24px auto}
 </style>
 </head>
 <body>
@@ -109,12 +120,27 @@ a{color:var(--acc);text-decoration:none}
     <div style="margin-top:12px;display:flex;gap:10px;justify-content:center"><button class="btn2" id="camCancel">Отмена</button></div>
   </div>
 </div>
+<div id="mapModal" class="modal hide"><div class="glass">
+  <iframe id="mapFrame" title="Карта" loading="lazy"></iframe>
+  <div id="mapCap" style="margin-top:10px;font-weight:600"></div>
+  <div style="margin-top:6px"><a id="mapGoogle" target="_blank" rel="noopener">Открыть в Google Maps</a></div>
+</div></div>
 <div id="imgModal" class="modal hide"><img id="bigImg" style="max-width:92vw;max-height:80vh;border-radius:18px"></div>
 
+<script>
+// режим встраивания и тема от родителя (только своё происхождение)
+(() => {
+  const q = new URLSearchParams(location.search), root = document.documentElement;
+  if (q.get("embed") === "1") root.classList.add("embed");
+  const setTheme = t => { if (t === "dark" || t === "light") root.setAttribute("data-theme", t); else root.removeAttribute("data-theme"); };
+  setTheme(q.get("theme"));
+  addEventListener("message", e => { if (e.origin === location.origin && e.source === parent && e.data && typeof e.data === "object" && "kassaTheme" in e.data) setTheme(e.data.kassaTheme); });
+})();
+</script>
 <script type="module">
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 const sb = createClient("https://qvblxhyftwivkzxucfak.supabase.co", "sb_publishable_-ceoJkpmAZ7Y8osbPHaOlg_3nqUsdB7",
-  { auth: { persistSession: true, storageKey: "kassa-web-auth" } });
+  { auth: { persistSession: true, autoRefreshToken: true } });
 const MODELS = "https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/model/";
 const TZ = "Asia/Tashkent", SAMPLES = 6;
 const $ = id => document.getElementById(id);
@@ -195,7 +221,15 @@ function shifts(evs) {
   return [...m.values()];
 }
 const empName = id => emps.find(e => e.id === id)?.name || "—";
-const mapLink = e => e?.lat ? ` <a href="https://maps.google.com/?q=${e.lat},${e.lng}" target="_blank" title="±${Math.round(e.acc || 0)} м">📍</a>` : "";
+const mapLink = (e, who = "") => e?.lat ? ` <button class="mapbtn" data-map="${e.id}" data-who="${esc(who)}">📍 где</button>` : "";
+const mapFor = new Map();
+function showMap(e, who) {
+  const la = +e.lat, ln = +e.lng;
+  $("mapFrame").src = `https://www.openstreetmap.org/export/embed.html?bbox=${ln - 0.004},${la - 0.0025},${ln + 0.004},${la + 0.0025}&layer=mapnik&marker=${la},${ln}`;
+  $("mapCap").textContent = `${who} · ${e.kind === "in" ? "Приход" : "Уход"} ${hm(e.ts)} · точность ±${Math.round(e.acc || 0)} м`;
+  $("mapGoogle").href = `https://maps.google.com/?q=${la},${ln}`;
+  $("mapModal").classList.remove("hide");
+}
 const photo = e => e?.photo ? `<img class="ph" src="${e.photo}" data-big>` : "";
 
 // ---------- журнал дня ----------
@@ -211,22 +245,25 @@ async function renderLog() {
     [absent.length, "не отметились"], [sh.filter(s => s.out).length, "ушли"],
   ].map(([n, t]) => `<div class="glass kpi"><b>${n}</b><span>${t}</span></div>`).join("");
   sh.sort((a, b) => (a.in?.ts || "z").localeCompare(b.in?.ts || "z"));
-  $("logTbl").innerHTML = `<tr><th>Сотрудник</th><th>Точка</th><th>Приход</th><th>Опоздание</th><th>Уход</th><th>Часов</th><th>Отметок</th></tr>` +
+  $("logTbl").innerHTML = `<tr><th>Сотрудник</th><th>Точка</th><th>Приход</th><th>Опоздание</th><th>Уход</th><th>Где</th><th>Часов</th><th>Отметок</th></tr>` +
     sh.map(s => `<tr>
       <td><b>${esc(empName(s.emp))}</b></td>
       <td>${esc(s.point)} <span class="mut">(с ${startOf(s.point)})</span></td>
-      <td>${photo(s.in)}${s.in ? hm(s.in.ts) : "—"}${mapLink(s.in)}</td>
+      <td>${photo(s.in)}${s.in ? hm(s.in.ts) : "—"}</td>
       <td>${s.in ? (s.late ? `<span class="late">${fmtMin(s.late)}</span>` : `<span class="ok">вовремя</span>`) : ""}</td>
-      <td>${photo(s.out)}${s.out ? hm(s.out.ts) : "—"}${mapLink(s.out)}</td>
+      <td>${photo(s.out)}${s.out ? hm(s.out.ts) : "—"}</td>
+      <td>${[["in", s.in], ["out", s.out]].filter(([, x]) => x?.lat).map(([, x]) => (mapFor.set(String(x.id), x), mapLink(x, empName(s.emp)))).join("") || `<span class="mut">без места</span>`}</td>
       <td>${s.work ? fmtH(s.work) : "—"}</td>
       <td class="mut">${s.evs.map(e => (e.kind === "in" ? "↘" : "↗") + hm(e.ts)).join(" ")}</td></tr>`).join("") +
-    absent.map(e => `<tr><td><b>${esc(e.name)}</b></td><td>${esc(e.point || "")}</td><td colspan="5"><span class="pill r">не отметился</span></td></tr>`).join("") +
-    (!sh.length && !absent.length ? `<tr><td class="mut" colspan="7">Нет отметок</td></tr>` : "");
+    absent.map(e => `<tr><td><b>${esc(e.name)}</b></td><td>${esc(e.point || "")}</td><td colspan="6"><span class="pill r">не отметился</span></td></tr>`).join("") +
+    (!sh.length && !absent.length ? `<tr><td class="mut" colspan="8">Нет отметок</td></tr>` : "");
 }
 const shiftDay = n => { const d = new Date($("day").value + "T12:00:00+05:00"); d.setDate(d.getDate() + n); $("day").value = dayOf(d); renderLog(); };
 $("dPrev").onclick = () => shiftDay(-1); $("dNext").onclick = () => shiftDay(1);
 $("day").onchange = $("logPt").onchange = $("reload").onclick = renderLog;
 document.addEventListener("click", e => { if (e.target.dataset.big !== undefined) { $("bigImg").src = e.target.src; $("imgModal").classList.remove("hide"); } });
+document.addEventListener("click", e => { const b = e.target.closest?.("[data-map]"); if (b && mapFor.has(b.dataset.map)) showMap(mapFor.get(b.dataset.map), b.dataset.who); });
+$("mapModal").onclick = e => { if (e.target === $("mapModal")) { $("mapModal").classList.add("hide"); $("mapFrame").src = "about:blank"; } };
 $("imgModal").onclick = () => $("imgModal").classList.add("hide");
 
 // ---------- сводка месяца ----------

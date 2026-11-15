@@ -1368,7 +1368,7 @@ html.sz-vt::view-transition-new(root){animation-name:szIn}
 /* --- ТЕЛЕФОН (до 640) --- */
 @media (max-width:640px){
   /* нижнее меню: 4 главные вкладки + «Ещё» */
-  .tabs .tab[data-tab="pay"],.tabs .tab[data-tab="analytics"],.tabs .tab[data-tab="plan"],.tabs .tab[data-tab="lens"],.tabs .tab[data-tab="batch"]{display:none}
+  .tabs .tab[data-tab="pay"],.tabs .tab[data-tab="att"],.tabs .tab[data-tab="analytics"],.tabs .tab[data-tab="plan"],.tabs .tab[data-tab="lens"],.tabs .tab[data-tab="batch"]{display:none}
   .tabs{left:10px;right:10px;padding:4px;border-radius:24px;bottom:calc(10px + env(safe-area-inset-bottom,0px))}
   .tabs .tab,.tabs .tab-more{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:7px 2px 6px;font-size:11px;line-height:1.1;border-radius:20px;min-height:52px}
   .tabs .tab .tab-ic{display:block;width:23px;height:23px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -1808,6 +1808,8 @@ tr.fm-dim>td{color:var(--muted)}
 .py-xs{padding:2px 7px!important;font-size:12px;border-radius:8px}
 .py-dft{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:14px 18px;border-top:1px solid var(--line)}
 .py-msg{font-size:13px;color:var(--minus)}
+/* «Приход» — iframe с админкой прихода */
+#attFrame{display:block;width:100%;height:calc(100vh - 190px);min-height:560px;border:1px solid var(--line);border-radius:22px;background:transparent}
 /* ===== Показ больших таблиц по страницам ===== */
 .pgbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
 .pg-size{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
@@ -1998,6 +2000,7 @@ window.__zw=function(){return innerWidth/(window.__uiZ||1)};window.__zh=function
     <button type="button" role="tab" class="tab" data-tab="kassa" aria-selected="true">Касса</button>
     <button type="button" role="tab" class="tab" data-tab="report" aria-selected="false">Отчёт р/с</button>
     <button type="button" role="tab" class="tab" data-tab="pay" aria-selected="false">Платежи</button>
+    <button type="button" role="tab" class="tab" data-tab="att" aria-selected="false">Приход</button>
     <button type="button" role="tab" class="tab" data-tab="sales" aria-selected="false">Продажи</button>
     <button type="button" role="tab" class="tab" data-tab="recon" aria-selected="false">Сверка</button>
     <button type="button" role="tab" class="tab" data-tab="analytics" aria-selected="false">Аналитика</button>
@@ -2416,6 +2419,16 @@ window.__zw=function(){return innerWidth/(window.__uiZ||1)};window.__zh=function
       <div class="pay-hact"><button type="button" class="sec" id="payXlsx">Выгрузить Excel</button><button type="button" id="payAdd">＋ Добавить платёж</button></div>
     </header>
     <div id="payBody" class="stack"></div>
+  </div>
+  <div class="page" id="page-att" hidden>
+    <header class="head">
+      <div>
+        <div class="eyebrow">Saif-Optics · сотрудники</div>
+        <h1>Приход</h1>
+        <p>Кто пришёл и во сколько, опоздания, место отметки</p>
+      </div>
+    </header>
+    <div id="attBody"></div>
   </div>
   <div class="page" id="page-analytics" hidden>
     <header class="head">
@@ -3401,7 +3414,7 @@ window.SaifXL=(function(){
   };
 
   // ===================== вкладки =====================
-  const PAGES=["home","kassa","report","pay","sales","recon","analytics","plan","lens","batch"];
+  const PAGES=["home","kassa","report","pay","att","sales","recon","analytics","plan","lens","batch"];
   function setTab(t){
     tab=t;
     document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t?"true":"false"));
@@ -4576,6 +4589,7 @@ window.SaifXL=(function(){
     fillMonths();
     const r=rangeOf(filtered());
     $("filterInfo").textContent=(F.from||F.to)?`Показано: ${dLong(F.from||r.from)} — ${dLong(F.to||r.to)}`+(F.point!=="all"?` · ${F.point}`:"")+(F.cat!=="all"?` · ${F.cat}`:""):"Показаны все продажи";
+    if(tab==="att"){window.__ATT&&window.__ATT.render();return}
     if(tab==="pay"){window.__PAY&&window.__PAY.render();return}
     if(tab==="recon"){renderBz();window.__BZ&&window.__BZ.render("recon");return}
     if(tab==="batch"){renderStockTab();return}
@@ -5217,11 +5231,12 @@ addEventListener("scroll",()=>{if(!t)t=requestAnimationFrame(chk)},{passive:true
     batch:'<path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9"/>',
     pay:'<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><path d="m9 14.6 2 2 4-4"/>',
     recon:'<path d="M4 7h11M4 12h7M4 17h9"/><path d="m14 15 2.5 2.5L21 13"/>',
+    att:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
     more:'<circle cx="5.5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="18.5" cy="12" r="1.4"/>'
   };
   const svg=k=>`<svg class="tab-ic" viewBox="0 0 24 24" aria-hidden="true">${IC[k]}</svg>`;
-  const EXTRA=["pay","recon","analytics","plan","lens","batch"];
-  const LBL={pay:"Платежи",recon:"Сверка",analytics:"Аналитика",plan:"План",lens:"Линзы",batch:"Склад"};
+  const EXTRA=["pay","att","recon","analytics","plan","lens","batch"];
+  const LBL={pay:"Платежи",att:"Приход",recon:"Сверка",analytics:"Аналитика",plan:"План",lens:"Линзы",batch:"Склад"};
   nav.querySelectorAll(".tab[data-tab]").forEach(b=>{if(!b.querySelector(".tab-ic"))b.insertAdjacentHTML("afterbegin",svg(b.dataset.tab))});
   // кнопка «Ещё» — сразу после «Продаж», чтобы капля вставала на неё раньше скрытых вкладок
   const more=document.createElement("button");more.type="button";more.className="tab-more";more.setAttribute("aria-haspopup","dialog");more.setAttribute("aria-selected","false");
@@ -6241,6 +6256,31 @@ addEventListener("scroll",()=>{if(!t)t=requestAnimationFrame(chk)},{passive:true
   document.addEventListener("sales-updated",()=>setTimeout(rerender,0));
   document.addEventListener("kassa-updated",()=>setTimeout(rerender,0));
   window.__PAY={render,monthRows,amountOf,dueOf,hitsOf,debtOf,cashless,get items(){return items},get marks(){return marks}};
+})();
+
+</script>
+<script>
+/* Касса · «Приход»: админка прихода сотрудников (smena/admin.html) во вкладке сайта.
+   Вход общий с сайтом (один origin и один ключ хранилища). Тему передаём в iframe при открытии и при смене. */
+(function(){
+  "use strict";
+  let frame=null;
+  const theme=()=>document.documentElement.getAttribute("data-theme")||"";
+  const send=()=>{if(frame&&frame.contentWindow)frame.contentWindow.postMessage({kassaTheme:theme()||null},location.origin)};
+  function render(){
+    const box=document.getElementById("attBody");
+    if(!box||frame)return;
+    frame=document.createElement("iframe");
+    frame.id="attFrame";
+    frame.title="Приход сотрудников";
+    frame.setAttribute("allow","camera");
+    frame.setAttribute("loading","lazy");
+    frame.src="smena/admin.html?embed=1&theme="+encodeURIComponent(theme());
+    frame.addEventListener("load",send);
+    box.appendChild(frame);
+  }
+  new MutationObserver(send).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+  window.__ATT={render};
 })();
 
 </script>
