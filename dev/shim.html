@@ -63,13 +63,30 @@ section:has(#phList){display:none!important}
   function emitAll(){for(const [c,s] of colSubs)s.forEach(f=>{try{f(colSnap(c))}catch(e){}});for(const [k,s] of docSubs){const i=k.indexOf("/");s.forEach(f=>{try{f(docSnap(k.slice(0,i),k.slice(i+1)))}catch(e){}})}}
   const split=p=>{const i=p.indexOf("/");if(i<1||p.indexOf("/",i+1)>=0)throw Object.assign(new Error("bad path "+p),{code:"invalid_argument"});return [p.slice(0,i),p.slice(i+1)]};
   const fail=(e)=>{const x=new Error(e&&e.message||"Ошибка хранилища");x.code=(e&&e.code==="42501")?"not_granted":"unavailable";return x};
+  // не владелец (продавец, маркетолог): только просмотр, документы — одним вызовом role_docs_all
+  const ro=()=>!!window.__sbRole&&window.__sbRole!=="admin";
+  const forbid=()=>Object.assign(new Error("Только просмотр"),{code:"forbidden"});
+  const cashier=()=>window.__sbRole==="cashier";
+  // кассир пишет продажи и расходы дня только через серверные RPC; ошибка сервера — code "server" с текстом по-русски
+  const srvErr=e=>Object.assign(new Error((e&&e.message)||"Ошибка сервера"),{code:"server"});
+  const CRPC={sales:["cashier_put_sale","cashier_del_sale"],entries:["cashier_put_entry","cashier_del_entry"]};
+  async function cashierPut(c,id,data){
+    if(!CRPC[c])throw forbid();const d=clone(data)||{};
+    const {error}=await sb.rpc(CRPC[c][0],{p_id:id,p_data:d});if(error)throw srvErr(error);
+    colOf(c).set(id,d);emit(c,id);try{await loadAll();emitAll()}catch(e){}}
+  async function cashierDel(c,id){
+    if(!CRPC[c])throw forbid();
+    const {error}=await sb.rpc(CRPC[c][1],{p_id:id});if(error)throw srvErr(error);
+    colOf(c).delete(id);emit(c,id);try{await loadAll();emitAll()}catch(e){}}
   async function loadAll(){
+    if(ro()){const {data,error}=await sb.rpc("role_docs_all");if(error)throw error;cache.clear();(Array.isArray(data)?data:[]).forEach(r=>colOf(r.col).set(r.id,r.data));loaded=true;return}
     const all=[];let from=0;const N=1000;
     for(;;){const {data,error}=await sb.from("docs").select("col,id,data").order("col").order("id").range(from,from+N-1);if(error)throw error;all.push(...data);if(data.length<N)break;from+=N}
     cache.clear();all.forEach(r=>colOf(r.col).set(r.id,r.data));loaded=true;
   }
   let chan=null,wasLive=false;
   function live(){
+    if(ro())return;
     if(chan)sb.removeChannel(chan);
     chan=sb.channel("docs-live").on("postgres_changes",{event:"*",schema:"public",table:"docs"},p=>{
       const n=p.new&&p.new.col?p.new:null,o=p.old&&p.old.col?p.old:null;
@@ -89,11 +106,13 @@ section:has(#phList){display:none!important}
       id,
       onSnapshot(cb,err){const k=c+"/"+id;let s=docSubs.get(k);if(!s)docSubs.set(k,s=new Set());s.add(cb);if(loaded)setTimeout(()=>cb(docSnap(c,id)),0);return ()=>s.delete(cb)},
       async get(){return docSnap(c,id)},
-      async set(data){const d=clone(data)||{};const {error}=await sb.from("docs").upsert({col:c,id,data:d});if(error)throw fail(error);colOf(c).set(id,d);emit(c,id)},
-      async update(patch){const cur=colOf(c).get(id);if(cur===undefined)throw Object.assign(new Error("not found"),{code:"not_found"});const d=Object.assign(clone(cur),clone(patch));const {error}=await sb.from("docs").update({data:d}).eq("col",c).eq("id",id);if(error)throw fail(error);colOf(c).set(id,d);emit(c,id)},
-      async delete(){const {error}=await sb.from("docs").delete().eq("col",c).eq("id",id);if(error)throw fail(error);colOf(c).delete(id);emit(c,id)}
+      async set(data){if(cashier())return cashierPut(c,id,data);if(ro())throw forbid();const d=clone(data)||{};const {error}=await sb.from("docs").upsert({col:c,id,data:d});if(error)throw fail(error);colOf(c).set(id,d);emit(c,id)},
+      async update(patch){if(ro()&&!cashier())throw forbid();const cur=colOf(c).get(id);if(cur===undefined)throw Object.assign(new Error("not found"),{code:"not_found"});const d=Object.assign(clone(cur),clone(patch));if(cashier())return cashierPut(c,id,d);const {error}=await sb.from("docs").update({data:d}).eq("col",c).eq("id",id);if(error)throw fail(error);colOf(c).set(id,d);emit(c,id)},
+      async delete(){if(cashier())return cashierDel(c,id);if(ro())throw forbid();const {error}=await sb.from("docs").delete().eq("col",c).eq("id",id);if(error)throw fail(error);colOf(c).delete(id);emit(c,id)}
     }}
   };
+  // перечитать документы и прогнать подписчиков (после серверных RPC, например seller_add_expense)
+  window.__sbReload=async()=>{await loadAll();emitAll()};
   const downloads={async save({filename,data}){const b=data instanceof Blob?data:new Blob([data],{type:"text/plain;charset=utf-8"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download=filename||"file";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);return {status:"saved"}}};
   window.claude={use:async name=>{if(name==="db"){await ready;return db}if(name==="downloads")return downloads;return null}};
 
@@ -114,10 +133,14 @@ section:has(#phList){display:none!important}
     const email=session.user.email||"";
     const {data:mem,error}=await sb.from("members").select("email").limit(1);
     if(error||!mem||!mem.length){gate.hidden=false;$("sbLead").textContent="У "+email+" нет доступа к кассе. Попросите владельца добавить эту почту.";$("sbForm").querySelectorAll("label,input,#sbGo,#sbMode").forEach(x=>x.hidden=true);msg("");const b=document.createElement("button");b.type="button";b.textContent="Выйти";b.onclick=()=>$("sbOut").click();$("sbForm").appendChild(b);return}
-    started=true;gate.hidden=true;$("sbUser").hidden=false;{const mv=()=>{const tb=document.querySelector(".topbar");if(tb){tb.appendChild($("sbUser"));$("sbUser").classList.add("in-top")}};if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",mv);else mv()}$("sbEm").textContent=email;window.__sbEmail=email;window.__sbSignOut=()=>$("sbOut").click();
-    try{await loadAll()}catch(e){console.error(e)}
+    // роль: my_access → admin | seller | marketer; нет ответа (старая база, тест) — владелец
+    let noAcc=false;try{const r=await sb.rpc("my_access");if(r&&!r.error){const a=Array.isArray(r.data)?r.data[0]:r.data;if(a&&a.role){window.__sbRole=a.role;window.__sbPoint=a.point||null}else noAcc=true}else if(r&&r.error&&!/PGRST202|schema cache|could not find/i.test(String(r.error.message||"")))noAcc=true}catch(e){}
+    if(noAcc){gate.hidden=false;$("sbLead").textContent="У "+email+" нет доступа к кассе. Попросите владельца добавить эту почту.";$("sbForm").querySelectorAll("label,input,#sbGo,#sbMode").forEach(x=>x.hidden=true);msg("");const b=document.createElement("button");b.type="button";b.textContent="Выйти";b.onclick=()=>$("sbOut").click();$("sbForm").appendChild(b);return}
+    window.__roleLabel=window.__sbRole==="seller"?"Продавец"+(window.__sbPoint?" · "+window.__sbPoint:""):window.__sbRole==="cashier"?"Кассир"+(window.__sbPoint?" · "+window.__sbPoint:""):window.__sbRole==="marketer"?"Маркетолог":"";
+    started=true;gate.hidden=true;$("sbUser").hidden=false;{const mv=()=>{const tb=document.querySelector(".topbar");if(tb){tb.appendChild($("sbUser"));$("sbUser").classList.add("in-top")}};if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",mv);else mv()}$("sbEm").textContent=email+(window.__roleLabel?" · "+window.__roleLabel:"");window.__sbEmail=email;window.__sbSignOut=()=>$("sbOut").click();
+    try{await loadAll()}catch(e){console.error(e);if(ro()){const m="Не удалось загрузить данные: "+String((e&&e.message)||e);const x=document.createElement("div");x.id="sbLoadErr";x.setAttribute("role","alert");x.textContent=m;x.style.cssText="position:fixed;left:12px;right:12px;top:12px;z-index:99998;padding:12px 16px;border-radius:14px;background:var(--surface,#fff);border:1px solid var(--minus,#b3322e);color:var(--minus,#b3322e);font:14px 'Golos Text',sans-serif;box-shadow:0 8px 24px rgba(40,20,80,.15)";document.body.appendChild(x);const s=document.getElementById("salesStatus");if(s)s.textContent=m}}
     live();readyRes();emitAll();
-    if(IMPORT)importUI();
+    if(IMPORT&&!ro())importUI();
   }
   // разовый перенос данных из файла выгрузки (откройте страницу с #import)
   function importUI(){

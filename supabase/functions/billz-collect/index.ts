@@ -195,7 +195,7 @@ async function allowed(req: Request) {
   const { data: u } = await sb.auth.getUser(jwt);
   const email = u && u.user && u.user.email;
   if (!email) return null;
-  const { data: m } = await sb.from("members").select("email").ilike("email", email).maybeSingle();
+  const { data: m } = await sb.from("members").select("email").eq("email", email.toLowerCase()).eq("role", "admin").eq("active", true).maybeSingle();
   return m ? "вручную: " + email : null;
 }
 async function putDoc(id: string, data: unknown) {

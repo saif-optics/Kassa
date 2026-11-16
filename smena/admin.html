@@ -225,6 +225,16 @@ const plural = (n, a, b, c) => { const m = n % 100, d = n % 10; return m > 10 &&
 const demoWarn = () => { alert("Демо-режим: изменения не сохраняются"); return true; };
 
 let points = [], emps = [];
+// режим продавца: только своя точка, только просмотр (журнал дня и сводка месяца), данные через RPC att_my_load
+let SELLER = null;
+async function sellerLoad(fromIso, toIso) {
+  const { data, error } = await sb.rpc("att_my_load", { p_from: fromIso, p_to: toIso });
+  if (error) throw error;
+  const d = data || {};
+  points = d.point ? [{ point: d.point, start_time: d.start_time || "10:00" }] : [];
+  emps = d.employees || [];
+  return d.events || [];
+}
 
 // ---------- высота iframe по содержимому ----------
 if (document.documentElement.classList.contains("embed") && parent !== window) {
@@ -264,6 +274,13 @@ async function boot() {
   const session = DEMO ? true : (await sb.auth.getSession()).data.session;
   if (!session) { $("login").classList.remove("hide"); return; }
   $("login").classList.add("hide"); $("app").classList.remove("hide");
+  if (!DEMO) {
+    try { const r = await sb.rpc("my_access"); const a = Array.isArray(r.data) ? r.data[0] : r.data; if (!r.error && (a?.role === "seller" || a?.role === "cashier")) SELLER = a; } catch {}
+    if (SELLER) {
+      document.querySelectorAll('#tabs [data-t="emp"],#tabs [data-t="pts"],#tabs [data-t="memo"],#logPt,#sumPt').forEach(x => x.classList.add("hide"));
+      $("tabs").querySelector('[data-t="log"]').textContent = "Журнал дня"; $("tabs").querySelector('[data-t="sum"]').textContent = "Сводка месяца";
+    }
+  }
   $("day").value = dayOf(new Date()); $("month").value = dayOf(new Date()).slice(0, 7);
   await loadRefs(); renderLog();
 }
@@ -285,6 +302,9 @@ async function loadRefs() {
         { id: "d3", name: "Мария Орлова", point: "Точка В", active: true, descriptors: [] },
       ];
     }
+  } else if (SELLER) {
+    const t = dayOf(new Date()), from = new Date(t + "T00:00:00+05:00").toISOString();
+    try { await sellerLoad(from, new Date(new Date(from).getTime() + 86400000).toISOString()); } catch (e) { alert("Нет доступа: " + (e.message || e)); return; }
   } else {
     const [p, e] = await Promise.all([
       sb.from("att_points").select("*").order("point"),
@@ -298,6 +318,7 @@ async function loadRefs() {
   $("logPt").innerHTML = `<option value="">Все точки</option>` + opts;
   $("sumPt").innerHTML = `<option value="">Все точки</option>` + opts;
   $("logPt").value = keep[0]; $("sumPt").value = keep[1];
+  if (SELLER && points[0]) $("logPt").value = $("sumPt").value = points[0].point;
   $("newPt").innerHTML = opts;
 }
 const startOf = pt => points.find(p => p.point === pt)?.start_time?.slice(0, 5) || "10:00";
@@ -321,6 +342,7 @@ async function events(fromDay, toDay, withPhoto) {
   const from = new Date(fromDay + "T00:00:00+05:00").toISOString();
   const to = new Date(new Date(toDay + "T00:00:00+05:00").getTime() + 86400000).toISOString();
   if (DEMO) return demoEvents().filter(e => e.ts >= from && e.ts < to);
+  if (SELLER) return sellerLoad(from, to);
   const cols = "id,employee_id,point,kind,ts,score,lat,lng,acc" + (withPhoto ? ",photo" : "");
   const all = []; let off = 0;
   for (;;) {
@@ -363,7 +385,8 @@ const photo = e => typeof e?.photo === "string" && e.photo.startsWith("data:imag
 async function renderLog() {
   const day = $("day").value, pt = $("logPt").value;
   $("logEmpty").innerHTML = ""; $("logTbl").innerHTML = `<tr><td class="mut">Загрузка…</td></tr>`;
-  const sh = shifts(await events(day, day, true)).filter(s => !pt || s.point === pt);
+  let evs; try { evs = await events(day, day, true); } catch (e) { $("logTbl").innerHTML = `<tr><td class="mut">Не удалось загрузить: ${esc(e.message || e)}</td></tr>`; return postH(); }
+  const sh = shifts(evs).filter(s => !pt || s.point === pt);
   const active = emps.filter(e => e.active && (!pt || e.point === pt));
   const came = new Set(sh.map(s => s.emp));
   const absent = day <= dayOf(new Date()) ? active.filter(e => !came.has(e.id)) : [];
@@ -403,7 +426,8 @@ async function renderSum() {
   const [y, mo] = m.split("-").map(Number);
   const last = new Date(y, mo, 0).getDate();
   $("sumEmpty").innerHTML = ""; $("sumTbl").innerHTML = `<tr><td class="mut">Загрузка…</td></tr>`;
-  const sh = shifts(await events(`${m}-01`, `${m}-${String(last).padStart(2, "0")}`, false)).filter(s => !pt || s.point === pt);
+  let evs; try { evs = await events(`${m}-01`, `${m}-${String(last).padStart(2, "0")}`, false); } catch (e) { $("sumTbl").innerHTML = `<tr><td class="mut">Не удалось загрузить: ${esc(e.message || e)}</td></tr>`; return postH(); }
+  const sh = shifts(evs).filter(s => !pt || s.point === pt);
   const by = {};
   for (const s of sh) {
     const r = by[s.emp] ??= { days: 0, late: 0, lateMin: 0, work: 0, inSum: 0, inN: 0, noOut: 0, pts: new Set() };

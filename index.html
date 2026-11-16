@@ -1808,34 +1808,60 @@ tr.fm-dim>td{color:var(--muted)}
 .py-xs{padding:2px 7px!important;font-size:12px;border-radius:8px}
 .py-dft{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:14px 18px;border-top:1px solid var(--line)}
 .py-msg{font-size:13px;color:var(--minus)}
-/* «Контроль» — окошко доступов и iframe с админкой прихода; высоту задаёт att.js по содержимому */
+/* «Контроль» — блок пользователей (#attUsers, заполняет patch_role) и iframe с админкой прихода; высоту задаёт att.js по содержимому */
+#attUsers:empty{display:none}
+#attUsers{margin-bottom:16px}
 #attFrame{display:block;width:100%;min-height:420px;border:0;background:transparent}
-.att-acc{margin-bottom:16px}
-.att-ah{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
-.att-ah h2{margin:0;font-size:17px}
-.att-ah button{padding:6px 12px;font-size:13px}
-.att-acc .tbl{overflow-x:auto;-webkit-overflow-scrolling:touch}
-.att-acc td{padding:9px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
-.att-acc tr:last-child td{border-bottom:0}
-.att-dt{color:var(--muted)}
-.att-st.ok{background:var(--plus-soft);color:var(--plus)}
-.att-st.off{background:var(--wash);color:var(--muted)}
-.att-hint{margin-top:10px;font-size:12px}
 
 /* ---- роли: продавец и маркетолог видят всё только для просмотра (patch_role.py) ---- */
 html[data-role] #photoPanel,
-html[data-role] #saleFormPanel,
 html[data-role] #page-sales details.settings,
 html[data-role] #exportBtns,
 html[data-role] #anXlsx,
 html[data-role] .scal-plan,
-html[data-role] #jGrid .ja,
-html[data-role] #dxTable .acts,
-html[data-role] #dxTable th:last-child{display:none!important}
+html:is([data-role=seller],[data-role=marketer]) #saleFormPanel,
+html:is([data-role=seller],[data-role=marketer]) #jGrid .ja,
+html:is([data-role=seller],[data-role=marketer]) #dxTable .acts,
+html:is([data-role=seller],[data-role=marketer]) #dxTable th:last-child{display:none!important}
 .dx-tpl{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;margin:0 0 2px}
 .dx-tpl button{min-height:30px;padding:4px 12px;border-radius:999px;border:1px solid var(--line);background:var(--accent-soft,var(--surface));color:var(--accent);font:inherit;font-size:13px;cursor:pointer}
 .more-acc small{display:block;color:var(--muted);font-size:12px}
-html[data-role] .att-acc{display:none!important}
+/* ---- «Пользователи» владельца (role/users.js) ---- */
+#roleUsers{margin-top:16px}
+#roleUsers .ru-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+#roleUsers h2{margin:0;font-size:18px}
+#roleUsers h3{margin:16px 0 8px;font-size:15px}
+#roleUsers .ru-wrap{overflow-x:auto}
+#roleUsers .ru-tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+#roleUsers .ru-tbl th{text-align:left;color:var(--muted);font-weight:500;padding:6px 8px;white-space:nowrap}
+#roleUsers .ru-tbl td{padding:8px;border-top:1px solid var(--line);vertical-align:middle}
+#roleUsers .ru-mut{color:var(--muted)}
+#roleUsers .ru-acts{display:flex;flex-wrap:wrap;gap:6px}
+#roleUsers .ru-btn{min-height:32px;padding:4px 12px;border-radius:999px;border:1px solid var(--line);background:var(--accent-soft,var(--surface));color:var(--accent);font:inherit;font-size:13px;cursor:pointer;-webkit-backdrop-filter:blur(var(--blur,22px));backdrop-filter:blur(var(--blur,22px))}
+#roleUsers .ru-btn:disabled{opacity:.6;cursor:default}
+#roleUsers .ru-main{background:var(--accent);color:#fff;border-color:transparent}
+#roleUsers .ru-del{color:var(--minus)}
+#roleUsers .ru-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+#roleUsers .ru-grid label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+#roleUsers .ru-grid label[hidden]{display:none}
+#roleUsers input,#roleUsers select{min-height:38px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:0 12px;font:inherit;font-size:15px;box-sizing:border-box;width:100%}
+#roleUsers .ru-pw{display:flex;gap:6px}
+#roleUsers .ru-pw .ru-btn{flex:none}
+#roleUsers .ru-act{display:flex;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap}
+#roleUsers .ru-msg{font-size:13px;min-height:18px;margin-top:6px}
+#roleUsers .ru-act .ru-msg{margin:0}
+#roleUsers .ru-once{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding:10px 12px;border-radius:14px;background:var(--accent-soft,var(--surface));font-size:13.5px}
+#roleUsers .ru-once[hidden]{display:none}
+#roleUsers .ru-once input{width:auto;flex:1;min-width:160px;font-family:monospace}
+#roleUsers .ru-once small{flex-basis:100%;color:var(--muted)}
+#roleUsers .ru-hint{margin:14px 0 0;padding-left:18px;font-size:12.5px;color:var(--muted);line-height:1.5}
+@media (max-width:640px){
+  #roleUsers .ru-grid{grid-template-columns:1fr}
+  #roleUsers .ru-tbl thead{display:none}
+  #roleUsers .ru-tbl tr{display:block;border-top:1px solid var(--line);padding:6px 0}
+  #roleUsers .ru-tbl td{display:flex;justify-content:space-between;gap:10px;border:0;padding:3px 8px}
+  #roleUsers .ru-tbl td[data-l]::before{content:attr(data-l);color:var(--muted)}
+}
 /* ===== Показ больших таблиц по страницам ===== */
 .pgbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
 .pg-size{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
@@ -1920,6 +1946,18 @@ section:has(#phList){display:none!important}
   // не владелец (продавец, маркетолог): только просмотр, документы — одним вызовом role_docs_all
   const ro=()=>!!window.__sbRole&&window.__sbRole!=="admin";
   const forbid=()=>Object.assign(new Error("Только просмотр"),{code:"forbidden"});
+  const cashier=()=>window.__sbRole==="cashier";
+  // кассир пишет продажи и расходы дня только через серверные RPC; ошибка сервера — code "server" с текстом по-русски
+  const srvErr=e=>Object.assign(new Error((e&&e.message)||"Ошибка сервера"),{code:"server"});
+  const CRPC={sales:["cashier_put_sale","cashier_del_sale"],entries:["cashier_put_entry","cashier_del_entry"]};
+  async function cashierPut(c,id,data){
+    if(!CRPC[c])throw forbid();const d=clone(data)||{};
+    const {error}=await sb.rpc(CRPC[c][0],{p_id:id,p_data:d});if(error)throw srvErr(error);
+    colOf(c).set(id,d);emit(c,id);try{await loadAll();emitAll()}catch(e){}}
+  async function cashierDel(c,id){
+    if(!CRPC[c])throw forbid();
+    const {error}=await sb.rpc(CRPC[c][1],{p_id:id});if(error)throw srvErr(error);
+    colOf(c).delete(id);emit(c,id);try{await loadAll();emitAll()}catch(e){}}
   async function loadAll(){
     if(ro()){const {data,error}=await sb.rpc("role_docs_all");if(error)throw error;cache.clear();(Array.isArray(data)?data:[]).forEach(r=>colOf(r.col).set(r.id,r.data));loaded=true;return}
     const all=[];let from=0;const N=1000;
@@ -1948,9 +1986,9 @@ section:has(#phList){display:none!important}
       id,
       onSnapshot(cb,err){const k=c+"/"+id;let s=docSubs.get(k);if(!s)docSubs.set(k,s=new Set());s.add(cb);if(loaded)setTimeout(()=>cb(docSnap(c,id)),0);return ()=>s.delete(cb)},
       async get(){return docSnap(c,id)},
-      async set(data){if(ro())throw forbid();const d=clone(data)||{};const {error}=await sb.from("docs").upsert({col:c,id,data:d});if(error)throw fail(error);colOf(c).set(id,d);emit(c,id)},
-      async update(patch){if(ro())throw forbid();const cur=colOf(c).get(id);if(cur===undefined)throw Object.assign(new Error("not found"),{code:"not_found"});const d=Object.assign(clone(cur),clone(patch));const {error}=await sb.from("docs").update({data:d}).eq("col",c).eq("id",id);if(error)throw fail(error);colOf(c).set(id,d);emit(c,id)},
-      async delete(){if(ro())throw forbid();const {error}=await sb.from("docs").delete().eq("col",c).eq("id",id);if(error)throw fail(error);colOf(c).delete(id);emit(c,id)}
+      async set(data){if(cashier())return cashierPut(c,id,data);if(ro())throw forbid();const d=clone(data)||{};const {error}=await sb.from("docs").upsert({col:c,id,data:d});if(error)throw fail(error);colOf(c).set(id,d);emit(c,id)},
+      async update(patch){if(ro()&&!cashier())throw forbid();const cur=colOf(c).get(id);if(cur===undefined)throw Object.assign(new Error("not found"),{code:"not_found"});const d=Object.assign(clone(cur),clone(patch));if(cashier())return cashierPut(c,id,d);const {error}=await sb.from("docs").update({data:d}).eq("col",c).eq("id",id);if(error)throw fail(error);colOf(c).set(id,d);emit(c,id)},
+      async delete(){if(cashier())return cashierDel(c,id);if(ro())throw forbid();const {error}=await sb.from("docs").delete().eq("col",c).eq("id",id);if(error)throw fail(error);colOf(c).delete(id);emit(c,id)}
     }}
   };
   // перечитать документы и прогнать подписчиков (после серверных RPC, например seller_add_expense)
@@ -1976,11 +2014,11 @@ section:has(#phList){display:none!important}
     const {data:mem,error}=await sb.from("members").select("email").limit(1);
     if(error||!mem||!mem.length){gate.hidden=false;$("sbLead").textContent="У "+email+" нет доступа к кассе. Попросите владельца добавить эту почту.";$("sbForm").querySelectorAll("label,input,#sbGo,#sbMode").forEach(x=>x.hidden=true);msg("");const b=document.createElement("button");b.type="button";b.textContent="Выйти";b.onclick=()=>$("sbOut").click();$("sbForm").appendChild(b);return}
     // роль: my_access → admin | seller | marketer; нет ответа (старая база, тест) — владелец
-    let noAcc=false;try{const r=await sb.rpc("my_access");if(r&&!r.error){const a=Array.isArray(r.data)?r.data[0]:r.data;if(a&&a.role){window.__sbRole=a.role;window.__sbPoint=a.point||null}else noAcc=true}}catch(e){}
+    let noAcc=false;try{const r=await sb.rpc("my_access");if(r&&!r.error){const a=Array.isArray(r.data)?r.data[0]:r.data;if(a&&a.role){window.__sbRole=a.role;window.__sbPoint=a.point||null}else noAcc=true}else if(r&&r.error&&!/PGRST202|schema cache|could not find/i.test(String(r.error.message||"")))noAcc=true}catch(e){}
     if(noAcc){gate.hidden=false;$("sbLead").textContent="У "+email+" нет доступа к кассе. Попросите владельца добавить эту почту.";$("sbForm").querySelectorAll("label,input,#sbGo,#sbMode").forEach(x=>x.hidden=true);msg("");const b=document.createElement("button");b.type="button";b.textContent="Выйти";b.onclick=()=>$("sbOut").click();$("sbForm").appendChild(b);return}
-    window.__roleLabel=window.__sbRole==="seller"?"Продавец"+(window.__sbPoint?" · "+window.__sbPoint:""):window.__sbRole==="marketer"?"Маркетолог":"";
+    window.__roleLabel=window.__sbRole==="seller"?"Продавец"+(window.__sbPoint?" · "+window.__sbPoint:""):window.__sbRole==="cashier"?"Кассир"+(window.__sbPoint?" · "+window.__sbPoint:""):window.__sbRole==="marketer"?"Маркетолог":"";
     started=true;gate.hidden=true;$("sbUser").hidden=false;{const mv=()=>{const tb=document.querySelector(".topbar");if(tb){tb.appendChild($("sbUser"));$("sbUser").classList.add("in-top")}};if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",mv);else mv()}$("sbEm").textContent=email+(window.__roleLabel?" · "+window.__roleLabel:"");window.__sbEmail=email;window.__sbSignOut=()=>$("sbOut").click();
-    try{await loadAll()}catch(e){console.error(e)}
+    try{await loadAll()}catch(e){console.error(e);if(ro()){const m="Не удалось загрузить данные: "+String((e&&e.message)||e);const x=document.createElement("div");x.id="sbLoadErr";x.setAttribute("role","alert");x.textContent=m;x.style.cssText="position:fixed;left:12px;right:12px;top:12px;z-index:99998;padding:12px 16px;border-radius:14px;background:var(--surface,#fff);border:1px solid var(--minus,#b3322e);color:var(--minus,#b3322e);font:14px 'Golos Text',sans-serif;box-shadow:0 8px 24px rgba(40,20,80,.15)";document.body.appendChild(x);const s=document.getElementById("salesStatus");if(s)s.textContent=m}}
     live();readyRes();emitAll();
     if(IMPORT&&!ro())importUI();
   }
@@ -2462,9 +2500,10 @@ window.__zw=function(){return innerWidth/(window.__uiZ||1)};window.__zh=function
       <div>
         <div class="eyebrow">Saif-Optics · контроль</div>
         <h1>Контроль</h1>
-        <p>Кто пришёл и во сколько, место отметки · доступы продавцов</p>
+        <p>Пользователи и доступы · кто пришёл и во сколько, место отметки</p>
       </div>
     </header>
+    <div id="attUsers"></div>
     <div id="attBody"></div>
   </div>
   <div class="page" id="page-analytics" hidden>
@@ -3575,7 +3614,7 @@ window.SaifXL=(function(){
       if(editId){const old=sales.find(s=>s.id===editId)||{};await putSale(editId,Object.assign({},old,rec));sMsg("Продажа обновлена")}
       else{await putSale(newId(),Object.assign(rec,{createdAt:Date.now()}));sMsg(`Добавлено: ${product}, ${fmt(sum)} сум`)}
       resetSaleForm(true);$("sProduct").focus();
-    }catch(err){sMsg(err&&err.code==="quota_exceeded"?"Хранилище заполнено.":"Не удалось сохранить. Попробуйте ещё раз.",true)}
+    }catch(err){sMsg(err&&err.code==="quota_exceeded"?"Хранилище заполнено.":window.__roleErr(err,"Не удалось сохранить. Попробуйте ещё раз."),true)}
     finally{$("sSubmit").disabled=false}
   });
   function startEditSale(id){const s=sales.find(x=>x.id===id);if(!s)return;editId=id;
@@ -3594,7 +3633,8 @@ window.SaifXL=(function(){
     if(window.__sbRole==="seller"){
       $("dxSubmit").disabled=true;
       try{const r=await window.__sb.rpc("seller_add_expense",{p_name:name,p_amount:amount,p_date:date});if(r.error)throw r.error;
-        await window.__sbReload();$("dxName").value="";$("dxAmount").value="";flash("dxMsg","Расход добавлен")}
+        $("dxName").value="";$("dxAmount").value="";
+        try{await window.__sbReload();flash("dxMsg","Расход добавлен")}catch(e2){flash("dxMsg","Расход добавлен, обновите страницу")}}
       catch(e){flash("dxMsg",String((e&&e.message)||"Не удалось сохранить расход."),true)}
       finally{$("dxSubmit").disabled=false}
       return}
@@ -3602,7 +3642,7 @@ window.SaifXL=(function(){
     $("dxSubmit").disabled=true;
     try{await db.doc("entries/"+newId()).set({type:"exp",name:`${point} за ${name.charAt(0).toLowerCase()+name.slice(1)}`,amount,cat:"op",branch:point,date,source:"day",createdAt:Date.now()});
       $("dxName").value="";$("dxAmount").value="";flash("dxMsg",`Расход добавлен${KASSA_POINTS.includes(point)?" и учтён в кассе":""}`)}
-    catch(e){flash("dxMsg","Не удалось сохранить расход.",true)}
+    catch(e){flash("dxMsg",window.__roleErr(e,"Не удалось сохранить расход."),true)}
     finally{$("dxSubmit").disabled=false}
   });
 
@@ -3624,7 +3664,7 @@ window.SaifXL=(function(){
     const i=sales.findIndex(s=>s.id===id);const v=Object.assign(clean,{id});if(i>=0)sales[i]=v;else sales.push(v);lsSet("list",sales);updateDatalist();renderAll();
   }
   async function delSale(id){
-    if(mode==="db"){try{await db.doc("sales/"+id).delete()}catch(e){sMsg("Не удалось удалить.",true)}return}
+    if(mode==="db"){try{await db.doc("sales/"+id).delete()}catch(e){sMsg(window.__roleErr(e,"Не удалось удалить."),true)}return}
     sales=sales.filter(s=>s.id!==id);lsSet("list",sales);renderAll();
   }
   function confirmBtn(b,go){if(b.dataset.c){go();return}b.dataset.c="1";const t=b.textContent;b.textContent="Точно удалить?";b.style.color="var(--minus)";setTimeout(()=>{if(b.isConnected){delete b.dataset.c;b.textContent=t;b.style.color=""}},3000)}
@@ -3856,7 +3896,7 @@ window.SaifXL=(function(){
      $("dxSum").innerHTML=exAll.length&&!dxOpen?`<h3 class="wsub" style="margin-top:16px">Расходы за период по точкам</h3>`+Object.entries(bp).sort((a,b)=>b[1]-a[1]).map(([k,x])=>`<div class="hb"><span class="name"><span class="sw" style="background:${pointColor(k)}"></span>${esc(k)}</span><span class="val num">${fmt(x)}</span><div class="track"><span style="width:${x/mx*100}%;background:${pointColor(k)}"></span></div></div>`).join("")+
        `<h3 class="wsub" style="margin-top:14px">Последние расходы</h3><div class="dx-last">`+exAll.slice(0,4).map(e=>`<div class="kv"><span>${dShort(e.date)} · ${esc(String(e.name||"").replace(/^\S+\s+(за|на)\s+/i,""))} <span class="srcs">${esc(e.branch||"")}</span></span><span class="num">−${fmt(v(e))}</span></div>`).join("")+`</div>`:"";}
     $("dxTable").innerHTML=exs.length?`<thead><tr><th>Дата</th><th>Точка</th><th>Статья</th><th class="r">Сумма</th><th></th></tr></thead><tbody>`+exs.map(e=>`<tr><td class="num">${dShort(e.date)}</td><td>${esc(e.branch)}</td><td>${esc(String(e.name).replace(/^\S+\s+(за|на)\s+/i,""))}</td><td class="r num">${fmt(typeof e.fact==="number"?e.fact:e.amount)}</td><td class="acts"><button class="ghost del" type="button" data-xd="${esc(e.id)}">Удалить</button></td></tr>`).join("")+`</tbody>`:`<tbody><tr><td class="srcs">Расходов дня за период нет</td></tr></tbody>`;
-    $("dxTable").querySelectorAll("[data-xd]").forEach(b=>b.onclick=()=>confirmBtn(b,async()=>{try{await db.doc("entries/"+b.dataset.xd).delete()}catch(e){flash("dxMsg","Не удалось удалить.",true)}}));
+    $("dxTable").querySelectorAll("[data-xd]").forEach(b=>b.onclick=()=>confirmBtn(b,async()=>{try{await db.doc("entries/"+b.dataset.xd).delete()}catch(e){flash("dxMsg",window.__roleErr(e,"Не удалось удалить."),true)}}));
 
     // статистика по периодам
     if(!stF.from||stF.from<r.from||stF.from>r.to)stF.from=r.from;if(!stF.to||stF.to>r.to||stF.to<r.from)stF.to=r.to;
@@ -4635,7 +4675,7 @@ window.SaifXL=(function(){
     fillMonths();
     const r=rangeOf(filtered());
     $("filterInfo").textContent=(F.from||F.to)?`Показано: ${dLong(F.from||r.from)} — ${dLong(F.to||r.to)}`+(F.point!=="all"?` · ${F.point}`:"")+(F.cat!=="all"?` · ${F.cat}`:""):"Показаны все продажи";
-    if(tab==="att"){window.__ATT&&window.__ATT.render();return}
+    if(tab==="att"){window.__roleUsersRender&&window.__roleUsersRender();window.__ATT&&window.__ATT.render();return}
     if(tab==="pay"){window.__PAY&&window.__PAY.render();return}
     if(tab==="recon"){renderBz();window.__BZ&&window.__BZ.render("recon");return}
     if(tab==="batch"){renderStockTab();return}
@@ -4892,12 +4932,18 @@ window.SaifXL=(function(){
     db.doc("settings/analytics3").onSnapshot(s=>{if(s.exists&&Array.isArray(s.data().off)){anSel=s.data().off;if(tab==="analytics")renderAnalytics()}},()=>{});
     db.doc("settings/sellerTpl").onSnapshot(s=>{if(window.__roleTpl)window.__roleTpl(s.exists?s.data():null)},()=>{});
   }
-  // ===================== роли: продавец и маркетолог (patch_role.py) =====================
+  // ===================== роли: продавец, кассир и маркетолог (patch_role.py) =====================
   // Вставлено внутрь скрипта страницы, чтобы видеть F, settings, setTab, METRICS и др.
   const roleName=()=>window.__sbRole||"admin";
   // показатели аналитики, которым нужны деньги владельца: прогноз и план, касса и расходы, прибыль и маржа
   const ROLE_DENY=new Set([4,5,20,21,23,24,25,26,27,36,37,38,39,59]);
   let roleTpl=null,roleDone=false;
+  // настройки страницы (точки) для раздела «Пользователи» (role/users.js)
+  window.__roleSettings=()=>settings;
+  // текст ошибки сервера (RPC кассира) вместо общего «Не удалось сохранить»
+  window.__roleErr=(e,def)=>(roleName()!=="admin"&&e&&e.code==="server"&&e.message)?e.message:def;
+  // сегодня и вчера по Ташкенту (UTC+5), а не по часам устройства
+  const roleDay=k=>new Date(Date.now()+5*3600e3-k*864e5).toISOString().slice(0,10);
   function roleRenderTpl(){
     const box=$("dxTpl");if(!box)return;
     const arr=roleTpl&&Array.isArray(roleTpl[window.__sbPoint])?roleTpl[window.__sbPoint]:[];
@@ -4907,16 +4953,23 @@ window.SaifXL=(function(){
   window.__roleTpl=d=>{roleTpl=d;roleRenderTpl()};
   // вызывается из fillSelects: зафиксировать точку продавца
   window.__roleFill=function(){
-    if(roleName()!=="seller"||!window.__sbPoint)return;
+    if(!["seller","cashier"].includes(roleName())||!window.__sbPoint)return;
     const pt=window.__sbPoint;F.point=pt;
     $("fPoint").innerHTML=`<option selected>${esc(pt)}</option>`;$("fPoint").value=pt;
     $("dxPoint").innerHTML=`<option selected>${esc(pt)}</option>`;$("dxPoint").value=pt;$("dxPoint").disabled=true;
+    if(roleName()==="cashier"){
+      // кассир вносит продажи только на своей точке: в сегменте одна кнопка
+      curPoint=pt;
+      $("sPointSeg").innerHTML=`<button type="button" role="radio" aria-checked="true" data-pt="${esc(pt)}"><span class="sw" style="background:${pointColor(pt)}"></span>${esc(pt)}</button>`;
+    }
   };
   window.__roleApply=function(){
     const r=roleName();if(r==="admin"||roleDone)return;roleDone=true;
     if(window.__roleDom)window.__roleDom();
     const hide=el=>{if(el)el.style.display="none"};
-    if(r==="seller"){
+    if(r==="seller"||r==="cashier"){
+      // даты расхода и продажи — только вчера и сегодня (Ташкент)
+      ["dxDate","sDate"].forEach(id=>{const e=$(id);if(!e)return;e.min=roleDay(1);e.max=roleDay(0);if(!e.value||e.value>e.max||e.value<e.min)e.value=e.max});
       hide($("fPoint").closest("label"));
       const lab=$("dxName").closest("label");
       if(lab&&!$("dxTpl")){const d=document.createElement("div");d.id="dxTpl";d.className="dx-tpl";d.hidden=true;lab.before(d);
@@ -5326,7 +5379,7 @@ addEventListener("scroll",()=>{if(!t)t=requestAnimationFrame(chk)},{passive:true
   };
   const svg=k=>`<svg class="tab-ic" viewBox="0 0 24 24" aria-hidden="true">${IC[k]}</svg>`;
   const EXTRA=["pay","att","recon","analytics","plan","lens","batch"];
-  const LBL={pay:"Платежи",att:"Контроль",recon:"Сверка",analytics:"Аналитика",plan:"План",lens:"Линзы",batch:"Склад"};
+  const LBL={pay:"Платежи",get att(){return window.__sbRole==="seller"||window.__sbRole==="cashier"?"Приход":"Контроль"},recon:"Сверка",analytics:"Аналитика",plan:"План",lens:"Линзы",batch:"Склад"};
   nav.querySelectorAll(".tab[data-tab]").forEach(b=>{if(!b.querySelector(".tab-ic"))b.insertAdjacentHTML("afterbegin",svg(b.dataset.tab))});
   // кнопка «Ещё» — сразу после «Продаж», чтобы капля вставала на неё раньше скрытых вкладок
   const more=document.createElement("button");more.type="button";more.className="tab-more";more.setAttribute("aria-haspopup","dialog");more.setAttribute("aria-selected","false");
@@ -6350,42 +6403,17 @@ addEventListener("scroll",()=>{if(!t)t=requestAnimationFrame(chk)},{passive:true
 
 </script>
 <script>
-/* Касса · «Контроль»: окошко «Доступы продавцов» (rpc access_list через window.__sb) и журнал прихода сотрудников (smena/admin.html) во вкладке сайта.
+/* Касса · «Контроль»: журнал прихода сотрудников (smena/admin.html) во вкладке сайта.
+   Блок «Пользователи» (логины, роли, статусы) над журналом вставляет patch_role в контейнер #attUsers.
    Вход общий с сайтом (один origin и один ключ хранилища). Тему передаём в iframe при открытии и при смене. */
 (function(){
   "use strict";
   let frame=null;
   const theme=()=>document.documentElement.getAttribute("data-theme")||"";
   const send=()=>{if(frame&&frame.contentWindow)frame.contentWindow.postMessage({kassaTheme:theme()||null},location.origin)};
-  const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-  const ROLE={owner:"Владелец",admin:"Владелец",seller:"Продавец",manager:"Управляющий",marketer:"Маркетолог"};
-  const dt=v=>{if(!v)return "ещё не входил";const d=new Date(v);if(isNaN(d))return esc(v);
-    return d.toLocaleString("ru-RU",{timeZone:"Asia/Tashkent",day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"})};
-  async function loadAcc(){
-    const body=document.getElementById("attAccBody");if(!body)return;
-    const btn=document.getElementById("attAccRef");if(btn)btn.disabled=true;
-    body.innerHTML='<p class="note">Загрузка…</p>';
-    let rows=null,err=null;
-    try{const sb=window.__sb;if(!sb)throw new Error("нет входа");const r=await sb.rpc("access_list");err=r.error;rows=r.data}catch(e){err={message:e&&e.message||String(e)}}
-    if(btn)btn.disabled=false;
-    if(err){
-      const m=String(err.message||""),c=String(err.code||"");
-      const none=c==="42883"||c==="PGRST202"||c==="404"||err.status===404||/could not find|does not exist|not found/i.test(m);
-      body.innerHTML=none?'<p class="note">Логины продавцов ещё не созданы</p>':'<p class="note">Не удалось загрузить: '+esc(m)+'</p>';return}
-    if(!Array.isArray(rows)||!rows.length){body.innerHTML='<p class="note">Логины продавцов ещё не созданы</p>';return}
-    body.innerHTML='<div class="tbl"><table><thead><tr><th>Кому выдан</th><th>Логин</th><th>Точка</th><th>Роль</th><th>Статус</th><th>Последний вход</th></tr></thead><tbody>'+
-      rows.map(r=>'<tr><td>'+esc(r.label||"—")+'</td><td>'+esc(r.email)+'</td><td>'+esc(r.point||"—")+'</td><td>'+esc(ROLE[r.role]||r.role||"—")+
-        '</td><td><span class="pill att-st '+(r.active?"ok":"off")+'">'+(r.active?"Активен":"Выключен")+'</span></td><td class="att-dt">'+dt(r.last_sign_in_at)+'</td></tr>').join("")+'</tbody></table></div>';
-  }
   function render(){
     const box=document.getElementById("attBody");
     if(!box||frame)return;
-    const acc=document.createElement("section");
-    acc.className="panel att-acc";
-    acc.innerHTML='<div class="att-ah"><h2>Доступы продавцов</h2><button type="button" class="sec" id="attAccRef">Обновить</button></div><div id="attAccBody"></div><p class="note att-hint">Логины создаёт владелец; пароль продавцу передаётся лично. Отключить вход — в разделе доступа.</p>';
-    box.appendChild(acc);
-    acc.querySelector("#attAccRef").addEventListener("click",loadAcc);
-    loadAcc();
     frame=document.createElement("iframe");
     frame.id="attFrame";
     frame.title="Приход сотрудников";
@@ -6408,12 +6436,12 @@ addEventListener("scroll",()=>{if(!t)t=requestAnimationFrame(chk)},{passive:true
 
 </script>
 <script>
-/* Касса · роли (patch_role.py): продавец (seller) и маркетолог (marketer) видят только разрешённое.
+/* Касса · роли (patch_role.py): продавец (seller), кассир (cashier) и маркетолог (marketer) видят только разрешённое.
    Роль приходит из shim.html (window.__sbRole / __sbPoint, RPC my_access); нет роли — владелец, ничего не меняется.
    Здесь — то, что не требует доступа к переменным страницы; остальное вставлено внутрь скрипта страницы (role/inner.js). */
 (function(){
   "use strict";
-  const TABS={seller:["sales","att"],marketer:["sales","analytics"]};
+  const TABS={seller:["sales","att"],cashier:["sales","att"],marketer:["sales","analytics"]};
   const role=()=>window.__sbRole||"admin";
   // можно ли открыть вкладку; неизвестная роль — только «Продажи»
   window.__roleOK=t=>{const r=role();return r==="admin"||(TABS[r]||["sales"]).includes(t)};
@@ -6422,10 +6450,10 @@ addEventListener("scroll",()=>{if(!t)t=requestAnimationFrame(chk)},{passive:true
     const r=role();if(r==="admin")return;
     document.documentElement.setAttribute("data-role",r);
     document.querySelectorAll(".tabs .tab[data-tab]").forEach(b=>{if(!window.__roleOK(b.dataset.tab))b.remove()});
-    if(r==="seller"){
-      // для продавца «Контроль» — просто «Приход»
+    if(r==="seller"||r==="cashier"){
+      // для продавца и кассира «Контроль» — просто «Приход»; ищем по data-tab, не по тексту
       const b=document.querySelector('.tabs .tab[data-tab="att"]');
-      if(b)[...b.childNodes].forEach(n=>{if(n.nodeType===3&&n.textContent.trim())n.textContent="Приход"; else if(n.nodeName==="SPAN"&&n.textContent.trim()==="Контроль")n.textContent="Приход"});
+      if(b){const w=document.createTreeWalker(b,NodeFilter.SHOW_TEXT);let n,done=false;while((n=w.nextNode())){if(n.textContent.trim()){n.textContent=done?"":"Приход";done=true}}}
       const h=document.querySelector("#page-att h1");if(h)h.textContent="Приход";
       const p=document.querySelector("#page-att header p");if(p)p.textContent="Кто пришёл и во сколько на вашей точке";
       const e=document.querySelector("#page-att .eyebrow");if(e)e.textContent="Saif-Optics · приход";
@@ -6437,6 +6465,122 @@ addEventListener("scroll",()=>{if(!t)t=requestAnimationFrame(chk)},{passive:true
     e.stopImmediatePropagation();e.preventDefault();
     const t=document.querySelector('.tabs .tab[data-tab="sales"]');if(t)t.click();
   },true);
+})();
+
+</script>
+<script>
+/* Касса · раздел «Пользователи» для владельца (patch_role.py): логины, роли, точки; сервер — функция users-admin.
+   Показывается только при window.__sbRole === "admin" (без роли — тесты, локальный режим — не показываем). */
+(function(){
+  "use strict";
+  const ROLES={admin:"Админ",cashier:"Кассир",seller:"Продавец",marketer:"Гость"};
+  const NEEDPT=["cashier","seller"];
+  const NOFN="Серверная функция не выложена";
+  const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  let built=false,loaded=false,busy=false;
+  const $=id=>document.getElementById(id);
+  // пароль 12 знаков: латиница и цифры без похожих (0/O, 1/l/I)
+  function genPass(){
+    const A="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789",b=new Uint32Array(12);
+    crypto.getRandomValues(b);return[...b].map(x=>A[x%A.length]).join("")}
+  // вызов серверной функции: успех — data.ok, бизнес-ошибка — data.error (статус 200), сбой HTTP — тело ответа
+  async function call(action,body){
+    try{
+      const r=await window.__sb.functions.invoke("users-admin",{body:Object.assign({action},body||{})});
+      if(r.error){
+        let m="";try{const j=await r.error.context.json();m=j&&j.error||""}catch(e){}
+        return{error:m||(/not found|404|Failed to send|fetch/i.test(String(r.error.message||""))?NOFN:"Не удалось выполнить запрос")}}
+      const d=r.data||{};
+      if(d.error)return{error:String(d.error)};
+      if(d.ok!==true)return{error:"Не удалось выполнить запрос"};
+      return{data:d}
+    }catch(e){return{error:e&&e.name==="FunctionsFetchError"?"Нет связи с сервером":NOFN}}}
+  async function list(){
+    // сначала RPC access_list, если его нет — функция
+    try{const r=await window.__sb.rpc("access_list");if(r&&!r.error)return{data:Array.isArray(r.data)?r.data:[]}}catch(e){}
+    const r=await call("list");if(r.error)return r;return{data:Array.isArray(r.data.users)?r.data.users:Array.isArray(r.data.list)?r.data.list:[]}}
+  const dt=v=>{if(!v)return"ещё не входил";const d=new Date(v);if(isNaN(d))return"ещё не входил";
+    return d.toLocaleString("ru-RU",{timeZone:"Asia/Tashkent",day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"})};
+  const msg=(id,t,bad)=>{const m=$(id);if(!m)return;m.textContent=t||"";m.style.color=bad?"var(--minus)":"var(--plus)"};
+  function points(){const s=window.__roleSettings&&window.__roleSettings();return s&&Array.isArray(s.points)?s.points:[]}
+  function fillPoints(){
+    const sel=$("ruPoint");if(!sel)return;const cur=sel.value,ps=points();
+    if(sel.options.length===ps.length&&ps.every((p,i)=>sel.options[i].value===p))return;
+    sel.innerHTML=ps.map(p=>`<option>${esc(p)}</option>`).join("");if(cur)sel.value=cur}
+  function build(){
+    const page=$("attUsers");if(!page||built)return;built=true;
+    const s=document.createElement("section");s.className="panel";s.id="roleUsers";
+    s.innerHTML=`<div class="ru-head"><h2>Пользователи</h2><button type="button" class="ru-btn" id="ruRefresh">Обновить</button></div>
+<div class="ru-wrap"><table class="ru-tbl"><thead><tr><th>Логин</th><th>Статус</th><th>Точка</th><th>Кому выдан</th><th>Включён</th><th>Последний вход</th><th></th></tr></thead><tbody id="ruBody"><tr><td colspan="7" class="ru-mut">Загрузка…</td></tr></tbody></table></div>
+<div class="ru-msg" id="ruTblMsg" role="status"></div>
+<form class="ru-form" id="ruForm" autocomplete="off">
+  <h3>Добавить пользователя</h3>
+  <div class="ru-grid">
+    <label>Логин (почта)<input type="email" id="ruEmail" required autocomplete="off"></label>
+    <label>Пароль<span class="ru-pw"><input type="text" id="ruPass" minlength="10" required autocomplete="new-password"><button type="button" class="ru-btn" id="ruGen">Сгенерировать</button></span></label>
+    <label>Статус<select id="ruRole"><option value="cashier">Кассир</option><option value="seller">Продавец</option><option value="marketer">Гость</option><option value="admin">Админ</option></select></label>
+    <label id="ruPtL">Точка<select id="ruPoint"></select></label>
+    <label>Кому выдан<input type="text" id="ruLabel" placeholder="Имя, необязательно" autocomplete="off"></label>
+  </div>
+  <div class="ru-act"><button type="submit" class="ru-btn ru-main" id="ruAdd">Добавить</button><span class="ru-msg" id="ruMsg" role="status"></span></div>
+  <div class="ru-once" id="ruOnce" hidden><span>Пароль для <b id="ruOnceFor"></b>:</span><input type="text" id="ruOnceVal" readonly><button type="button" class="ru-btn" id="ruCopy">Скопировать</button><small>Запишите, больше не покажется.</small></div>
+  <ul class="ru-hint"><li><b>Админ</b> — всё.</li><li><b>Кассир</b> — своя точка: продажи и расходы дня, вносит и правит за сегодня и вчера, журнал прихода.</li><li><b>Продавец</b> — своя точка, только просмотр и расход дня.</li><li><b>Гость</b> — продажи всех точек без себестоимости, расходов и плана.</li></ul>
+</form>`;
+    page.appendChild(s);
+    $("ruRefresh").onclick=refresh;
+    $("ruGen").onclick=()=>{$("ruPass").value=genPass()};
+    const syncPt=()=>{const need=NEEDPT.includes($("ruRole").value);$("ruPtL").hidden=!need;$("ruPoint").required=need};
+    $("ruRole").onchange=syncPt;syncPt();
+    $("ruCopy").onclick=async()=>{const v=$("ruOnceVal");try{await navigator.clipboard.writeText(v.value);$("ruCopy").textContent="Скопировано"}catch(e){v.select();try{document.execCommand("copy");$("ruCopy").textContent="Скопировано"}catch(x){}}setTimeout(()=>{$("ruCopy").textContent="Скопировать"},2000)};
+    $("ruForm").onsubmit=onAdd;
+    $("ruBody").addEventListener("click",onAct);
+    fillPoints();
+  }
+  let pwTimer=0;
+  function showPass(email,pw){$("ruOnceFor").textContent=email;$("ruOnceVal").value=pw;$("ruOnce").hidden=false;clearTimeout(pwTimer);pwTimer=setTimeout(()=>{$("ruOnceVal").value="";$("ruOnce").hidden=true},90000)}
+  async function onAdd(ev){
+    ev.preventDefault();if(busy)return;
+    const role=$("ruRole").value,email=$("ruEmail").value.trim(),password=$("ruPass").value;
+    const point=NEEDPT.includes(role)?$("ruPoint").value:null;
+    if(NEEDPT.includes(role)&&!point){msg("ruMsg","Выберите точку.",true);return}
+    if(password.length<10){msg("ruMsg","Пароль — минимум 10 знаков.",true);return}
+    busy=true;$("ruAdd").disabled=true;msg("ruMsg","Добавляю…");
+    const r=await call("create",{email,password,role,point,label:$("ruLabel").value.trim()||null});
+    busy=false;$("ruAdd").disabled=false;
+    if(r.error){msg("ruMsg",r.error,true);return}
+    msg("ruMsg","Пользователь добавлен");showPass(email,password);
+    $("ruEmail").value="";$("ruPass").value="";$("ruLabel").value="";
+    refresh()}
+  async function onAct(ev){
+    const b=ev.target.closest("[data-act]");if(!b||busy)return;
+    const email=b.dataset.email,act=b.dataset.act;
+    if(act==="del"||act==="pw"){
+      if(!b.dataset.c){b.dataset.c="1";const t=b.textContent;b.textContent=act==="del"?"Точно удалить?":"Точно сменить?";b.style.color="var(--minus)";
+        setTimeout(()=>{if(b.isConnected){delete b.dataset.c;b.textContent=t;b.style.color=""}},3000);return}}
+    busy=true;b.disabled=true;let r;
+    if(act==="del")r=await call("delete",{email});
+    else if(act==="pw"){const pw=genPass();r=await call("password",{email,password:pw});if(!r.error)showPass(email,pw)}
+    else r=await call("update",{email,active:act==="on"});
+    busy=false;
+    if(r.error){msg("ruTblMsg",r.error,true);b.disabled=false;return}
+    msg("ruTblMsg",act==="del"?"Удалено":act==="pw"?"Пароль изменён, он показан под формой":"Сохранено");
+    refresh()}
+  async function refresh(){
+    const body=$("ruBody");if(!body)return;loaded=true;
+    const r=await list();
+    if(r.error){body.innerHTML=`<tr><td colspan="7" class="ru-mut">${esc(r.error)}</td></tr>`;return}
+    const me=String(window.__sbEmail||"").toLowerCase();
+    if(!r.data.length){body.innerHTML=`<tr><td colspan="7" class="ru-mut">Пока никого нет</td></tr>`;return}
+    body.innerHTML=r.data.map(u=>{
+      const em=String(u.email||""),mine=em.toLowerCase()===me,on=u.active!==false;
+      const act=mine?"":`<button type="button" class="ru-btn" data-act="${on?"off":"on"}" data-email="${esc(em)}">${on?"Выключить":"Включить"}</button><button type="button" class="ru-btn" data-act="pw" data-email="${esc(em)}">Новый пароль</button><button type="button" class="ru-btn ru-del" data-act="del" data-email="${esc(em)}">Удалить</button>`;
+      return`<tr><td data-l="Логин">${esc(em)}</td><td data-l="Статус">${esc(ROLES[u.role]||u.role||"")}</td><td data-l="Точка">${esc(u.point||"—")}</td><td data-l="Кому выдан">${esc(u.label||"—")}</td><td data-l="Включён">${on?"да":"нет"}</td><td data-l="Последний вход">${esc(dt(u.last_sign_in_at||u.last_sign_in||u.last_login))}</td><td class="ru-acts">${act}</td></tr>`}).join("")}
+  // вызывается страницей при показе вкладки «Контроль» (patch_role.py)
+  window.__roleUsersRender=function(){
+    if(window.__sbRole!=="admin")return;
+    build();if(!built)return;
+    fillPoints();
+    if(!loaded)refresh()};
 })();
 
 </script>

@@ -9,6 +9,7 @@ python3 patch_rs.py /tmp/kassa_work.html
 python3 patch_fm.py /tmp/kassa_work.html
 python3 patch_pay.py /tmp/kassa_work.html
 python3 patch_att.py /tmp/kassa_work.html
+python3 patch_role.py /tmp/kassa_work.html
 python3 patch_ui.py /tmp/kassa_work.html
 python3 patch_tidy.py /tmp/kassa_work.html
 python3 build.py /tmp/kassa_work.html ../index.html
