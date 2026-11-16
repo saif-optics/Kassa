@@ -1,13 +1,4 @@
-/* «Контроль» — окошко доступов и iframe с админкой прихода; высоту задаёт att.js по содержимому */
+/* «Контроль» — блок пользователей (#attUsers, заполняет patch_role) и iframe с админкой прихода; высоту задаёт att.js по содержимому */
+#attUsers:empty{display:none}
+#attUsers{margin-bottom:16px}
 #attFrame{display:block;width:100%;min-height:420px;border:0;background:transparent}
-.att-acc{margin-bottom:16px}
-.att-ah{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
-.att-ah h2{margin:0;font-size:17px}
-.att-ah button{padding:6px 12px;font-size:13px}
-.att-acc .tbl{overflow-x:auto;-webkit-overflow-scrolling:touch}
-.att-acc td{padding:9px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
-.att-acc tr:last-child td{border-bottom:0}
-.att-dt{color:var(--muted)}
-.att-st.ok{background:var(--plus-soft);color:var(--plus)}
-.att-st.off{background:var(--wash);color:var(--muted)}
-.att-hint{margin-top:10px;font-size:12px}

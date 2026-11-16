@@ -24,9 +24,10 @@ PAGE = '''  <div class="page" id="page-att" hidden>
       <div>
         <div class="eyebrow">Saif-Optics · контроль</div>
         <h1>Контроль</h1>
-        <p>Кто пришёл и во сколько, место отметки · доступы продавцов</p>
+        <p>Пользователи и доступы · кто пришёл и во сколько, место отметки</p>
       </div>
     </header>
+    <div id="attUsers"></div>
     <div id="attBody"></div>
   </div>
 '''

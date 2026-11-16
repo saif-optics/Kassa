@@ -64,9 +64,10 @@
   Нет интернета — отметки копятся в localStorage и уходят позже.
 - Админка: `smena/admin.html` — вход как в Кассу (is_member). Вкладки: Журнал дня, Сводка месяца,
   Сотрудники (добавить + снять 6 образцов лица), Точки (время начала работы, код киоска, ссылка), Памятка.
-- На сайте это вкладка **«Контроль»** (data-tab `att`, `dev/patch_att.py` + `dev/att/`): сверху окошко «Доступы продавцов»
-  (RPC `access_list()` — кому выдан логин, точка, роль, активен, последний вход; RPC делает сессия доступа по точкам),
-  ниже журнал прихода (iframe `smena/admin.html?embed=1`). До 16.11.2026 вкладка называлась «Приход».
+- На сайте это вкладка **«Контроль»** (data-tab `att`, `dev/patch_att.py` + `dev/att/`): сверху контейнер `#attUsers`,
+  куда `patch_role` ставит блок «Пользователи» (логины, роли admin/cashier/seller/marketer, точка, статус, последний вход,
+  форма «Добавить»; данные — RPC `access_list()`), ниже журнал прихода (iframe `smena/admin.html?embed=1`).
+  До 16.11.2026 вкладка называлась «Приход».
 - Таблицы: `att_points` (point, code, start_time), `att_employees` (name, point, descriptors jsonb, active),
   `att_events` (employee_id, point, kind in/out, ts, score, photo base64, lat/lng/acc). RLS — только is_member.
   Киоск без входа: RPC `att_kiosk_load(p_code)` и `att_kiosk_mark(...)` (security definer, проверка кода точки,
