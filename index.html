@@ -1808,8 +1808,19 @@ tr.fm-dim>td{color:var(--muted)}
 .py-xs{padding:2px 7px!important;font-size:12px;border-radius:8px}
 .py-dft{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:14px 18px;border-top:1px solid var(--line)}
 .py-msg{font-size:13px;color:var(--minus)}
-/* «Приход» — iframe с админкой прихода; высоту задаёт att.js по содержимому */
+/* «Контроль» — окошко доступов и iframe с админкой прихода; высоту задаёт att.js по содержимому */
 #attFrame{display:block;width:100%;min-height:420px;border:0;background:transparent}
+.att-acc{margin-bottom:16px}
+.att-ah{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.att-ah h2{margin:0;font-size:17px}
+.att-ah button{padding:6px 12px;font-size:13px}
+.att-acc .tbl{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.att-acc td{padding:9px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+.att-acc tr:last-child td{border-bottom:0}
+.att-dt{color:var(--muted)}
+.att-st.ok{background:var(--plus-soft);color:var(--plus)}
+.att-st.off{background:var(--wash);color:var(--muted)}
+.att-hint{margin-top:10px;font-size:12px}
 /* ===== Показ больших таблиц по страницам ===== */
 .pgbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
 .pg-size{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
@@ -2000,7 +2011,7 @@ window.__zw=function(){return innerWidth/(window.__uiZ||1)};window.__zh=function
     <button type="button" role="tab" class="tab" data-tab="kassa" aria-selected="true">Касса</button>
     <button type="button" role="tab" class="tab" data-tab="report" aria-selected="false">Отчёт р/с</button>
     <button type="button" role="tab" class="tab" data-tab="pay" aria-selected="false">Платежи</button>
-    <button type="button" role="tab" class="tab" data-tab="att" aria-selected="false">Приход</button>
+    <button type="button" role="tab" class="tab" data-tab="att" aria-selected="false">Контроль</button>
     <button type="button" role="tab" class="tab" data-tab="sales" aria-selected="false">Продажи</button>
     <button type="button" role="tab" class="tab" data-tab="recon" aria-selected="false">Сверка</button>
     <button type="button" role="tab" class="tab" data-tab="analytics" aria-selected="false">Аналитика</button>
@@ -2423,9 +2434,9 @@ window.__zw=function(){return innerWidth/(window.__uiZ||1)};window.__zh=function
   <div class="page" id="page-att" hidden>
     <header class="head">
       <div>
-        <div class="eyebrow">Saif-Optics · сотрудники</div>
-        <h1>Приход</h1>
-        <p>Кто пришёл и во сколько, опоздания, место отметки</p>
+        <div class="eyebrow">Saif-Optics · контроль</div>
+        <h1>Контроль</h1>
+        <p>Кто пришёл и во сколько, место отметки · доступы продавцов</p>
       </div>
     </header>
     <div id="attBody"></div>
@@ -5236,7 +5247,7 @@ addEventListener("scroll",()=>{if(!t)t=requestAnimationFrame(chk)},{passive:true
   };
   const svg=k=>`<svg class="tab-ic" viewBox="0 0 24 24" aria-hidden="true">${IC[k]}</svg>`;
   const EXTRA=["pay","att","recon","analytics","plan","lens","batch"];
-  const LBL={pay:"Платежи",att:"Приход",recon:"Сверка",analytics:"Аналитика",plan:"План",lens:"Линзы",batch:"Склад"};
+  const LBL={pay:"Платежи",att:"Контроль",recon:"Сверка",analytics:"Аналитика",plan:"План",lens:"Линзы",batch:"Склад"};
   nav.querySelectorAll(".tab[data-tab]").forEach(b=>{if(!b.querySelector(".tab-ic"))b.insertAdjacentHTML("afterbegin",svg(b.dataset.tab))});
   // кнопка «Ещё» — сразу после «Продаж», чтобы капля вставала на неё раньше скрытых вкладок
   const more=document.createElement("button");more.type="button";more.className="tab-more";more.setAttribute("aria-haspopup","dialog");more.setAttribute("aria-selected","false");
@@ -6260,16 +6271,42 @@ addEventListener("scroll",()=>{if(!t)t=requestAnimationFrame(chk)},{passive:true
 
 </script>
 <script>
-/* Касса · «Приход»: админка прихода сотрудников (smena/admin.html) во вкладке сайта.
+/* Касса · «Контроль»: окошко «Доступы продавцов» (rpc access_list через window.__sb) и журнал прихода сотрудников (smena/admin.html) во вкладке сайта.
    Вход общий с сайтом (один origin и один ключ хранилища). Тему передаём в iframe при открытии и при смене. */
 (function(){
   "use strict";
   let frame=null;
   const theme=()=>document.documentElement.getAttribute("data-theme")||"";
   const send=()=>{if(frame&&frame.contentWindow)frame.contentWindow.postMessage({kassaTheme:theme()||null},location.origin)};
+  const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const ROLE={owner:"Владелец",admin:"Владелец",seller:"Продавец",manager:"Управляющий"};
+  const dt=v=>{if(!v)return "ещё не входил";const d=new Date(v);if(isNaN(d))return esc(v);
+    return d.toLocaleString("ru-RU",{timeZone:"Asia/Tashkent",day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"})};
+  async function loadAcc(){
+    const body=document.getElementById("attAccBody");if(!body)return;
+    const btn=document.getElementById("attAccRef");if(btn)btn.disabled=true;
+    body.innerHTML='<p class="note">Загрузка…</p>';
+    let rows=null,err=null;
+    try{const sb=window.__sb;if(!sb)throw new Error("нет входа");const r=await sb.rpc("access_list");err=r.error;rows=r.data}catch(e){err={message:e&&e.message||String(e)}}
+    if(btn)btn.disabled=false;
+    if(err){
+      const m=String(err.message||""),c=String(err.code||"");
+      const none=c==="42883"||c==="PGRST202"||c==="404"||err.status===404||/could not find|does not exist|not found/i.test(m);
+      body.innerHTML=none?'<p class="note">Логины продавцов ещё не созданы</p>':'<p class="note">Не удалось загрузить: '+esc(m)+'</p>';return}
+    if(!Array.isArray(rows)||!rows.length){body.innerHTML='<p class="note">Логины продавцов ещё не созданы</p>';return}
+    body.innerHTML='<div class="tbl"><table><thead><tr><th>Кому выдан</th><th>Логин</th><th>Точка</th><th>Роль</th><th>Статус</th><th>Последний вход</th></tr></thead><tbody>'+
+      rows.map(r=>'<tr><td>'+esc(r.label||"—")+'</td><td>'+esc(r.email)+'</td><td>'+esc(r.point||"—")+'</td><td>'+esc(ROLE[r.role]||r.role||"—")+
+        '</td><td><span class="pill att-st '+(r.active?"ok":"off")+'">'+(r.active?"Активен":"Выключен")+'</span></td><td class="att-dt">'+dt(r.last_sign_in_at)+'</td></tr>').join("")+'</tbody></table></div>';
+  }
   function render(){
     const box=document.getElementById("attBody");
     if(!box||frame)return;
+    const acc=document.createElement("section");
+    acc.className="panel att-acc";
+    acc.innerHTML='<div class="att-ah"><h2>Доступы продавцов</h2><button type="button" class="sec" id="attAccRef">Обновить</button></div><div id="attAccBody"></div><p class="note att-hint">Логины создаёт владелец; пароль продавцу передаётся лично. Отключить вход — в разделе доступа.</p>';
+    box.appendChild(acc);
+    acc.querySelector("#attAccRef").addEventListener("click",loadAcc);
+    loadAcc();
     frame=document.createElement("iframe");
     frame.id="attFrame";
     frame.title="Приход сотрудников";

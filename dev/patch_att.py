@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Касса: раздел «Приход» — админка прихода сотрудников (smena/admin.html) во вкладке. Применять после patch_pay.py."""
+"""Касса: раздел «Контроль» — доступы продавцов и журнал прихода сотрудников (smena/admin.html) во вкладке. Применять после patch_pay.py."""
 import sys, io, os
 SRC = sys.argv[1]
 D = os.path.dirname(os.path.abspath(__file__)) + '/att/'
@@ -10,10 +10,10 @@ def rep(old, new, cnt=1):
 
 # --- вкладка после «Платежей»
 A = 'data-tab="pay" aria-selected="false">Платежи</button>'
-rep(A, A + '\n    <button type="button" role="tab" class="tab" data-tab="att" aria-selected="false">Приход</button>')
+rep(A, A + '\n    <button type="button" role="tab" class="tab" data-tab="att" aria-selected="false">Контроль</button>')
 rep('const PAGES=["home","kassa","report","pay","sales","recon",', 'const PAGES=["home","kassa","report","pay","att","sales","recon",')
 rep('const EXTRA=["pay","recon",', 'const EXTRA=["pay","att","recon",')
-rep('const LBL={pay:"Платежи",recon:"Сверка",', 'const LBL={pay:"Платежи",att:"Приход",recon:"Сверка",')
+rep('const LBL={pay:"Платежи",recon:"Сверка",', 'const LBL={pay:"Платежи",att:"Контроль",recon:"Сверка",')
 RC = "    more:"
 rep(RC, "    att:'<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><path d=\"M12 7.5V12l3 2\"/>',\n" + RC)
 # на телефоне — в листе «Ещё»
@@ -22,9 +22,9 @@ rep('.tabs .tab[data-tab="pay"],', '.tabs .tab[data-tab="pay"],.tabs .tab[data-t
 PAGE = '''  <div class="page" id="page-att" hidden>
     <header class="head">
       <div>
-        <div class="eyebrow">Saif-Optics · сотрудники</div>
-        <h1>Приход</h1>
-        <p>Кто пришёл и во сколько, опоздания, место отметки</p>
+        <div class="eyebrow">Saif-Optics · контроль</div>
+        <h1>Контроль</h1>
+        <p>Кто пришёл и во сколько, место отметки · доступы продавцов</p>
       </div>
     </header>
     <div id="attBody"></div>
