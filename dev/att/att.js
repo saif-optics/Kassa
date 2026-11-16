@@ -6,7 +6,7 @@
   const theme=()=>document.documentElement.getAttribute("data-theme")||"";
   const send=()=>{if(frame&&frame.contentWindow)frame.contentWindow.postMessage({kassaTheme:theme()||null},location.origin)};
   const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-  const ROLE={owner:"Владелец",admin:"Владелец",seller:"Продавец",manager:"Управляющий"};
+  const ROLE={owner:"Владелец",admin:"Владелец",seller:"Продавец",manager:"Управляющий",marketer:"Маркетолог"};
   const dt=v=>{if(!v)return "ещё не входил";const d=new Date(v);if(isNaN(d))return esc(v);
     return d.toLocaleString("ru-RU",{timeZone:"Asia/Tashkent",day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"})};
   async function loadAcc(){
