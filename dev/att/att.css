@@ -1,4 +1,4 @@
-/* «Контроль» — блок пользователей (#attUsers, заполняет patch_role) и iframe с админкой прихода; высоту задаёт att.js по содержимому */
+/* «Пользователи» — блок пользователей (#attUsers, заполняет patch_role) и iframe с админкой прихода; высоту задаёт att.js по содержимому */
 #attUsers:empty{display:none}
 #attUsers{margin-bottom:16px}
 #attFrame{display:block;width:100%;min-height:420px;border:0;background:transparent}

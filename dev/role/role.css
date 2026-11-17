@@ -1,14 +1,17 @@
 
-/* ---- роли: продавец и маркетолог видят всё только для просмотра (patch_role.py) ---- */
+/* ---- роли: элементы скрываются по правам (data-np — список отсутствующих прав, ставит role.js) ---- */
 html[data-role] #photoPanel,
 html[data-role] #page-sales details.settings,
-html[data-role] #exportBtns,
-html[data-role] #anXlsx,
 html[data-role] .scal-plan,
-html:is([data-role=seller],[data-role=marketer]) #saleFormPanel,
-html:is([data-role=seller],[data-role=marketer]) #jGrid .ja,
-html:is([data-role=seller],[data-role=marketer]) #dxTable .acts,
-html:is([data-role=seller],[data-role=marketer]) #dxTable th:last-child{display:none!important}
+html[data-np~=sales_write] #saleFormPanel,
+html[data-np~=sales_edit] #jGrid .ja,
+html[data-np~=exp_edit] #dxTable .acts,
+html[data-np~=exp_edit] #dxTable th:last-child,
+html[data-np~=export] #exportBtns,
+html[data-np~=export] #anXlsx,
+html[data-role-none] .page,
+html[data-role-none] .tabs{display:none!important}
+#roleNone{margin:24px auto;max-width:520px;text-align:center;color:var(--muted)}
 .dx-tpl{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;margin:0 0 2px}
 .dx-tpl button{min-height:30px;padding:4px 12px;border-radius:999px;border:1px solid var(--line);background:var(--accent-soft,var(--surface));color:var(--accent);font:inherit;font-size:13px;cursor:pointer}
 .more-acc small{display:block;color:var(--muted);font-size:12px}
@@ -48,3 +51,16 @@ html:is([data-role=seller],[data-role=marketer]) #dxTable th:last-child{display:
   #roleUsers .ru-tbl td{display:flex;justify-content:space-between;gap:10px;border:0;padding:3px 8px}
   #roleUsers .ru-tbl td[data-l]::before{content:attr(data-l);color:var(--muted)}
 }
+/* ---- права и группы точек ---- */
+#roleUsers .ru-grp td{border-top:0;padding:14px 8px 4px;font-weight:600;font-size:14px}
+#roleUsers .ru-edit>td{padding:4px 8px 14px}
+#roleUsers .ru-edit .ru-form{padding:12px;border-radius:14px;background:var(--accent-soft,var(--surface))}
+#roleUsers .ru-perms{margin:12px 0 0;padding:10px 12px;border:1px solid var(--line);border-radius:14px}
+#roleUsers .ru-perms legend{padding:0 6px;color:var(--muted);font-size:13px}
+#roleUsers .ru-pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px 16px}
+#roleUsers .ru-pl{display:flex;flex-direction:row;align-items:center;gap:10px;font-size:13.5px;color:var(--ink);cursor:pointer}
+#roleUsers .ru-pl[hidden]{display:none}
+#roleUsers input.ru-sw{appearance:none;-webkit-appearance:none;flex:none;width:36px;min-height:0;height:22px;padding:0;border-radius:999px;border:1px solid var(--line);background:var(--line);position:relative;cursor:pointer;transition:background .15s}
+#roleUsers input.ru-sw::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s}
+#roleUsers input.ru-sw:checked{background:var(--accent);border-color:transparent}
+#roleUsers input.ru-sw:checked::after{transform:translateX(14px)}

@@ -225,7 +225,7 @@ const plural = (n, a, b, c) => { const m = n % 100, d = n % 10; return m > 10 &&
 const demoWarn = () => { alert("Демо-режим: изменения не сохраняются"); return true; };
 
 let points = [], emps = [];
-// режим продавца: только своя точка, только просмотр (журнал дня и сводка месяца), данные через RPC att_my_load
+// режим не-админа (кассир, продавец, гость): своя точка (у гостя может быть «все точки»), только просмотр (журнал дня и сводка месяца), данные через RPC att_my_load
 let SELLER = null;
 async function sellerLoad(fromIso, toIso) {
   const { data, error } = await sb.rpc("att_my_load", { p_from: fromIso, p_to: toIso });
@@ -275,7 +275,7 @@ async function boot() {
   if (!session) { $("login").classList.remove("hide"); return; }
   $("login").classList.add("hide"); $("app").classList.remove("hide");
   if (!DEMO) {
-    try { const r = await sb.rpc("my_access"); const a = Array.isArray(r.data) ? r.data[0] : r.data; if (!r.error && (a?.role === "seller" || a?.role === "cashier")) SELLER = a; } catch {}
+    try { const r = await sb.rpc("my_access"); const a = Array.isArray(r.data) ? r.data[0] : r.data; if (!r.error && a?.role && a.role !== "owner" && a.role !== "admin") SELLER = a; } catch {}
     if (SELLER) {
       document.querySelectorAll('#tabs [data-t="emp"],#tabs [data-t="pts"],#tabs [data-t="memo"],#logPt,#sumPt').forEach(x => x.classList.add("hide"));
       $("tabs").querySelector('[data-t="log"]').textContent = "Журнал дня"; $("tabs").querySelector('[data-t="sum"]').textContent = "Сводка месяца";
@@ -318,7 +318,7 @@ async function loadRefs() {
   $("logPt").innerHTML = `<option value="">Все точки</option>` + opts;
   $("sumPt").innerHTML = `<option value="">Все точки</option>` + opts;
   $("logPt").value = keep[0]; $("sumPt").value = keep[1];
-  if (SELLER && points[0]) $("logPt").value = $("sumPt").value = points[0].point;
+  if (SELLER && SELLER.point && points[0]) $("logPt").value = $("sumPt").value = points[0].point;
   $("newPt").innerHTML = opts;
 }
 const startOf = pt => points.find(p => p.point === pt)?.start_time?.slice(0, 5) || "10:00";

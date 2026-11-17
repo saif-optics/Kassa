@@ -1,5 +1,5 @@
 ﻿# Сборка Кассы на Windows: то же, что dev/build.sh. Запуск: powershell -File dev\build.ps1 [-Test]
-# -Test — после сборки прогнать dev/test/t_audit.py, t_native.py и t_role.py (seller, cashier, marketer) (пустой вывод {} = чисто)
+# -Test — после сборки прогнать dev/test/t_audit.py, t_native.py и t_role.py (seller, cashier, marketer, guestpt, sellernoatt, sellernoview, empty, owner, admin) (пустой вывод {} = чисто)
 param([switch]$Test)
 $ErrorActionPreference = 'Stop'
 $py = Get-ChildItem "$env:USERPROFILE\.uv\python" -Directory -Filter 'cpython-3.12*' | Sort-Object Name -Descending | Select-Object -First 1 | ForEach-Object { Join-Path $_.FullName 'python.exe' }
@@ -24,7 +24,7 @@ if ($Test) {
     $n = uv run --no-project -q --with playwright python -X utf8 dev\test\t_native.py
     $bad = ("$a".Trim() -ne '{}' -or "$n".Trim() -ne '{}')
     "t_audit: $a"; "t_native: $n"
-    foreach ($r in 'seller', 'cashier', 'marketer') {
+    foreach ($r in 'seller', 'cashier', 'marketer', 'guestpt', 'sellernoatt', 'sellernoview', 'empty', 'owner', 'admin') {
       $env:ROLE = $r
       $o = uv run --no-project -q --with playwright python -X utf8 dev\test\t_role.py
       "t_role: $o"

@@ -64,10 +64,10 @@
   Нет интернета — отметки копятся в localStorage и уходят позже.
 - Админка: `smena/admin.html` — вход как в Кассу (админ — по is_member; кассир и продавец — своя точка через `att_my_load`, см. «Роли доступа»). Вкладки: Журнал дня, Сводка месяца,
   Сотрудники (добавить + снять 6 образцов лица), Точки (время начала работы, код киоска, ссылка), Памятка.
-- На сайте это вкладка **«Контроль»** (data-tab `att`, `dev/patch_att.py` + `dev/att/`): сверху контейнер `#attUsers`,
-  куда `patch_role` ставит блок «Пользователи» (логины, роли admin/cashier/seller/marketer, точка, статус, последний вход,
-  форма «Добавить»; данные — RPC `access_list()`), ниже журнал прихода (iframe `smena/admin.html?embed=1`).
-  До 16.11.2026 вкладка называлась «Приход».
+- На сайте это вкладка **«Пользователи»** (data-tab `att`, `dev/patch_att.py` + `dev/att/`): сверху контейнер `#attUsers`,
+  куда `patch_role` ставит панель пользователей (логины, статус, точка, анкета, права-переключатели, последний вход,
+  «Изменить», «Добавить»; данные — RPC `access_list()`), ниже журнал прихода (iframe `smena/admin.html?embed=1`).
+  До 16.11.2026 вкладка называлась «Приход», 16.11 — «Контроль», с 17.11.2026 — «Пользователи»; для ограниченных ролей она подписана «Приход».
 - Таблицы: `att_points` (point, code, start_time), `att_employees` (name, point, descriptors jsonb, active),
   `att_events` (employee_id, point, kind in/out, ts, score, photo base64, lat/lng/acc). RLS — только is_member.
   Киоск без входа: RPC `att_kiosk_load(p_code)` и `att_kiosk_mark(...)` (security definer, проверка кода точки,
@@ -114,18 +114,25 @@
 - `bash dev/build.sh` сам обновляет зеркало и граф (без LLM, бесплатно). Изменения в `graphify-out/`
   коммитить вместе с кодом; большой diff `graph.json` — это нормально.
 
-## Роли доступа (с 16.11.2026) — таблица `public.members(email, role, point, label, active)`
-- Вход — Supabase Auth; роль и точка — строка в `members` (RPC `my_access`). `active=false` снимает доступ. Пользователей
-  заводит владелец на сайте в разделе «Пользователи» (вкладка «Контроль») через серверную функцию `users-admin`
-  (service role только внутри Supabase). Пароли никому в репозиторий и в память не писать.
-- **admin** (владелец) — всё, прямой доступ к таблицам по RLS (`is_admin()`), функции Billz тоже только для него.
-- **cashier** (кассир, своя точка) — продажи и расходы дня своей точки: видит, вносит и правит за сегодня/вчера
-  (RPC `cashier_put_sale`/`cashier_del_sale`/`cashier_put_entry`/`cashier_del_entry`: только белый список полей, продажа до 500 000 000,
-  расход `cat=op` до 50 000 000, правка/удаление расходов только `source=day`, продажи Billz не трогает; себестоимость строк сервер сохраняет),
-  журнал прихода своей точки (`att_my_load`). Вкладки «Продажи» и «Приход».
-- **seller** (продавец, своя точка) — то же, но только просмотр; единственная запись — «расход дня» по шаблонам точки
-  (`settings/sellerTpl`, RPC `seller_add_expense`: до 3 000 000 за запись, до 30 записей в день, дата не старше позавчера).
-- **marketer** (гость/маркетолог) — продажи всех точек без себестоимости, расходов, плана и кассы; вкладки «Продажи» и «Аналитика».
+## Роли доступа (с 16.11.2026, права-переключатели с 17.11.2026)
+Таблица `public.members(email lower, role, point, label, phone, "position", note, perms jsonb, active)`.
+- Вход — Supabase Auth; строка в `members` даёт статус, точку и права (RPC `my_access` → role, point, perms, label). `active=false` снимает доступ.
+  Пользователей заводит владелец (или админ) на сайте во вкладке «Пользователи» через серверную функцию `users-admin`
+  (service role только внутри Supabase). Пароли в репозиторий, чат-итоги и память не писать.
+- Статусы: **owner** (владелец, одна запись — его почта; триггер `members_guard` не даёт удалить, выключить или понизить) →
+  **admin** (всё, кроме владельца и других админов) → **cashier**, **seller**, **marketer** («Гость»). Владелец и админ читают таблицы
+  напрямую по RLS (`is_admin()`), точка у них может быть «Все точки» (null). У остальных ровно одна точка.
+- Права (ключи `perms`): `sales_view, sales_write, sales_edit, exp_view, exp_add, exp_edit, cash_view, debts_view, att_view, analytics, export`.
+  Набор по умолчанию задаёт статус (`role_perms(role)`): cashier — всё кроме analytics/export; seller — sales_view, exp_view, exp_add, att_view;
+  marketer — sales_view, analytics. `members.perms` — переопределения владельца (итог = по умолчанию || perms). Вкладки и кнопки на сайте
+  идут по правам: «Продажи» (sales_view), «Аналитика» (analytics), «Приход» (att_view).
 - Ограниченные роли читают данные одним вызовом `role_docs_all()` (продажи без `cost/costEst/costSrc/photo`, `settings/sales` без плана,
-  расходы только `source=day` своей точки); realtime для них не подписывается. Не видят: р/с, платежи, фискальные модули, Billz,
-  склад, настройки, другие точки. SQL — `supabase/migrations/20261116_roles*.sql`, клиент — `dev/patch_role.py` + `dev/role/`.
+  расходы только `source=day`; точка фильтруется, если задана) и пишут только через RPC: `cashier_put_sale`/`cashier_del_sale`
+  (sales_write/sales_edit: своя точка, сегодня/вчера, белый список полей, продажа до 500 000 000, Billz не трогает, себестоимость
+  старой строки сервер сохраняет), `cashier_put_entry`/`cashier_del_entry` (exp_add/exp_edit: `cat=op`, до 50 000 000, только `source=day`),
+  `seller_add_expense` (exp_add без exp_edit: шаблоны `settings/sellerTpl`, до 3 000 000, до 30 в день, дата не старше позавчера),
+  `att_my_load` (att_view, журнал прихода своей точки без кодов и фото). Realtime для них не подписывается.
+  Не видят никогда: себестоимость, прибыль, план, р/с, платежи, фискальные модули, Billz, склад, настройки, чужие точки.
+- Функции Billz (`billz-sync`, `billz-collect`) вручную запускает только активный owner/admin.
+- SQL — `supabase/migrations/2026111*_roles*.sql` (по порядку номеров), сервер — `supabase/functions/users-admin`,
+  клиент — `dev/patch_role.py` + `dev/role/` (`users.js` — панель пользователей), тест — `dev/test/t_role.py`.
