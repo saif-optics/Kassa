@@ -99,13 +99,14 @@ export function recFor(d: Data, M: string): CashRec | null {
 }
 /** день по Ташкенту (UTC+5) — так считает рабочий сайт у владельца */
 const tashDay = (ms: number) => new Date(ms + 5 * 3600e3).toISOString().slice(0, 10);
-/** после пересчёта: записи, внесённые позже и датированные днём пересчёта или позже, двигают и «должно быть», и факт */
+/** после пересчёта: записи и наличные продажи, внесённые позже и датированные днём пересчёта или позже, двигают и «должно быть», и факт */
 export function cashState(d: Data, r: CashRec, M: string) {
   const cday = tashDay(r.at || 0);
   const after = kEntries(d, M).filter((x) => (x.createdAt || 0) > (r.at || 0) && (!x.date || x.date >= cday));
   const afterExp = after.filter((e) => (e.type !== "inc" && !fromRsv(e)) || toRsv(e)).reduce((a, e) => a + val(e), 0);
   const afterInc = after.filter((e) => e.type === "inc" && !isBc(e) && !isRsvIn(e)).reduce((a, e) => a + val(e), 0);
-  return { afterExp, afterInc, actual: r.amount - afterExp + afterInc, at: r.at };
+  const afterSales = d.sales.filter((s) => s.date && s.date.slice(0, 7) === M && inKassa(s.point, s.date) && (s.createdAt || 0) > (r.at || 0) && s.date >= cday).reduce((a, s) => a + cashOf(s), 0);
+  return { afterExp, afterInc, afterSales, actual: r.amount - afterExp + afterInc + afterSales, at: r.at };
 }
 
 /** анализ расходов месяца: статьи с Б/Ч, по точкам, по дням, выводы */

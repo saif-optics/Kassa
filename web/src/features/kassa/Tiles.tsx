@@ -16,7 +16,7 @@ const Tile = ({ i, hero, children, className }: { i: number; hero?: boolean; chi
 );
 const Eyebrow = ({ children, light }: { children: React.ReactNode; light?: boolean }) => <span className={cn("text-[11px] font-semibold tracking-wide uppercase", light ? "text-white/85" : "text-muted-foreground")}>{children}</span>;
 
-type Props = { c: Kassa; M: string; isLast: boolean; rec: CashRec | null; st: { actual: number; afterExp: number; afterInc: number } | null; lastRecNote: string;
+type Props = { c: Kassa; M: string; isLast: boolean; rec: CashRec | null; st: { actual: number; afterExp: number; afterInc: number; afterSales?: number } | null; lastRecNote: string;
   rsv: { bal: number; inn: number; out: number; n: number; mIn: number; mOut: number }; onCash: (v: number) => Promise<void>; onReserve: (v: number, from: "kassa" | "out") => Promise<void> };
 
 export function Tiles({ c, M, isLast, rec, st, lastRecNote, rsv, onCash, onReserve }: Props) {
@@ -24,7 +24,7 @@ export function Tiles({ c, M, isLast, rec, st, lastRecNote, rsv, onCash, onReser
   const diff = st ? c.expected - st.actual : null;
   const fmtIn = (s: string) => { const v = digits(s); return isNaN(v) ? "" : fmt(v); };
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 @5xl/main:grid-cols-4">
       <Tile i={0} hero>
         <Eyebrow light>{isLast ? "Должно быть на руках" : `Должно быть на конец месяца · ${monthName(M).toLowerCase()}`}</Eyebrow>
         <span className="num my-auto text-[30px] font-semibold tracking-tight">{fmt(c.expected)} сум</span>
@@ -33,7 +33,7 @@ export function Tiles({ c, M, isLast, rec, st, lastRecNote, rsv, onCash, onReser
       <Tile i={1}>
         <Eyebrow>{isLast ? "Фактическая наличка сейчас" : "Фактическая наличка на конец месяца"}</Eyebrow>
         <span className="num text-[26px] font-semibold tracking-tight">{st ? fmt(st.actual) + " сум" : "—"}</span>
-        <span className="text-[12.5px] text-muted-foreground">{rec ? <>Пересчёт {when(rec.at)}: {fmt(rec.amount)}{st?.afterExp ? ` · после него расходы −${fmt(st.afterExp)}` : ""}{st?.afterInc ? ` · приходы +${fmt(st.afterInc)}` : ""}</> : lastRecNote}</span>
+        <span className="text-[12.5px] text-muted-foreground">{rec ? <>Пересчёт {when(rec.at)}: {fmt(rec.amount)}{st?.afterExp ? ` · после него расходы −${fmt(st.afterExp)}` : ""}{st?.afterInc ? ` · приходы +${fmt(st.afterInc)}` : ""}{st?.afterSales ? ` · продажи наличными +${fmt(st.afterSales)}` : ""}</> : lastRecNote}</span>
         {isLast && <form className="mt-auto flex gap-2 pt-2" onSubmit={async (e) => { e.preventDefault(); const v = digits(cash); if (isNaN(v)) { setMsg("Введите сумму цифрами"); return; } try { await onCash(v); setCash(""); setMsg(""); } catch { setMsg("Не удалось сохранить, попробуйте ещё раз"); } }}>
           <Input value={cash} onChange={(e) => setCash(fmtIn(e.target.value))} inputMode="numeric" placeholder="Новый пересчёт кассы" aria-label="Сколько наличных в кассе" className="num" />
           <Button type="submit">Пересчитал</Button></form>}

@@ -2016,6 +2016,7 @@ window.SaifXL=(function(){
       let meta=`Пересчёт ${whenOf(rec.at)}: ${fmt(rec.amount)}`;
       if(afterExp) meta+=` · после него расходы −${fmt(afterExp)}`;
       if(afterInc) meta+=` · приходы +${fmt(afterInc)}`;
+      if(st.afterSales) meta+=` · продажи наличными +${fmt(st.afterSales)}`;
       const diff=c.expected-actual;
       if(diff>0){$("tDiff").textContent=fmt(diff)+" сум";chip.className="chip bad";chip.textContent="Недостача"}
       else if(diff<0){$("tDiff").textContent=fmt(-diff)+" сум";chip.className="chip over";chip.textContent="Излишек"}
@@ -2048,14 +2049,15 @@ window.SaifXL=(function(){
     let best=null;all.forEach(r=>{if(isNaN(r.amount)||recM(r)!==M)return;if(!best||r.at>best.at)best=r});
     return best;
   }
-  // после пересчёта: новые записи (расходы и приходы), внесённые позже пересчёта и датированные днём пересчёта или позже, двигают и «должно быть», и фактическую наличку
+  // после пересчёта: новые записи (расходы и приходы) и наличные продажи, внесённые позже пересчёта и датированные днём пересчёта или позже, двигают и «должно быть», и фактическую наличку
   function cashState(c,r,M){
     const cd=new Date(r.at||0);const cday=cd.getFullYear()+"-"+String(cd.getMonth()+1).padStart(2,"0")+"-"+String(cd.getDate()).padStart(2,"0");
     const isAfter=x=>(x.createdAt||0)>(r.at||0)&&(!x.date||x.date>=cday);
     const after=kEntries(M).filter(isAfter);
     const afterExp=after.filter(e=>(e.type!=="inc"&&!fromRsv(e))||toRsv(e)).reduce((a,e)=>a+val(e),0);
     const afterInc=after.filter(e=>e.type==="inc"&&!isBc(e)&&!isRsvIn(e)).reduce((a,e)=>a+val(e),0);
-    return {afterExp,afterInc,actual:r.amount-afterExp+afterInc,at:r.at};
+    const afterSales=sales.filter(s=>s.date&&s.date.slice(0,7)===M&&inKassa(s.point,s.date)&&(s.createdAt||0)>(r.at||0)&&s.date>=cday).reduce((a,s)=>a+cashOf(s),0);
+    return {afterExp,afterInc,afterSales,actual:r.amount-afterExp+afterInc+afterSales,at:r.at};
   }
 
   function renderAnalysis(c){
