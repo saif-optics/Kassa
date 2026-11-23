@@ -1,0 +1,29 @@
+/* «Задания» — задания и проблемы по точкам */
+#tasksBody{display:flex;flex-direction:column;gap:14px}
+.tk-filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.tk-filters select,.tk-filters input{min-width:0}
+.tk-filters input[type=search]{flex:1 1 180px}
+.tk-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tk-form label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);min-width:0}
+.tk-form label.wide{grid-column:1/-1}
+.tk-form input,.tk-form select,.tk-form textarea{width:100%;box-sizing:border-box;font:inherit}
+.tk-form textarea{min-height:80px;resize:vertical}
+.tk-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tk-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,420px),1fr));gap:12px}
+.tk-card{display:flex;flex-direction:column;gap:8px;min-width:0}
+.tk-head{display:flex;flex-direction:column;gap:6px;cursor:pointer}
+.tk-title{font-weight:600;font-size:16px;overflow-wrap:anywhere}
+.tk-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tk-meta{font-size:13px;color:var(--muted)}
+.tk-body{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px}
+.tk-feed{display:flex;flex-direction:column;gap:6px}
+.tk-c{border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:14px;overflow-wrap:anywhere;white-space:pre-wrap}
+.tk-c.problem{border-color:var(--minus);background:var(--minus-soft)}
+.tk-c small{display:block;color:var(--muted);font-size:12px;margin-bottom:2px}
+.tk-empty{color:var(--muted);text-align:center;padding:24px 8px}
+.tk-err{color:var(--minus);font-size:13px}
+@media (max-width:760px){
+  .tk-form{grid-template-columns:1fr}
+  .tk-list{grid-template-columns:1fr}
+  .tk-actions button,.tk-filters select,.tk-filters input,.tk-form input,.tk-form select{min-height:44px;font-size:15px}
+}
