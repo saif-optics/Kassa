@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Отметка — Saif-Optics</title>
+<!-- Проверка живости (защита от фото): после узнавания лица (расстояние < MATCH) киоск даёт случайное задание
+     на LIVE_MS: «Моргните» (EAR глаз по 68 точкам: падает ниже EAR_LOW и возвращается выше EAR_HIGH)
+     или «Поверните голову влево/вправо» (нос, точка 30, смещается от центра глаз больше TURN_MIN
+     межглазного расстояния в нужную сторону и возвращается к центру ближе TURN_BACK). Всё время проверяется
+     тот же человек (расстояние < MATCH + SAME_PLUS), кадров не чаще 1000/LIVE_GAP в секунду.
+     Защита только от статичного фото: видео с лицом она не остановит.
+     Не прошёл — отметка не пишется, поиск лица начинается заново. -->
 <meta name="theme-color" content="#f2f2f7">
 <style>
 :root{--bg:#f2f2f7;--card:rgba(255,255,255,.72);--line:rgba(60,60,67,.14);--tx:#1c1c1e;--mut:#8e8e93;--acc:#007aff;--ok:#34c759;--warn:#ff9500;--bad:#ff3b30}
@@ -28,6 +35,8 @@ button:active{transform:scale(.97)}button:disabled{opacity:.45;cursor:default}
 .cam video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
 .cam .ring{position:absolute;inset:12% 22%;border:3px solid rgba(255,255,255,.7);border-radius:50%;transition:border-color .2s}
 .cam.found .ring{border-color:var(--ok)}
+.cam .chal{position:absolute;left:0;right:0;top:0;padding:14px 10px;text-align:center;color:#fff;font-size:30px;font-weight:800;background:linear-gradient(rgba(0,0,0,.65),transparent);text-shadow:0 2px 8px rgba(0,0,0,.6)}
+.cam .chal small{display:block;font-size:20px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:2px}
 .status{margin-top:14px;font-size:18px;font-weight:600;min-height:26px}
 .who{display:flex;flex-direction:column;align-items:center;gap:10px}
 .who img{width:150px;height:150px;border-radius:50%;object-fit:cover;border:4px solid var(--ok)}
@@ -69,7 +78,7 @@ input{font:inherit;font-size:28px;text-align:center;letter-spacing:.2em;text-tra
       <div class="hint">Нажмите и посмотрите в камеру · или клавиша «пробел»</div>
     </div>
     <div id="scan" class="hide" style="width:100%;display:flex;flex-direction:column;align-items:center">
-      <div class="cam" id="camBox"><video id="video" playsinline muted></video><div class="ring"></div></div>
+      <div class="cam" id="camBox"><video id="video" playsinline muted></video><div class="ring"></div><div class="chal hide" id="chal"></div></div>
       <div class="status" id="status">Смотрите в камеру</div>
       <button class="sec" id="cancelScan" style="margin-top:10px">Отмена</button>
     </div>
@@ -102,7 +111,12 @@ const SB = "https://qvblxhyftwivkzxucfak.supabase.co";
 const KEY = "sb_publishable_-ceoJkpmAZ7Y8osbPHaOlg_3nqUsdB7";
 const MODELS = "https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/model/";
 const TZ = "Asia/Tashkent";
-const MATCH = 0.5;          // порог расстояния: меньше — тот же человек
+const MATCH = 0.45;         // порог расстояния: меньше — тот же человек
+const SAME_PLUS = 0.05;     // допуск «тот же человек» во время проверки живости (MATCH + SAME_PLUS)
+const LIVE_MS = 6000;       // время на задание проверки живости
+const LIVE_GAP = 125;       // не чаще ~8 кадров в секунду при проверке
+const EAR_LOW = 0.22, EAR_HIGH = 0.25;  // моргание: закрыт ниже max(LOW, 0.75 × макс. EAR задания), открыт выше HIGH
+const TURN_MIN = 0.25, TURN_BACK = 0.12; // поворот головы: доли межглазного расстояния
 const NEED = 3;             // подряд кадров с одним и тем же человеком
 const $ = id => document.getElementById(id);
 const show = (id, on = true) => $(id).classList.toggle("hide", !on);
@@ -190,7 +204,7 @@ async function loadModels() {
 // ---------- распознавание ----------
 function best(desc) {
   let b = { id: null, d: 9 }, second = 9;
-  for (const e of data.employees) for (const s of e.d) {
+  for (const e of data.employees) for (const s of (e.d || [])) {
     let sum = 0; for (let i = 0; i < 128; i++) { const x = desc[i] - s[i]; sum += x * x; }
     const d = Math.sqrt(sum);
     if (d < b.d) { if (b.id !== e.id) second = b.d; b = { id: e.id, d }; }
@@ -212,22 +226,87 @@ async function scan() {
   }
   const v = $("video"); v.srcObject = stream; await v.play();
   const opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 });
+  const my = stream;
   let streak = 0, lastId = null, t0 = Date.now();
-  while (stream) {
+  while (stream === my) {
     if (Date.now() - t0 > 20000) { $("status").textContent = "Не удалось узнать. Попробуйте ещё раз"; stopCam(); setTimeout(home, 2500); return; }
     const r = await faceapi.detectSingleFace(v, opts).withFaceLandmarks().withFaceDescriptor();
-    if (!stream) return;
+    if (stream !== my) return;
     if (!r) { streak = 0; $("camBox").classList.remove("found"); $("status").textContent = "Смотрите в камеру"; continue; }
     const m = best(r.descriptor);
     if (m.id && m.d < MATCH && m.second - m.d > 0.04) {
       streak = m.id === lastId ? streak + 1 : 1; lastId = m.id;
       $("camBox").classList.add("found"); $("status").textContent = "Узнаю…";
-      if (streak >= NEED) { const photo = grab(v); stopCam(); return ask(m.id, 1 - m.d, photo); }
+      if (streak >= NEED) {
+        const photo = grab(v);
+        const ok = await live(v, m.id, opts, my);
+        if (stream !== my) return;
+        if (ok) { stopCam(); return ask(m.id, 1 - m.d, photo); }
+        $("camBox").classList.remove("found"); $("status").textContent = "Не удалось подтвердить, попробуйте ещё раз";
+        await new Promise(r => setTimeout(r, 1800));
+        if (stream !== my) return;
+        streak = 0; lastId = null; t0 = Date.now();
+      }
     } else {
       streak = 0; $("camBox").classList.remove("found");
       $("status").textContent = data.employees.length ? "Не узнаю — подойдите ближе" : "Сотрудники ещё не добавлены";
     }
   }
+}
+// ---------- проверка живости ----------
+const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+const eyeEar = (p, i) => (dist(p[i + 1], p[i + 5]) + dist(p[i + 2], p[i + 4])) / (2 * dist(p[i], p[i + 3]));
+function sameFace(desc, id) {
+  const e = data.employees.find(x => x.id === id);
+  for (const s of (e?.d || [])) {
+    let sum = 0; for (let i = 0; i < 128; i++) { const x = desc[i] - s[i]; sum += x * x; }
+    if (Math.sqrt(sum) < MATCH + SAME_PLUS) return true;
+  }
+  return false;
+}
+// true — задание выполнено тем же человеком за LIVE_MS; false — нет (или камеру закрыли)
+async function live(v, id, opts, my) {
+  const tasks = [
+    { t: "Моргните", k: "blink" },
+    { t: "Поверните голову влево", k: "turn", dir: 1 },   // кадр с камеры не зеркальный: влево у человека = x носа растёт
+    { t: "Поверните голову вправо", k: "turn", dir: -1 },
+  ];
+  const task = tasks[Math.floor(Math.random() * tasks.length)];
+  const box = $("chal"), t0 = Date.now();
+  let closed = false, turned = false, centered = false, ok = false, n = 0, last = 0, bad = 0, maxEar = 0;
+  $("status").textContent = "Проверяем, что это вы";
+  show("chal");
+  const draw = () => { box.innerHTML = `${task.t}<small>${Math.max(0, Math.ceil((LIVE_MS - (Date.now() - t0)) / 1000))} с</small>`; };
+  draw();
+  try {
+    while (stream === my && Date.now() - t0 < LIVE_MS && !ok) {
+      const wait = LIVE_GAP - (Date.now() - last);
+      if (wait > 0) await new Promise(r => setTimeout(r, wait));
+      last = Date.now(); draw();
+      if (stream !== my) return false;
+      // дескриптор (тяжёлый) — на каждом третьем кадре, остальное — только точки лица
+      const chk = n++ % 3 === 0;
+      const q = faceapi.detectSingleFace(v, opts).withFaceLandmarks();
+      const r = await (chk ? q.withFaceDescriptor() : q);
+      if (stream !== my) return false;
+      if (!r) continue;
+      if (chk) { bad = sameFace(r.descriptor, id) ? 0 : bad + 1; if (bad >= 2) return false; } // 2 плохих проверки подряд — сброс
+      const p = r.landmarks.positions;
+      if (task.k === "blink") {
+        const ear = (eyeEar(p, 36) + eyeEar(p, 42)) / 2;
+        maxEar = Math.max(maxEar, ear);
+        if (ear < Math.max(EAR_LOW, 0.75 * maxEar)) closed = true; else if (closed && ear > EAR_HIGH) ok = true;
+      } else {
+        const eye = dist(p[36], p[45]);
+        const off = (p[30].x - (p[36].x + p[45].x) / 2) / eye * task.dir;
+        if (!centered) { if (Math.abs(off) < TURN_BACK) centered = true; } // сначала центр
+        else if (off > TURN_MIN) turned = true;
+        else if (turned && Math.abs(off) < TURN_BACK) ok = true;
+      }
+    }
+  } catch (e) { console.error(e); return false; }
+  finally { show("chal", false); }
+  return ok;
 }
 function grab(v) {
   const c = document.createElement("canvas"); c.width = 320; c.height = 240;
