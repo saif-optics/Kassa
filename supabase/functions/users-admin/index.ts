@@ -10,12 +10,12 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type", "Access-Control-Allow-Methods": "POST, OPTIONS" };
 const ROLES = ["admin", "cashier", "seller", "marketer"]; // owner назначить нельзя
 const LOW_ROLES = ["cashier", "seller", "marketer"]; // роли, которыми управляет admin
-const PERM_KEYS = ["sales_view", "sales_write", "sales_edit", "exp_view", "exp_add", "exp_edit", "cash_view", "debts_view", "att_view", "analytics", "export"];
+const PERM_KEYS = ["sales_view", "sales_write", "sales_edit", "exp_view", "exp_add", "exp_edit", "cash_view", "debts_view", "att_view", "analytics", "export", "tasks"];
 // Набор прав по умолчанию — как SQL-функция role_perms(role)
 const ROLE_ON: Record<string, string[]> = {
   admin: PERM_KEYS,
   cashier: PERM_KEYS.filter((k) => k !== "analytics" && k !== "export"),
-  seller: ["sales_view", "exp_view", "exp_add", "att_view"],
+  seller: ["sales_view", "exp_view", "exp_add", "att_view", "tasks"],
   marketer: ["sales_view", "analytics"],
 };
 // В members.perms пишем только отличия от набора роли; у admin права всегда полные
@@ -201,6 +201,11 @@ Deno.serve(async (req) => {
           if (au) await sb.auth.admin.updateUserById(au.id, { ban_duration: cur.active ? "none" : "876000h" });
         }
         throw error;
+      }
+      // доступ выключен — гасим все сессии пользователя (RPC проверяет иерархию сам)
+      if (body.active === false && cur.active) {
+        const { error: ke } = await me.rpc("admin_kill_sessions", { p_email: email });
+        if (ke) return reply({ ok: true, warn: "Доступ выключен, но сессии не погашены: " + ke.message });
       }
       return reply({ ok: true });
     }

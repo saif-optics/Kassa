@@ -1,20 +1,20 @@
 """Самопроверка ролей и прав на фейковом Supabase: ROLE=seller|cashier|marketer|guestpt|sellernoatt|sellernoview|empty|owner|admin python t_role.py.
 seller/cashier/marketer — права по умолчанию статуса; guestpt — гость с точкой (продажи + аналитика); sellernoatt — продавец без журнала прихода; sellernoview — добавляет расход, но не видит расходы (панель списка скрыта); empty — пустые права (сообщение «Нет доступных разделов»);
-owner/admin — раздел «Пользователи» (группы по точкам, форма изменения, права).
+owner/admin — вкладка «Пользователи» с тремя подразделами (фейс-контроль, сессии, таблица: группы по точкам, select-ы статуса и точки, форма изменения, права); ownerempty — владелец при пустых данных (нет сотрудников и сессий, без ошибок).
 Вывод {} = чисто, иначе — словарь отклонений; DEBUG=1 дополнительно печатает весь отчёт."""
 import os,json
 from playwright.sync_api import sync_playwright
 D=os.path.dirname(os.path.abspath(__file__))
 SC=os.environ.get("ROLE","seller");POINT=os.environ.get("POINT","Премиум")
-KEYS=["sales_view","sales_write","sales_edit","exp_view","exp_add","exp_edit","cash_view","debts_view","att_view","analytics","export"]
-DEF={"cashier":[k for k in KEYS if k not in("analytics","export")],"seller":["sales_view","exp_view","exp_add","att_view"],
+KEYS=["sales_view","sales_write","sales_edit","exp_view","exp_add","exp_edit","cash_view","debts_view","att_view","analytics","export","tasks"]
+DEF={"cashier":[k for k in KEYS if k not in("analytics","export")],"seller":["sales_view","exp_view","exp_add","att_view","tasks"],
      "marketer":["sales_view","analytics"]}
 # сценарий -> (статус, есть ли точка, права)
 SCEN={"seller":("seller",True,DEF["seller"]),"cashier":("cashier",True,DEF["cashier"]),"marketer":("marketer",False,DEF["marketer"]),
       "guestpt":("marketer",True,DEF["marketer"]),"sellernoatt":("seller",True,[k for k in DEF["seller"] if k!="att_view"]),
       "sellernoview":("seller",True,["sales_view","exp_add","att_view"]),"empty":("marketer",False,[]),
-      "owner":("owner",False,KEYS),"admin":("admin",False,KEYS)}
-ROLE,HASPT,PL=SCEN[SC];PERM={k:(k in PL) for k in KEYS};FULL=ROLE in("owner","admin")
+      "owner":("owner",False,KEYS),"admin":("admin",False,KEYS),"ownerempty":("owner",False,KEYS)}
+EMPTY=SC=="ownerempty";ROLE,HASPT,PL=SCEN[SC];PERM={k:(k in PL) for k in KEYS};FULL=ROLE in("owner","admin")
 EXT='''
 (function(){const cc=window.supabase.createClient;window.supabase.createClient=function(){const c=cc.apply(this,arguments);
  const role=%r,pt=%r,perms=%s,own=role!=="owner"&&role!=="admin",P0="Премиум";window.__calls=[];
@@ -44,8 +44,26 @@ EXT='''
   if(name==="access_list")return {data:own?[]:ulist,error:null};
   return {data:null,error:{message:"нет "+name}}};
  c.functions={invoke:async(n,o)=>{window.__calls.push(o&&o.body);return {data:{ok:true},error:null}}};
+ // подразделы «Пользователей»: приход (att_* через from), сессии (admin_sessions, admin_end_session)
+ const emp=%s,day=new Date(Date.now()+5*3600000).toISOString().slice(0,10),T=h=>day+"T"+h+"+05:00";
+ const ATT={att_points:[{point:"Премиум",start_time:"10:00:00"}],
+  att_employees:[{id:"e1",name:"Аня",point:"Премиум",active:true},{id:"e2",name:"Бек",point:"Премиум",active:true},{id:"e3",name:"Гуля",point:"Премиум",active:true},{id:"e4",name:"Дина",point:"Премиум",active:true},{id:"e5",name:"Ева",point:"Яшнабад",active:true}],
+  att_events:[{employee_id:"e1",point:"Премиум",kind:"in",ts:T("09:30:00")},{employee_id:"e1",point:"Премиум",kind:"out",ts:T("18:00:00")},{employee_id:"e2",point:"Премиум",kind:"in",ts:T("09:55:00")},{employee_id:"e3",point:"Премиум",kind:"in",ts:T("10:20:00")}]};
+ const of=c.from;c.from=function(t){if(!/^att_/.test(t))return of.apply(this,arguments);
+  const rows=emp?[]:(ATT[t]||[]),q={select(){return q},eq(){return q},gte(){return q},order(){return q},then(a,b){return Promise.resolve({data:rows,error:null}).then(a,b)}};return q};
+ const UA=["Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1",
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36 Edg/120.0","Weird/1.0 <b>x</b>"];
+ const SESS=[{id:"s1",email:"o@x.uz",role:role,point:null,label:"Я",created_at:T("08:00:00"),last_at:T("09:00:00"),user_agent:UA[1],ip:"10.0.0.1",is_current:true},
+  {id:"s2",email:"o@x.uz",role:role,point:null,label:"Я",created_at:T("07:00:00"),last_at:T("08:30:00"),user_agent:UA[0],ip:"10.0.0.2",is_current:false},
+  {id:"s3",email:"c1@x.uz",role:"cashier",point:"Премиум",label:"Касса",created_at:T("06:00:00"),last_at:T("08:00:00"),user_agent:UA[2],ip:"10.0.0.3",is_current:false},
+  {id:"s4",email:"c1@x.uz",role:"cashier",point:"Премиум",label:"Касса",created_at:T("05:00:00"),last_at:T("07:00:00"),user_agent:UA[3],ip:"10.0.0.4",is_current:false}];
+ const orpc=c.rpc;c.rpc=async(name,args)=>{
+  if(name==="admin_sessions")return {data:emp?[]:SESS,error:null};
+  if(name==="admin_end_session"){window.__calls.push({rpc:name,args:args});return {data:null,error:null}}
+  return orpc(name,args)};
  return c}})();
-'''%(ROLE,POINT if HASPT else "",json.dumps(PERM))
+'''%(ROLE,POINT if HASPT else "",json.dumps(PERM),"true" if EMPTY else "false")
 rep={};errs=[]
 with sync_playwright() as pw:
     b=pw.chromium.launch();ctx=b.new_context(viewport={'width':1440,'height':950});p=ctx.new_page()
@@ -60,8 +78,37 @@ with sync_playwright() as pw:
     rep["visible"]=p.evaluate('[...document.querySelectorAll(".page:not([hidden])")].map(x=>x.id)')
     vis=lambda s:p.evaluate('s=>{const e=document.querySelector(s);return !!e&&e.getBoundingClientRect().width>0}',s)
     bad={}
-    if FULL:
+    if EMPTY:
+        # пустые данные: ни точек, ни сотрудников, ни сессий — тексты-заглушки и ни одной ошибки
         p.evaluate('document.querySelector(\'.tab[data-tab="att"]\').click()');p.wait_for_timeout(900)
+        rep["faceEmpty"]=p.inner_text("#ruFaceBody")
+        p.click('#ruSeg [data-sub=sess]');p.wait_for_timeout(500);rep["sessEmpty"]=p.inner_text("#ruSessBody")
+        p.click('#ruSeg [data-sub=users]');p.wait_for_timeout(500)
+        rep["errors"]=list(dict.fromkeys(errs))
+        if "Нет точек" not in rep["faceEmpty"]:bad["faceEmpty"]=rep["faceEmpty"]
+        if "нет" not in rep["sessEmpty"]:bad["sessEmpty"]=rep["sessEmpty"]
+        if rep["errors"]:bad["errors"]=rep["errors"]
+    elif FULL:
+        p.evaluate('document.querySelector(\'.tab[data-tab="att"]\').click()');p.wait_for_timeout(900)
+        # --- подраздел 1: фейс-контроль (по умолчанию), журнал виден ---
+        rep["subDef"]=p.evaluate('document.querySelector("#ruSeg [aria-pressed=true]").dataset.sub')
+        rep["segBtns"]=p.evaluate('[...document.querySelectorAll("#ruSeg button")].map(b=>b.textContent)')
+        rep["bodyFace"]=p.evaluate('document.getElementById("attBody").style.display')
+        rep["tiles"]=p.evaluate('[...document.querySelectorAll("#ruFaceBody .ru-tile")].map(t=>t.innerText.replace(/\\s+/g," "))')
+        # --- подраздел 2: сессии ---
+        p.click('#ruSeg [data-sub=sess]');p.wait_for_timeout(600)
+        rep["bodySess"]=p.evaluate('document.getElementById("attBody").style.display')
+        rep["sessGroups"]=p.evaluate('document.querySelectorAll("#ruSessBody .ru-user").length')
+        rep["sessText"]=p.inner_text("#ruPSess")
+        rep["endBtns"]=p.evaluate('document.querySelectorAll("#ruSessBody [data-end]").length')
+        rep["curBtn"]=p.evaluate('[...document.querySelectorAll("#ruSessBody .ru-sess li")].filter(li=>li.textContent.includes("эта сессия")).map(li=>li.querySelectorAll("[data-end]").length)')
+        rep["access"]=p.evaluate('[...document.querySelectorAll("#ruSessBody [data-access]")].map(x=>x.dataset.access)')
+        rep["hasTag"]=p.evaluate('!!document.querySelector("#ruSessBody b") && [...document.querySelectorAll("#ruSessBody b")].every(b=>!b.querySelector("b"))')
+        p.click('#ruSessBody [data-end=s2]');p.wait_for_timeout(500)
+        rep["endCall"]=[c for c in p.evaluate("window.__calls") if isinstance(c,dict) and c.get("rpc")=="admin_end_session"]
+        p.click('#ruSeg [data-sub=users]');p.wait_for_timeout(600)
+        rep["bodyUsers"]=p.evaluate('document.getElementById("attBody").style.display')
+        rep["lsSub"]=p.evaluate('localStorage.getItem("ruSub")')
         rep["usersBlock"]=vis("#roleUsers")
         if os.environ.get("SHOT"):p.evaluate('document.querySelector("#roleUsers [data-act=edit]")?.click()');p.wait_for_timeout(400);p.screenshot(path=os.environ["SHOT"],full_page=True)  # снимок панели для превью владельцу
         rep["groups"]=p.evaluate('[...document.querySelectorAll("#ruBody .ru-grp td")].map(x=>x.textContent.trim())')
@@ -83,7 +130,36 @@ with sync_playwright() as pw:
         p.click('#ruBody .ru-edit [data-p=export]');p.click('#ruBody .ru-edit button[type=submit]');p.wait_for_timeout(500)
         up=[c for c in p.evaluate("window.__calls") if isinstance(c,dict) and c.get("action")=="update"]
         rep["updateCall"]=up[-1] if up else None
+        # select-ы в строке: свои и владельца заблокированы; смена статуса шлёт update {email, role, point}
+        rep["sel"]=p.evaluate('Object.fromEntries([...document.querySelectorAll("#ruBody tr[data-row]")].map(r=>[r.dataset.row,[...r.querySelectorAll("[data-sel]")].map(x=>x.value+(x.disabled?"!":""))]))')
+        p.select_option('#ruBody tr[data-row="c1@x.uz"] [data-sel=role]','seller');p.wait_for_timeout(600)
+        up2=[c for c in p.evaluate("window.__calls") if isinstance(c,dict) and c.get("action")=="update"]
+        rep["selCall"]=up2[-1] if up2 else None
+        rep["selMsg"]=p.inner_text("#ruTblMsg")
         rep["errors"]=list(dict.fromkeys(errs))
+        if rep["subDef"]!="face":bad["subDef"]=rep["subDef"]
+        if len(rep["segBtns"])!=3:bad["segBtns"]=rep["segBtns"]
+        if rep["bodyFace"]=="none":bad["bodyFace"]="журнал скрыт в фейс-контроле"
+        if rep["bodySess"]!="none" or rep["bodyUsers"]!="none":bad["bodyHidden"]=[rep["bodySess"],rep["bodyUsers"]]
+        if rep["lsSub"]!="users":bad["lsSub"]=rep["lsSub"]
+        t0=next((t for t in rep["tiles"] if t.startswith("Премиум")),"")
+        for w in ["начало 10:00","пришли 2","опоздали 1","ещё нет 1","пришёл 09:30","ушёл 18:00","впритык 09:55","опоздал на 20 мин, 10:20","Дина ещё нет"]:
+            if w not in t0:bad["tile "+w]=t0
+        if not any(t.startswith("Яшнабад") and "ещё нет 1" in t for t in rep["tiles"]):bad["tileYa"]=rep["tiles"]
+        if rep["sessGroups"]!=2:bad["sessGroups"]=rep["sessGroups"]
+        if rep["endBtns"]!=3 or rep["curBtn"]!=[0]:bad["endBtns"]=[rep["endBtns"],rep["curBtn"]]
+        if rep["access"]!=["c1@x.uz"]:bad["access"]=rep["access"]
+        for w in ["iPhone iOS 17 · Safari","Mac · Chrome","Windows · Edge","Weird/1.0 <b>x</b>","10.0.0.3","эта сессия","не позже чем через час"]:
+            if w not in rep["sessText"]:bad["sess "+w]=rep["sessText"][:300]
+        if not rep["endCall"] or rep["endCall"][-1]["args"]!={"p_id":"s2"}:bad["endCall"]=rep["endCall"]
+        sl=rep["sel"]
+        if sl.get("c1@x.uz")!=["cashier","Премиум"]:bad["selC1"]=sl.get("c1@x.uz")
+        if sl.get("own@x.uz") is None or not all(x.endswith("!") for x in sl["own@x.uz"]):bad["selOwner"]=sl.get("own@x.uz")
+        if not all(x.endswith("!") for x in sl.get("o@x.uz",["x"])):bad["selSelf"]=sl.get("o@x.uz")
+        if ROLE=="owner" and any(x.endswith("!") for x in sl.get("adm@x.uz",["!"])):bad["selAdmOwner"]=sl.get("adm@x.uz")
+        if ROLE=="admin" and not all(x.endswith("!") for x in sl.get("adm@x.uz",["x"])):bad["selAdmAdmin"]=sl.get("adm@x.uz")
+        if not rep["selCall"] or {k:rep["selCall"].get(k) for k in("email","role","point")}!={"email":"c1@x.uz","role":"seller","point":"Премиум"}:bad["selCall"]=rep["selCall"]
+        if rep["selMsg"]!="Сохранено":bad["selMsg"]=rep["selMsg"]
         if "att" not in rep["tabs"] or "sales" not in rep["tabs"] or "analytics" not in rep["tabs"]:bad["tabs"]=rep["tabs"]
         if not rep["usersBlock"]:bad["usersBlock"]="нет панели «Пользователи»"
         if not rep["groups"] or not rep["groups"][0].startswith("Все точки"):bad["groups"]=rep["groups"]
@@ -101,7 +177,7 @@ with sync_playwright() as pw:
         if sorted(rep["defSeller"])!=sorted(DEF["seller"]):bad["defSeller"]=rep["defSeller"]
         if sorted(rep["defMarketer"])!=sorted(DEF["marketer"]):bad["defMarketer"]=rep["defMarketer"]
         if sorted(rep["defCashier"])!=sorted(DEF["cashier"]):bad["defCashier"]=rep["defCashier"]
-        if rep["swCount"]!=11:bad["swCount"]=rep["swCount"]
+        if rep["swCount"]!=12:bad["swCount"]=rep["swCount"]
         if not rep["editOpen"]:bad["editOpen"]="форма не раскрылась"
         u=rep["updateCall"]
         if not u or sorted((u.get("perms") or {}).keys())!=sorted(KEYS) or u["perms"].get("export") is not True:bad["updateCall"]=u
@@ -138,7 +214,8 @@ with sync_playwright() as pw:
             rep["anText"]=[w for w in ["Прогноз","Маржа","Валовая","План за период","Расходы дня","Прибыль"] if w in p.evaluate("document.getElementById('page-analytics').innerText")]
         rep["errors"]=list(dict.fromkeys(errs))
         # --- проверки по правам ---
-        exp_tabs=[t for t,k in(("sales","sales_view"),("analytics","analytics"),("att","att_view")) if PERM[k]]
+        HASTASKS='data-tab="tasks"' in open(D+"/../../index.html",encoding="utf-8").read()  # вкладка «Задания» появится позже отдельным патчем
+        exp_tabs=[t for t,k in(("sales","sales_view"),("analytics","analytics"),("att","att_view"),("tasks","tasks")) if PERM[k] and (t!="tasks" or HASTASKS)]
         if sorted(rep["tabs"])!=sorted(exp_tabs):bad["tabs"]=rep["tabs"]
         SH={"#photoPanel":0,"details.settings":0,".scal-plan":0,"#saleFormPanel":PERM["sales_write"] and PERM["sales_view"],"#dxForm":PERM["exp_add"]}
         if not PERM["exp_view"]:SH["#dxToggle"]=0;SH["#dxTable"]=0

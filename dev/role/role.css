@@ -64,3 +64,29 @@ html[data-role-none] .tabs{display:none!important}
 #roleUsers input.ru-sw::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s}
 #roleUsers input.ru-sw:checked{background:var(--accent);border-color:transparent}
 #roleUsers input.ru-sw:checked::after{transform:translateX(14px)}
+/* ---- подразделы вкладки: сегмент, плитки прихода, сессии, select-ы в строке ---- */
+#roleUsers .ru-sub[hidden]{display:none}
+#roleUsers .ru-seg{display:flex;width:100%;margin-bottom:14px}
+#roleUsers .ru-seg button{flex:1;min-height:36px;padding:7px 10px;cursor:pointer;border:0;font:inherit;font-size:13.5px}
+#roleUsers .ru-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+#roleUsers .ru-tile,#roleUsers .ru-user{padding:12px 14px;border-radius:16px;border:1px solid var(--line);background:var(--surface)}
+#roleUsers .ru-th{display:flex;justify-content:space-between;gap:8px;align-items:baseline;font-size:15px}
+#roleUsers .ru-cnt{display:flex;flex-wrap:wrap;gap:6px 14px;margin:6px 0 8px;font-size:13px;font-weight:600}
+#roleUsers .ru-emp,#roleUsers .ru-sess{list-style:none;margin:0;padding:0}
+#roleUsers .ru-emp li{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px solid var(--line);font-size:13.5px}
+#roleUsers .ru-emp li span:last-child{text-align:right}
+#roleUsers .ru-ok{color:var(--plus)}
+#roleUsers .ru-warn{color:var(--warn)}
+#roleUsers .ru-bad{color:var(--minus)}
+#roleUsers .ru-user{margin-bottom:12px}
+#roleUsers .ru-uh{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-weight:600;font-size:14px}
+#roleUsers .ru-acc{font-weight:400;white-space:nowrap}
+#roleUsers .ru-sess li{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px;margin-top:8px}
+#roleUsers .ru-cur{display:inline-block;padding:1px 8px;border-radius:999px;background:var(--accent-soft,var(--wash));color:var(--accent);font-size:12px}
+#roleUsers .ru-note{margin:12px 0 0;font-size:12.5px;color:var(--muted)}
+#roleUsers select.ru-sel{min-height:32px;width:auto;max-width:100%;padding:0 8px;font-size:13.5px}
+#roleUsers select.ru-sel:disabled{opacity:.6}
+@media (max-width:640px){
+  #roleUsers .ru-seg{flex-direction:column}
+  #roleUsers .ru-tiles{grid-template-columns:1fr}
+}

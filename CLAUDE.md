@@ -135,7 +135,8 @@
 - Статусы: **owner** (владелец, одна запись — его почта; триггер `members_guard` не даёт удалить, выключить или понизить) →
   **admin** (всё, кроме владельца и других админов) → **cashier**, **seller**, **marketer** («Гость»). Владелец и админ читают таблицы
   напрямую по RLS (`is_admin()`), точка у них может быть «Все точки» (null). У остальных ровно одна точка.
-- Права (ключи `perms`): `sales_view, sales_write, sales_edit, exp_view, exp_add, exp_edit, cash_view, debts_view, att_view, analytics, export`.
+- Права (ключи `perms`): `sales_view, sales_write, sales_edit, exp_view, exp_add, exp_edit, cash_view, debts_view, att_view, analytics, export, tasks`
+  (`tasks` — «Задания своей точки», с 23.11.2026: по умолчанию у cashier и seller).
   Набор по умолчанию задаёт статус (`role_perms(role)`): cashier — всё кроме analytics/export; seller — sales_view, exp_view, exp_add, att_view;
   marketer — sales_view, analytics. `members.perms` — переопределения владельца (итог = по умолчанию || perms). Вкладки и кнопки на сайте
   идут по правам: «Продажи» (sales_view), «Аналитика» (analytics), «Приход» (att_view).
@@ -146,6 +147,10 @@
   `seller_add_expense` (exp_add без exp_edit: шаблоны `settings/sellerTpl`, до 3 000 000, до 30 в день, дата не старше позавчера),
   `att_my_load` (att_view, журнал прихода своей точки без кодов и фото). Realtime для них не подписывается.
   Не видят никогда: себестоимость, прибыль, план, р/с, платежи, фискальные модули, Billz, склад, настройки, чужие точки.
+- Вкладка «Пользователи» у owner/admin — три подраздела (23.11.2026): «Фейс-контроль по точкам» (плитки на сегодня по att_*: пришёл /
+  впритык за 10 мин до начала / опоздал / ещё нет; ниже журнал прихода), «Активные сессии» (RPC `admin_sessions` из auth.sessions:
+  устройство, вход, активность, IP; `admin_end_session` — завершить чужую сессию, свою текущую нельзя; переключатель «Доступ к сайту» =
+  бан в Auth + `admin_kill_sessions`), «Пользователи» (таблица со сменой статуса и точки в строке, «Изменить», «Добавить»).
 - Функции Billz (`billz-sync`, `billz-collect`) вручную запускает только активный owner/admin.
 - SQL — `supabase/migrations/2026111*_roles*.sql` (по порядку номеров), сервер — `supabase/functions/users-admin`,
   клиент — `dev/patch_role.py` + `dev/role/` (`users.js` — панель пользователей), тест — `dev/test/t_role.py`.

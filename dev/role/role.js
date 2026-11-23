@@ -4,9 +4,9 @@
 (function(){
   "use strict";
   // права, которые открывают вкладки (att — журнал прихода)
-  const TABP={sales:"sales_view",analytics:"analytics",att:"att_view"};
-  const ORDER=["sales","analytics","att"];
-  const PERMS=["sales_view","sales_write","sales_edit","exp_view","exp_add","exp_edit","cash_view","debts_view","att_view","analytics","export"];
+  const TABP={sales:"sales_view",analytics:"analytics",att:"att_view",tasks:"tasks"};
+  const ORDER=["sales","analytics","att","tasks"];
+  const PERMS=["sales_view","sales_write","sales_edit","exp_view","exp_add","exp_edit","cash_view","debts_view","att_view","analytics","export","tasks"];
   const role=()=>window.__sbRole||"admin";
   const full=()=>role()==="admin"||role()==="owner";
   window.__roleFull=full;

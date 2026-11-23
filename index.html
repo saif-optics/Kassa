@@ -1368,7 +1368,7 @@ html.sz-vt::view-transition-new(root){animation-name:szIn}
 /* --- ТЕЛЕФОН (до 640) --- */
 @media (max-width:640px){
   /* нижнее меню: 4 главные вкладки + «Ещё» */
-  .tabs .tab[data-tab="pay"],.tabs .tab[data-tab="att"],.tabs .tab[data-tab="analytics"],.tabs .tab[data-tab="plan"],.tabs .tab[data-tab="lens"],.tabs .tab[data-tab="batch"]{display:none}
+  .tabs .tab[data-tab="pay"],.tabs .tab[data-tab="att"],.tabs .tab[data-tab="tasks"],.tabs .tab[data-tab="analytics"],.tabs .tab[data-tab="plan"],.tabs .tab[data-tab="lens"],.tabs .tab[data-tab="batch"]{display:none}
   .tabs{left:10px;right:10px;padding:4px;border-radius:24px;bottom:calc(10px + env(safe-area-inset-bottom,0px))}
   .tabs .tab,.tabs .tab-more{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:7px 2px 6px;font-size:11px;line-height:1.1;border-radius:20px;min-height:52px}
   .tabs .tab .tab-ic{display:block;width:23px;height:23px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -1878,6 +1878,61 @@ html[data-role-none] .tabs{display:none!important}
 #roleUsers input.ru-sw::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s}
 #roleUsers input.ru-sw:checked{background:var(--accent);border-color:transparent}
 #roleUsers input.ru-sw:checked::after{transform:translateX(14px)}
+/* ---- подразделы вкладки: сегмент, плитки прихода, сессии, select-ы в строке ---- */
+#roleUsers .ru-sub[hidden]{display:none}
+#roleUsers .ru-seg{display:flex;width:100%;margin-bottom:14px}
+#roleUsers .ru-seg button{flex:1;min-height:36px;padding:7px 10px;cursor:pointer;border:0;font:inherit;font-size:13.5px}
+#roleUsers .ru-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+#roleUsers .ru-tile,#roleUsers .ru-user{padding:12px 14px;border-radius:16px;border:1px solid var(--line);background:var(--surface)}
+#roleUsers .ru-th{display:flex;justify-content:space-between;gap:8px;align-items:baseline;font-size:15px}
+#roleUsers .ru-cnt{display:flex;flex-wrap:wrap;gap:6px 14px;margin:6px 0 8px;font-size:13px;font-weight:600}
+#roleUsers .ru-emp,#roleUsers .ru-sess{list-style:none;margin:0;padding:0}
+#roleUsers .ru-emp li{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px solid var(--line);font-size:13.5px}
+#roleUsers .ru-emp li span:last-child{text-align:right}
+#roleUsers .ru-ok{color:var(--plus)}
+#roleUsers .ru-warn{color:var(--warn)}
+#roleUsers .ru-bad{color:var(--minus)}
+#roleUsers .ru-user{margin-bottom:12px}
+#roleUsers .ru-uh{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-weight:600;font-size:14px}
+#roleUsers .ru-acc{font-weight:400;white-space:nowrap}
+#roleUsers .ru-sess li{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px;margin-top:8px}
+#roleUsers .ru-cur{display:inline-block;padding:1px 8px;border-radius:999px;background:var(--accent-soft,var(--wash));color:var(--accent);font-size:12px}
+#roleUsers .ru-note{margin:12px 0 0;font-size:12.5px;color:var(--muted)}
+#roleUsers select.ru-sel{min-height:32px;width:auto;max-width:100%;padding:0 8px;font-size:13.5px}
+#roleUsers select.ru-sel:disabled{opacity:.6}
+@media (max-width:640px){
+  #roleUsers .ru-seg{flex-direction:column}
+  #roleUsers .ru-tiles{grid-template-columns:1fr}
+}
+/* «Задания» — задания и проблемы по точкам */
+#tasksBody{display:flex;flex-direction:column;gap:14px}
+.tk-filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.tk-filters select,.tk-filters input{min-width:0}
+.tk-filters input[type=search]{flex:1 1 180px}
+.tk-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tk-form label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);min-width:0}
+.tk-form label.wide{grid-column:1/-1}
+.tk-form input,.tk-form select,.tk-form textarea{width:100%;box-sizing:border-box;font:inherit}
+.tk-form textarea{min-height:80px;resize:vertical}
+.tk-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tk-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,420px),1fr));gap:12px}
+.tk-card{display:flex;flex-direction:column;gap:8px;min-width:0}
+.tk-head{display:flex;flex-direction:column;gap:6px;cursor:pointer}
+.tk-title{font-weight:600;font-size:16px;overflow-wrap:anywhere}
+.tk-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tk-meta{font-size:13px;color:var(--muted)}
+.tk-body{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px}
+.tk-feed{display:flex;flex-direction:column;gap:6px}
+.tk-c{border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:14px;overflow-wrap:anywhere;white-space:pre-wrap}
+.tk-c.problem{border-color:var(--minus);background:var(--minus-soft)}
+.tk-c small{display:block;color:var(--muted);font-size:12px;margin-bottom:2px}
+.tk-empty{color:var(--muted);text-align:center;padding:24px 8px}
+.tk-err{color:var(--minus);font-size:13px}
+@media (max-width:760px){
+  .tk-form{grid-template-columns:1fr}
+  .tk-list{grid-template-columns:1fr}
+  .tk-actions button,.tk-filters select,.tk-filters input,.tk-form input,.tk-form select{min-height:44px;font-size:15px}
+}
 /* ===== Показ больших таблиц по страницам ===== */
 .pgbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
 .pg-size{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
@@ -2093,6 +2148,7 @@ window.__zw=function(){return innerWidth/(window.__uiZ||1)};window.__zh=function
     <button type="button" role="tab" class="tab" data-tab="report" aria-selected="false">Отчёт р/с</button>
     <button type="button" role="tab" class="tab" data-tab="pay" aria-selected="false">Платежи</button>
     <button type="button" role="tab" class="tab" data-tab="att" aria-selected="false">Пользователи</button>
+    <button type="button" role="tab" class="tab" data-tab="tasks" aria-selected="false">Задания</button>
     <button type="button" role="tab" class="tab" data-tab="sales" aria-selected="false">Продажи</button>
     <button type="button" role="tab" class="tab" data-tab="recon" aria-selected="false">Сверка</button>
     <button type="button" role="tab" class="tab" data-tab="analytics" aria-selected="false">Аналитика</button>
@@ -2522,6 +2578,16 @@ window.__zw=function(){return innerWidth/(window.__uiZ||1)};window.__zh=function
     </header>
     <div id="attUsers"></div>
     <div id="attBody"></div>
+  </div>
+  <div class="page" id="page-tasks" hidden>
+    <header class="head">
+      <div>
+        <div class="eyebrow">Saif-Optics · задания</div>
+        <h1>Задания</h1>
+        <p>Задания и проблемы по точкам</p>
+      </div>
+    </header>
+    <div id="tasksBody"></div>
   </div>
   <div class="page" id="page-analytics" hidden>
     <header class="head">
@@ -3509,7 +3575,7 @@ window.SaifXL=(function(){
   };
 
   // ===================== вкладки =====================
-  const PAGES=["home","kassa","report","pay","att","sales","recon","analytics","plan","lens","batch"];
+  const PAGES=["home","kassa","report","pay","att","tasks","sales","recon","analytics","plan","lens","batch"];
   function setTab(t){
     if(window.__roleOK&&!window.__roleOK(t))t=window.__roleFirst();
     tab=t;
@@ -4694,6 +4760,7 @@ window.SaifXL=(function(){
     fillMonths();
     const r=rangeOf(filtered());
     $("filterInfo").textContent=(F.from||F.to)?`Показано: ${dLong(F.from||r.from)} — ${dLong(F.to||r.to)}`+(F.point!=="all"?` · ${F.point}`:"")+(F.cat!=="all"?` · ${F.cat}`:""):"Показаны все продажи";
+    if(tab==="tasks"){window.__TASKS&&window.__TASKS.render();return}
     if(tab==="att"){window.__roleUsersRender&&window.__roleUsersRender();window.__ATT&&window.__ATT.render();return}
     if(tab==="pay"){window.__PAY&&window.__PAY.render();return}
     if(tab==="recon"){renderBz();window.__BZ&&window.__BZ.render("recon");return}
@@ -5400,11 +5467,12 @@ addEventListener("scroll",()=>{if(!t)t=requestAnimationFrame(chk)},{passive:true
     pay:'<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><path d="m9 14.6 2 2 4-4"/>',
     recon:'<path d="M4 7h11M4 12h7M4 17h9"/><path d="m14 15 2.5 2.5L21 13"/>',
     att:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+    tasks:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/>',
     more:'<circle cx="5.5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="18.5" cy="12" r="1.4"/>'
   };
   const svg=k=>`<svg class="tab-ic" viewBox="0 0 24 24" aria-hidden="true">${IC[k]}</svg>`;
-  const EXTRA=["pay","att","recon","analytics","plan","lens","batch"];
-  const LBL={pay:"Платежи",get att(){return window.__roleFull&&!window.__roleFull()?"Приход":"Пользователи"},recon:"Сверка",analytics:"Аналитика",plan:"План",lens:"Линзы",batch:"Склад"};
+  const EXTRA=["pay","att","tasks","recon","analytics","plan","lens","batch"];
+  const LBL={tasks:"Задания",pay:"Платежи",get att(){return window.__roleFull&&!window.__roleFull()?"Приход":"Пользователи"},recon:"Сверка",analytics:"Аналитика",plan:"План",lens:"Линзы",batch:"Склад"};
   nav.querySelectorAll(".tab[data-tab]").forEach(b=>{if(!b.querySelector(".tab-ic"))b.insertAdjacentHTML("afterbegin",svg(b.dataset.tab))});
   // кнопка «Ещё» — сразу после «Продаж», чтобы капля вставала на неё раньше скрытых вкладок
   const more=document.createElement("button");more.type="button";more.className="tab-more";more.setAttribute("aria-haspopup","dialog");more.setAttribute("aria-selected","false");
@@ -6467,9 +6535,9 @@ addEventListener("scroll",()=>{if(!t)t=requestAnimationFrame(chk)},{passive:true
 (function(){
   "use strict";
   // права, которые открывают вкладки (att — журнал прихода)
-  const TABP={sales:"sales_view",analytics:"analytics",att:"att_view"};
-  const ORDER=["sales","analytics","att"];
-  const PERMS=["sales_view","sales_write","sales_edit","exp_view","exp_add","exp_edit","cash_view","debts_view","att_view","analytics","export"];
+  const TABP={sales:"sales_view",analytics:"analytics",att:"att_view",tasks:"tasks"};
+  const ORDER=["sales","analytics","att","tasks"];
+  const PERMS=["sales_view","sales_write","sales_edit","exp_view","exp_add","exp_edit","cash_view","debts_view","att_view","analytics","export","tasks"];
   const role=()=>window.__sbRole||"admin";
   const full=()=>role()==="admin"||role()==="owner";
   window.__roleFull=full;
@@ -6510,23 +6578,26 @@ addEventListener("scroll",()=>{if(!t)t=requestAnimationFrame(chk)},{passive:true
 
 </script>
 <script>
-/* Касса · раздел «Пользователи» для владельца и админа (patch_role.py): логины, статусы, точки, права; сервер — функция users-admin.
+/* Касса · вкладка «Пользователи» для владельца и админа (patch_role.py); сервер — функция users-admin и RPC admin_sessions / admin_end_session.
    Показывается только при window.__sbRole owner или admin (без роли — тесты, локальный режим — не показываем).
-   Таблица сгруппирована по точкам; «Изменить» раскрывает форму под строкой; форма «Добавить» — те же поля и переключатели прав. */
+   Три подраздела (сегмент сверху, выбор запоминается): «Фейс-контроль по точкам» (плитки прихода за сегодня; под ними журнал #attBody),
+   «Активные сессии» (по пользователям, завершение сессии, доступ к сайту), «Пользователи» (таблица по точкам, статус и точка прямо в строке,
+   «Изменить» раскрывает форму под строкой, форма «Добавить»). */
 (function(){
   "use strict";
   const ROLES={owner:"Владелец",admin:"Админ",cashier:"Кассир",seller:"Продавец",marketer:"Гость"};
   const NOFN="Серверная функция не выложена";
-  // 11 прав: ключ, подпись
+  // 12 прав: ключ, подпись
   const PERMS=[["sales_view","Видеть продажи"],["sales_write","Вносить продажи"],["sales_edit","Править и удалять продажи за сегодня и вчера"],
     ["exp_view","Видеть расходы дня"],["exp_add","Добавлять расход дня"],["exp_edit","Править и удалять расходы дня"],
-    ["cash_view","Видеть кассу дня"],["debts_view","Видеть долги"],["att_view","Журнал прихода"],["analytics","Аналитика продаж"],["export","Экспорт в Excel"]];
+    ["cash_view","Видеть кассу дня"],["debts_view","Видеть долги"],["att_view","Журнал прихода"],["analytics","Аналитика продаж"],["export","Экспорт в Excel"],["tasks","Задания своей точки"]];
   // стартовый набор по статусу (admin и owner — полный доступ)
   const DEF={cashier:PERMS.map(p=>p[0]).filter(k=>k!=="analytics"&&k!=="export"),
-    seller:["sales_view","exp_view","exp_add","att_view"],marketer:["sales_view","analytics"]};
+    seller:["sales_view","exp_view","exp_add","att_view","tasks"],marketer:["sales_view","analytics"]};
   const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const $=id=>document.getElementById(id);
-  let built=false,loaded=false,busy=false,rows=[];
+  let built=false,loaded=false,busy=false,rows=[],sub="face",sessRows=[];
+  const SUBS=[["face","Фейс-контроль по точкам"],["sess","Активные сессии"],["users","Пользователи"]];
   const myRole=()=>window.__sbOwner?"owner":"admin";
   // пароль из n знаков: латиница и цифры без похожих (0/O, 1/l/I)
   function genPass(n){
@@ -6594,8 +6665,16 @@ addEventListener("scroll",()=>{if(!t)t=requestAnimationFrame(chk)},{passive:true
   function build(){
     const page=$("attUsers");if(!page||built)return;built=true;
     const s=document.createElement("section");s.className="panel";s.id="roleUsers";
-    s.innerHTML=`<div class="ru-head"><h2>Пользователи</h2><button type="button" class="ru-btn" id="ruRefresh">Обновить</button></div>
-<div class="ru-wrap"><table class="ru-tbl"><thead><tr><th>Логин</th><th>Имя</th><th>Статус</th><th>Телефон</th><th>Должность</th><th>Включён</th><th>Последний вход</th><th></th></tr></thead><tbody id="ruBody"><tr><td colspan="8" class="ru-mut">Загрузка…</td></tr></tbody></table></div>
+    let saved="";try{saved=localStorage.getItem("ruSub")||""}catch(e){}
+    if(SUBS.some(x=>x[0]===saved))sub=saved;
+    s.innerHTML=`<div class="seg ru-seg" role="group" aria-label="Подраздел" id="ruSeg">${SUBS.map(x=>`<button type="button" data-sub="${x[0]}" aria-pressed="${x[0]===sub}">${x[1]}</button>`).join("")}</div>
+<div class="ru-sub" id="ruPFace" hidden><div class="ru-head"><h2>Фейс-контроль по точкам</h2><button type="button" class="ru-btn" id="ruFaceRef">Обновить</button></div>
+<div id="ruFaceBody" class="ru-tiles"><p class="ru-mut">Загрузка…</p></div></div>
+<div class="ru-sub" id="ruPSess" hidden><div class="ru-head"><h2>Активные сессии</h2><button type="button" class="ru-btn" id="ruSessRef">Обновить</button></div>
+<div id="ruSessBody"><p class="ru-mut">Загрузка…</p></div><div class="ru-msg" id="ruSessMsg" role="status"></div>
+<p class="ru-note">Завершение сессии действует после обновления страницы у пользователя, не позже чем через час.</p></div>
+<div class="ru-sub" id="ruPUsers" hidden><div class="ru-head"><h2>Пользователи</h2><button type="button" class="ru-btn" id="ruRefresh">Обновить</button></div>
+<div class="ru-wrap"><table class="ru-tbl"><thead><tr><th>Логин</th><th>Имя</th><th>Статус</th><th>Точка</th><th>Телефон</th><th>Должность</th><th>Включён</th><th>Последний вход</th><th></th></tr></thead><tbody id="ruBody"><tr><td colspan="9" class="ru-mut">Загрузка…</td></tr></tbody></table></div>
 <div class="ru-msg" id="ruTblMsg" role="status"></div>
 <form class="ru-form" id="ruForm" autocomplete="off">
   <h3>Добавить пользователя</h3>
@@ -6603,14 +6682,105 @@ addEventListener("scroll",()=>{if(!t)t=requestAnimationFrame(chk)},{passive:true
   <div class="ru-act"><button type="submit" class="ru-btn ru-main" id="ruAdd">Добавить</button><span class="ru-msg" id="ruMsg" role="status"></span></div>
   <div class="ru-once" id="ruOnce" hidden><span>Пароль для <b id="ruOnceFor"></b>:</span><input type="text" id="ruOnceVal" readonly><button type="button" class="ru-btn" id="ruCopy">Скопировать</button><small>Запишите, больше не покажется.</small></div>
   <ul class="ru-hint"><li><b>Владелец</b> — всё и управление доступами.</li><li><b>Админ</b> — всё, кроме владельца и других админов.</li><li><b>Кассир, Продавец, Гость</b> — по переключателям; при выборе статуса ставится стартовый набор.</li></ul>
-</form>`;
+</form></div>`;
     page.appendChild(s);
     const f=$("ruForm");wire(f,null);F(f,"password").value=genPass(12);
     $("ruRefresh").onclick=refresh;
     $("ruCopy").onclick=async()=>{const v=$("ruOnceVal");try{await navigator.clipboard.writeText(v.value);$("ruCopy").textContent="Скопировано"}catch(e){v.select();try{document.execCommand("copy");$("ruCopy").textContent="Скопировано"}catch(x){}}setTimeout(()=>{$("ruCopy").textContent="Скопировать"},2000)};
     f.onsubmit=onAdd;
     $("ruBody").addEventListener("click",onAct);
+    $("ruBody").addEventListener("change",onSel);
+    $("ruSeg").onclick=ev=>{const b=ev.target.closest("[data-sub]");if(b)setSub(b.dataset.sub)};
+    $("ruFaceRef").onclick=loadFace;$("ruSessRef").onclick=loadSess;
+    $("ruSessBody").addEventListener("click",onSessAct);$("ruSessBody").addEventListener("change",onAccess);
   }
+  // переключение подраздела: показать свою панель, журнал #attBody — только в «Фейс-контроле» (att.js не трогаем)
+  function setSub(k){
+    if(!SUBS.some(x=>x[0]===k))k="face";sub=k;try{localStorage.setItem("ruSub",k)}catch(e){}
+    SUBS.forEach(x=>{const p=$({face:"ruPFace",sess:"ruPSess",users:"ruPUsers"}[x[0]]);if(p)p.hidden=x[0]!==k});
+    document.querySelectorAll("#ruSeg [data-sub]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.sub===k)));
+    const ab=$("attBody");if(ab)ab.style.display=k==="face"?"":"none";
+    if(k==="face")loadFace();else if(k==="sess")loadSess();else if(!loaded)refresh()}
+  // ---- «Фейс-контроль»: приход за сегодня по Ташкенту (UTC+5) ----
+  const TZ=5*3600000,HM=ms=>{const d=new Date(ms+TZ);return String(d.getUTCHours()).padStart(2,"0")+":"+String(d.getUTCMinutes()).padStart(2,"0")};
+  let faceSeq=0;
+  async function loadFace(){
+    const box=$("ruFaceBody");if(!box)return;const my=++faceSeq;
+    try{
+      const day=new Date(Date.now()+TZ).toISOString().slice(0,10),t0=new Date(day+"T00:00:00+05:00").toISOString();
+      const [a,b,c]=await Promise.all([window.__sb.from("att_points").select("point,start_time"),
+        window.__sb.from("att_employees").select("id,name,point,active").eq("active",true),
+        window.__sb.from("att_events").select("employee_id,point,kind,ts").gte("ts",t0).order("ts",{ascending:true})]);
+      if(my!==faceSeq)return;
+      const er=a.error||b.error||c.error;if(er){box.innerHTML=`<p class="ru-mut">${esc(er.message||"Не удалось загрузить приход")}</p>`;return}
+      box.innerHTML=faceHtml(day,a.data||[],b.data||[],c.data||[])
+    }catch(e){if(my===faceSeq)box.innerHTML=`<p class="ru-mut">Не удалось загрузить приход</p>`}}
+  function faceHtml(day,pts,emps,evs){
+    const start={};pts.forEach(p=>{start[p.point]=String(p.start_time||"").slice(0,5)});
+    const keys=[...new Set([...pts.map(p=>p.point),...emps.map(e=>e.point)])].filter(Boolean),ps=points();
+    const o=k=>ps.indexOf(k)>=0?ps.indexOf(k):1000;
+    keys.sort((x,y)=>o(x)-o(y)||String(x).localeCompare(String(y),"ru"));
+    if(!keys.length)return`<p class="ru-mut">Нет точек и сотрудников</p>`;
+    return keys.map(pt=>{
+      const st0=start[pt]||"",st=/^\d{1,2}:\d{2}$/.test(st0)?st0.padStart(5,"0"):"10:00",sm=new Date(day+"T"+st+":00+05:00").getTime();
+      let came=0,late=0,none=0;
+      const li=emps.filter(e=>e.point===pt).sort((x,y)=>String(x.name).localeCompare(String(y.name),"ru")).map(e=>{
+        const mine=evs.filter(v=>v.employee_id===e.id).map(v=>({k:v.kind,t:new Date(v.ts).getTime()})).filter(v=>!isNaN(v.t)).sort((x,y)=>x.t-y.t);
+        const ins=mine.filter(v=>v.k==="in"),outs=mine.filter(v=>v.k==="out");
+        let txt,cls;
+        if(!ins.length){none++;txt="ещё нет";cls="ru-mut"}
+        else{const fi=ins[0].t,m=Math.max(1,Math.floor((fi-sm)/60000));
+          if(fi>sm){late++;txt="опоздал на "+m+" мин, "+HM(fi);cls="ru-bad"}
+          else if(fi>=sm-600000){came++;txt="впритык "+HM(fi);cls="ru-warn"}
+          else{came++;txt="пришёл "+HM(fi);cls="ru-ok"}
+          const lastIn=ins[ins.length-1],lo=outs[outs.length-1];if(lo&&lo.t>lastIn.t)txt+=" · ушёл "+HM(lo.t)}
+        return`<li><span>${esc(e.name||"—")}</span><span class="${cls}">${esc(txt)}</span></li>`}).join("");
+      return`<div class="ru-tile"><div class="ru-th"><b>${esc(pt)}</b><span class="ru-mut">начало ${esc(st)}</span></div>
+<div class="ru-cnt"><span class="ru-ok">пришли ${came}</span><span class="ru-bad">опоздали ${late}</span><span class="ru-mut">ещё нет ${none}</span></div>
+<ul class="ru-emp">${li||`<li class="ru-mut">Нет сотрудников</li>`}</ul></div>`}).join("")}
+  // ---- «Активные сессии» ----
+  function uaText(ua){
+    ua=String(ua||"");let d="",b="",m;
+    if(/iPhone/.test(ua))d="iPhone"+((m=ua.match(/OS (\d+)/))?" iOS "+m[1]:"");
+    else if(/iPad/.test(ua))d="iPad"+((m=ua.match(/OS (\d+)/))?" iOS "+m[1]:"");
+    else if(/Android/.test(ua))d="Android"+((m=ua.match(/Android (\d+)/))?" "+m[1]:"");
+    else if(/Macintosh|Mac OS X/.test(ua))d="Mac";
+    else if(/Windows/.test(ua))d="Windows";
+    else if(/Linux/.test(ua))d="Linux";
+    if(/YaBrowser/.test(ua))b="Яндекс";else if(/Edg/.test(ua))b="Edge";else if(/Firefox|FxiOS/.test(ua))b="Firefox";
+    else if(/CriOS|Chrome/.test(ua))b="Chrome";else if(/Safari/.test(ua))b="Safari";
+    return[d,b].filter(Boolean).join(" · ")||ua.slice(0,40)||"неизвестное устройство"}
+  let sessSeq=0;
+  async function loadSess(){
+    const box=$("ruSessBody");if(!box)return;const my=++sessSeq;
+    let r;try{r=await window.__sb.rpc("admin_sessions")}catch(e){r={error:{message:NOFN}}}
+    if(my!==sessSeq)return;
+    if(!r||r.error){box.innerHTML=`<p class="ru-mut">${esc(r&&r.error&&r.error.message||"Не удалось загрузить сессии")}</p>`;return}
+    if(!loaded){const l=await list();if(!l.error)rows=l.data;if(my!==sessSeq)return}
+    sessRows=Array.isArray(r.data)?r.data:[];box.innerHTML=sessHtml()}
+  function sessHtml(){
+    if(!sessRows.length)return`<p class="ru-mut">Активных сессий нет</p>`;
+    const by=new Map();sessRows.forEach(x=>{const k=String(x.email||"").toLowerCase();if(!by.has(k))by.set(k,[]);by.get(k).push(x)});
+    return[...by.values()].map(g=>{
+      const h=g[0],em=String(h.email||""),e=esc(em),u=rows.find(x=>String(x.email||"").toLowerCase()===em.toLowerCase()),on=!u||u.active!==false;
+      const sw=(u&&h.role&&can({email:em,role:h.role}).ops)?`<label class="ru-pl ru-acc"><span>Доступ к сайту</span><input type="checkbox" class="ru-sw" data-access="${e}"${on?" checked":""}></label>`:"";
+      const items=g.map(x=>`<li><div><b>${esc(uaText(x.user_agent))}</b>${x.is_current?' <span class="ru-cur">эта сессия</span>':""}</div>
+<div class="ru-mut">вход ${esc(x.created_at?dt(x.created_at):"—")} · активность ${esc(x.last_at?dt(x.last_at):"—")} · сеть ${esc(x.ip||"—")}</div>
+${x.is_current?"":`<button type="button" class="ru-btn ru-del" data-end="${esc(x.id)}">Завершить сессию</button>`}</li>`).join("");
+      return`<div class="ru-user"><div class="ru-uh"><span>${esc(h.label||"—")} · ${esc(ROLES[h.role]||h.role||"")} · ${esc(h.point||"Все точки")} · ${e}</span>${sw}</div><ul class="ru-sess">${items}</ul></div>`}).join("")}
+  async function onSessAct(ev){
+    const b=ev.target.closest("[data-end]");if(!b||busy)return;busy=true;b.disabled=true;
+    let r;try{r=await window.__sb.rpc("admin_end_session",{p_id:b.dataset.end})}catch(e){r={error:{message:NOFN}}}
+    busy=false;
+    if(!r||r.error){msg("ruSessMsg",r&&r.error&&r.error.message||"Не удалось завершить сессию",true);b.disabled=false;return}
+    msg("ruSessMsg","Сессия завершена");loadSess()}
+  async function onAccess(ev){
+    const c=ev.target.closest("[data-access]");if(!c||busy)return;
+    const on=c.checked;busy=true;c.disabled=true;
+    const r=await call("update",{email:c.dataset.access,active:on});busy=false;
+    if(r.error){msg("ruSessMsg",r.error,true);c.checked=!on;c.disabled=false;return}
+    msg("ruSessMsg",r.data&&r.data.warn?String(r.data.warn):on?"Доступ включён":"Доступ выключен, сессии завершены. Включить обратно можно в подразделе «Пользователи»",!!(r.data&&r.data.warn));
+    refresh();loadSess()}
   let pwTimer=0;
   function showPass(email,pw){$("ruOnceFor").textContent=email;$("ruOnceVal").value=pw;$("ruOnce").hidden=false;clearTimeout(pwTimer);pwTimer=setTimeout(()=>{$("ruOnceVal").value="";$("ruOnce").hidden=true},90000)}
   const val=(root,k)=>{const e=F(root,k);return e?e.value.trim():""};
@@ -6634,26 +6804,47 @@ addEventListener("scroll",()=>{if(!t)t=requestAnimationFrame(chk)},{passive:true
     if(u.role==="owner")return{edit:mine,limited:true,ops:false};
     if(u.role==="admin")return me==="owner"?{edit:true,limited:mine,ops:!mine}:{edit:mine,limited:true,ops:false};
     return{edit:true,limited:false,ops:!mine}}
+  // select-ы статуса и точки в строке: доступны там же, где доступны «Выключить»/«Удалить» (c.ops)
+  function selHtml(u,c){
+    const d=c.ops?"":" disabled",roles=myRole()==="owner"?["admin","cashier","seller","marketer"]:["cashier","seller","marketer"];
+    if(!roles.includes(u.role))roles.unshift(u.role);
+    const adm=u.role==="admin"||u.role==="owner",ps=points().slice();if(u.point&&!ps.includes(u.point))ps.push(u.point);
+    const po=(adm?'<option value="">Все точки</option>':(u.point?"":'<option value="">—</option>'))+ps.map(p=>`<option value="${esc(p)}"${p===u.point?" selected":""}>${esc(p)}</option>`).join("");
+    return`<td data-l="Статус"><select class="ru-sel" data-sel="role"${d}>${roles.map(r=>`<option value="${r}"${r===u.role?" selected":""}>${esc(ROLES[r]||r)}</option>`).join("")}</select></td>
+<td data-l="Точка"><select class="ru-sel" data-sel="point"${d}>${po}</select></td>`}
   function rowHtml(u){
     const em=String(u.email||""),on=u.active!==false,c=can(u),e=esc(em);
     const act=(c.edit?`<button type="button" class="ru-btn" data-act="edit" data-email="${e}">Изменить</button>`:"")+
       (c.ops?`<button type="button" class="ru-btn" data-act="${on?"off":"on"}" data-email="${e}">${on?"Выключить":"Включить"}</button><button type="button" class="ru-btn" data-act="pw" data-email="${e}">Новый пароль</button><button type="button" class="ru-btn ru-del" data-act="del" data-email="${e}">Удалить</button>`:"");
-    return`<tr data-row="${e}"><td data-l="Логин">${e}</td><td data-l="Имя">${esc(u.label||"—")}</td><td data-l="Статус">${esc(ROLES[u.role]||u.role||"")}</td><td data-l="Телефон">${esc(u.phone||"—")}</td><td data-l="Должность">${esc(u.position||"—")}</td><td data-l="Включён">${on?"да":"нет"}</td><td data-l="Последний вход">${esc(dt(u.last_sign_in_at||u.last_sign_in||u.last_login))}</td><td class="ru-acts">${act}</td></tr>`}
+    return`<tr data-row="${e}"><td data-l="Логин">${e}</td><td data-l="Имя">${esc(u.label||"—")}</td>${selHtml(u,c)}<td data-l="Телефон">${esc(u.phone||"—")}</td><td data-l="Должность">${esc(u.position||"—")}</td><td data-l="Включён">${on?"да":"нет"}</td><td data-l="Последний вход">${esc(dt(u.last_sign_in_at||u.last_sign_in||u.last_login))}</td><td class="ru-acts">${act}</td></tr>`}
   function render(){
     const body=$("ruBody");
-    if(!rows.length){body.innerHTML=`<tr><td colspan="8" class="ru-mut">Пока никого нет</td></tr>`;return}
+    if(!rows.length){body.innerHTML=`<tr><td colspan="9" class="ru-mut">Пока никого нет</td></tr>`;return}
     // группы по точкам: «Все точки» первой, дальше в порядке настроек, потом прочие
     const ps=points(),keys=[...new Set(rows.map(u=>u.point||""))];
     const ord=k=>k===""?-1:(ps.indexOf(k)>=0?ps.indexOf(k):1000);
     keys.sort((a,b)=>ord(a)-ord(b)||a.localeCompare(b,"ru"));
     body.innerHTML=keys.map(k=>{const g=rows.filter(u=>(u.point||"")===k);
-      return`<tr class="ru-grp"><td colspan="8">${esc(k||"Все точки")} <span class="ru-mut">· ${g.length}</span></td></tr>`+g.map(rowHtml).join("")}).join("")}
+      return`<tr class="ru-grp"><td colspan="9">${esc(k||"Все точки")} <span class="ru-mut">· ${g.length}</span></td></tr>`+g.map(rowHtml).join("")}).join("")}
+  // смена статуса или точки прямо в строке: сервер при смене статуса сбрасывает права на набор статуса
+  async function onSel(ev){
+    const sel=ev.target.closest("[data-sel]");if(!sel)return;
+    const tr=sel.closest("tr[data-row]"),email=tr&&tr.dataset.row;if(!email)return;
+    const rs=tr.querySelector('[data-sel="role"]'),ps=tr.querySelector('[data-sel="point"]');
+    const role=rs.value;let point=ps.value;
+    if(sel.dataset.sel==="role")point=role==="admin"?"":(point||points()[0]||"");
+    if(role!=="admin"&&!point){msg("ruTblMsg","Выберите точку.",true);render();return}
+    if(busy){render();return}
+    busy=true;rs.disabled=ps.disabled=true;msg("ruTblMsg","Сохраняю…");
+    const r=await call("update",{email,role,point:point||null});busy=false;
+    if(r.error)msg("ruTblMsg",r.error,true);else msg("ruTblMsg","Сохранено");
+    refresh()}
   function openEdit(email){
     const body=$("ruBody"),old=body.querySelector(".ru-edit");
     const same=old&&old.dataset.for===email;if(old)old.remove();if(same)return;
     const u=rows.find(x=>x.email===email),tr=[...body.querySelectorAll("tr[data-row]")].find(x=>x.dataset.row===email);if(!u||!tr)return;
     const c=can(u),e=document.createElement("tr");e.className="ru-edit";e.dataset.for=email;
-    e.innerHTML=`<td colspan="8"><form class="ru-form" autocomplete="off"><h3>Изменить: ${esc(email)}</h3>${fieldsHtml({limited:c.limited})}
+    e.innerHTML=`<td colspan="9"><form class="ru-form" autocomplete="off"><h3>Изменить: ${esc(email)}</h3>${fieldsHtml({limited:c.limited})}
 <div class="ru-act"><button type="submit" class="ru-btn ru-main">Сохранить</button><button type="button" class="ru-btn" data-cancel>Отмена</button><span class="ru-msg" role="status"></span></div></form></td>`;
     tr.after(e);const f=e.querySelector("form");wire(f,u);
     f.querySelector("[data-cancel]").onclick=()=>e.remove();
@@ -6680,19 +6871,256 @@ addEventListener("scroll",()=>{if(!t)t=requestAnimationFrame(chk)},{passive:true
     else r=await call("update",{email,active:act==="on"});
     busy=false;
     if(r.error){msg("ruTblMsg",r.error,true);b.disabled=false;return}
-    msg("ruTblMsg",act==="del"?"Удалено":act==="pw"?"Пароль изменён, он показан под формой":"Сохранено");
+    msg("ruTblMsg",r.data&&r.data.warn?String(r.data.warn):act==="del"?"Удалено":act==="pw"?"Пароль изменён, он показан под формой":"Сохранено",!!(r.data&&r.data.warn));
     refresh()}
   async function refresh(){
     const body=$("ruBody");if(!body)return;loaded=true;
     const r=await list();
-    if(r.error){rows=[];body.innerHTML=`<tr><td colspan="8" class="ru-mut">${esc(r.error)}</td></tr>`;return}
+    if(r.error){rows=[];body.innerHTML=`<tr><td colspan="9" class="ru-mut">${esc(r.error)}</td></tr>`;return}
     rows=r.data;render()}
   // вызывается страницей при показе вкладки «Пользователи» (patch_role.py)
   window.__roleUsersRender=function(){
     if(!window.__roleFull||!window.__sbRole||!window.__roleFull())return;
     build();if(!built)return;
     const f=$("ruForm");if(f&&F(f,"role"))fillPt(f,F(f,"point").value);
-    if(!loaded)refresh()};
+    setSub(sub)};
+})();
+
+</script>
+<script>
+/* Касса · «Задания»: задания и проблемы по точкам.
+   Админ (owner/admin) работает с таблицами tasks / task_comments напрямую (RLS по is_admin()),
+   ограниченная роль — через RPC tasks_my_list / tasks_comment / tasks_problem. */
+(function(){
+  "use strict";
+  const PTS=["Премиум","Яшнабад","Сергели","C1"];
+  const PRI={high:"Срочно",normal:"Обычное",low:"Не горит"};
+  const ST={new:"Новая",work:"В работе",done:"Сделано"};
+  const S={tasks:[],comments:[],open:new Set(),f:{point:"",status:"open",pri:"",q:""},form:null,nf:{},pf:{},showDone:false,req:0,drafts:{},err:"",busy:false,loaded:false,loading:false};
+  let bound=false;
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const isAdm=()=>["owner","admin"].includes(window.__sbRole)||!!window.__sbOwner;
+  const TZ="Asia/Tashkent";
+  const today=()=>new Date().toLocaleDateString("sv-SE",{timeZone:TZ});
+  const fmtD=d=>d?String(d).slice(8,10)+"."+String(d).slice(5,7)+"."+String(d).slice(0,4):"";
+  const fmtT=t=>{if(!t)return"";const d=new Date(t);return isNaN(d)?"":d.toLocaleString("ru-RU",{timeZone:TZ,day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})};
+  const overdue=t=>t.status!=="done"&&t.due&&String(t.due).slice(0,10)<today();
+  const sb=()=>window.__sb;
+  // Частые ошибки базы — по-русски, остальное как есть
+  const errMsg=e=>{
+    const m=(e&&e.message)||"",c=e&&e.code;
+    if(c==="42501"||/row-level security|permission denied/i.test(m))return /[А-Яа-я]/.test(m)&&c==="42501"?m:"Нет прав на это действие";
+    if(c==="23514"||/violates check constraint/i.test(m))return "Слишком длинный текст или неверное значение";
+    if(c==="23502")return "Заполните обязательное поле";
+    return m||"Не получилось, попробуйте ещё раз";
+  };
+
+  async function load(){
+    if(!sb()){S.err="Нет связи с базой";draw();return}
+    const my=++S.req;
+    S.loading=true;S.err="";draw();
+    let tk=null,cm=null,er="";
+    try{
+      if(isAdm()){
+        const a=await sb().from("tasks").select("*").order("created_at",{ascending:false});
+        if(a.error)throw a.error;
+        const b=await sb().from("task_comments").select("*").order("created_at",{ascending:true});
+        if(b.error)throw b.error;
+        tk=a.data||[];cm=b.data||[];
+      }else{
+        const r=await sb().rpc("tasks_my_list");
+        if(r.error)throw r.error;
+        const d=r.data||{};tk=d.tasks||[];cm=d.comments||[];
+      }
+    }catch(e){er=errMsg(e)}
+    if(my!==S.req)return; // устаревший ответ
+    if(tk){S.tasks=tk;S.comments=cm;S.loaded=true}
+    S.err=er;S.loading=false;draw();
+  }
+
+  function filtered(){
+    const f=S.f,q=f.q.trim().toLowerCase();
+    return S.tasks.filter(t=>{
+      if(f.point&&t.point!==f.point)return false;
+      if(!isAdm()&&!S.showDone&&t.status==="done")return false;
+      if(f.status==="open"&&t.status==="done")return false;
+      if(f.status&&f.status!=="open"&&t.status!==f.status)return false;
+      if(f.pri&&t.priority!==f.pri)return false;
+      if(q&&!((t.title||"")+" "+(t.body||"")+" "+(t.assignee||"")).toLowerCase().includes(q))return false;
+      return true;
+    });
+  }
+
+  function kpis(){
+    return '<div class="kpis">'+PTS.map(p=>{
+      const a=S.tasks.filter(t=>t.point===p);
+      const open=a.filter(t=>t.status!=="done").length,over=a.filter(overdue).length,sel=a.filter(t=>t.source==="seller"&&t.status!=="done").length;
+      return '<div class="kpi"><span class="k">'+esc(p)+'</span><span class="v">Открыто: '+open+'</span>'
+        +'<span class="d"'+(over?' style="color:var(--minus)"':'')+'>Просрочено: '+over+'</span>'
+        +'<span class="d">От продавцов: '+sel+'</span></div>';
+    }).join("")+'</div>';
+  }
+
+  function opts(map,sel,all){
+    return (all?'<option value="">'+esc(all)+'</option>':'')+Object.keys(map).map(k=>'<option value="'+esc(k)+'"'+(k===sel?' selected':'')+'>'+esc(map[k])+'</option>').join("");
+  }
+  function filters(){
+    const pm={};PTS.forEach(p=>pm[p]=p);
+    return '<div class="panel tk-filters">'
+      +'<select data-f="point" aria-label="Точка">'+opts(pm,S.f.point,"Все точки")+'</select>'
+      +'<select data-f="status" aria-label="Статус"><option value="open"'+(S.f.status==="open"?' selected':'')+'>Открытые</option><option value=""'+(S.f.status===""?' selected':'')+'>Все</option>'+opts(ST,S.f.status)+'</select>'
+      +'<select data-f="pri" aria-label="Срочность">'+opts(PRI,S.f.pri,"Любая срочность")+'</select>'
+      +'<input type="search" data-f="q" placeholder="Поиск по тексту" value="'+esc(S.f.q)+'" aria-label="Поиск">'
+      +'</div>';
+  }
+
+  function formAdmin(){
+    const v=S.nf,pm={};PTS.forEach(p=>pm[p]=p);
+    return '<form class="panel tk-form" data-form="new">'
+      +'<label>Точка<select name="point" required>'+opts(pm,v.point||S.f.point||PTS[0])+'</select></label>'
+      +'<label>Срочность<select name="priority">'+opts(PRI,v.priority||"normal")+'</select></label>'
+      +'<label class="wide">Заголовок<input name="title" maxlength="200" required value="'+esc(v.title)+'"></label>'
+      +'<label class="wide">Описание<textarea name="body" maxlength="4000">'+esc(v.body)+'</textarea></label>'
+      +'<label>Срок<input type="date" name="due" value="'+esc(v.due)+'"></label>'
+      +'<label>Ответственный<input name="assignee" maxlength="80" value="'+esc(v.assignee)+'"></label>'
+      +'<div class="tk-actions wide" style="grid-column:1/-1"><button type="submit" class="primary"'+(S.busy?' disabled':'')+'>Создать</button><button type="button" data-act="cancel">Отмена</button></div>'
+      +'</form>';
+  }
+  function formProblem(){
+    const v=S.pf;
+    return '<form class="panel tk-form" data-form="problem">'
+      +'<label class="wide">Заголовок<input name="title" maxlength="200" required value="'+esc(v.title)+'"></label>'
+      +'<label class="wide">Что случилось или что предлагаете<textarea name="body" maxlength="4000">'+esc(v.body)+'</textarea></label>'
+      +'<div class="tk-actions wide" style="grid-column:1/-1"><button type="submit" class="primary"'+(S.busy?' disabled':'')+'>Отправить</button><button type="button" data-act="cancel">Отмена</button></div>'
+      +'</form>';
+  }
+
+  function card(t){
+    const open=S.open.has(t.id),adm=isAdm();
+    const od=overdue(t);
+    let h='<div class="panel tk-card" data-id="'+esc(t.id)+'">'
+      +'<div class="tk-head" data-act="toggle" role="button" tabindex="0" aria-expanded="'+open+'">'
+      +'<div class="tk-title">'+esc(t.title)+'</div><div class="tk-chips">'
+      +'<span class="chip none">'+esc(t.point)+'</span>'
+      +'<span class="chip '+(t.priority==="high"?'bad':t.priority==="low"?'none':'over')+'">'+esc(PRI[t.priority]||t.priority)+'</span>'
+      +'<span class="chip '+(t.status==="done"?'ok':t.status==="work"?'over':'none')+'">'+esc(ST[t.status]||t.status)+'</span>'
+      +(t.due?'<span class="chip '+(od?'bad':'none')+'">'+(od?'Просрочено · ':'Срок ')+esc(fmtD(t.due))+'</span>':'')
+      +(t.source==="seller"?'<span class="chip over">От продавца</span>':'')
+      +'</div>'
+      +(t.assignee?'<div class="tk-meta">Ответственный: '+esc(t.assignee)+'</div>':'')
+      +'</div>';
+    if(adm){
+      h+='<div class="tk-actions">'+Object.keys(ST).map(k=>'<button type="button" data-act="status" data-v="'+k+'" aria-pressed="'+(t.status===k)+'"'+(t.status===k?' disabled':'')+'>'+ST[k]+'</button>').join("")
+        +'<button type="button" data-act="del" style="margin-left:auto;color:var(--minus)">Удалить</button></div>';
+    }
+    if(open){
+      const cs=S.comments.filter(c=>c.task_id===t.id);
+      h+=(t.body?'<div class="tk-body">'+esc(t.body)+'</div>':'<div class="tk-meta">Без описания</div>')
+        +'<div class="tk-meta">Создано '+esc(fmtT(t.created_at))+((t.created_label||t.created_by)?' · '+esc(t.created_label||t.created_by):'')+'</div>'
+        +'<div class="tk-feed">'+(cs.length?cs.map(c=>'<div class="tk-c'+(c.kind==="problem"?' problem':'')+'"><small>'+esc(c.author_label||(isAdm()?c.author_email:"")||"")+' · '+esc(fmtT(c.created_at))+(c.kind==="problem"?' · проблема':'')+'</small>'+esc(c.body)+'</div>').join(""):'<div class="tk-meta">Комментариев пока нет</div>')+'</div>'
+        +'<form class="tk-form" data-form="comment"><label class="wide">Комментарий<textarea name="body" maxlength="2000">'+esc(S.drafts[t.id]||"")+'</textarea></label>'
+        +'<div class="tk-actions wide" style="grid-column:1/-1"><button type="submit"'+(S.busy?' disabled':'')+'>Отправить</button></div></form>';
+    }
+    return h+'</div>';
+  }
+
+  function listHtml(){
+    const a=filtered();
+    if(S.loading&&!S.loaded)return '<div class="tk-empty">Загрузка…</div>';
+    if(!a.length)return '<div class="tk-empty">'+(S.tasks.length?'По фильтрам ничего не найдено.':isAdm()?'Заданий пока нет. Нажмите «Новое задание».':'Для вашей точки заданий нет. Если что-то не так — нажмите «Сообщить о проблеме».')+'</div>';
+    return '<div class="tk-list">'+a.map(card).join("")+'</div>';
+  }
+
+  function draw(){
+    const box=$("tasksBody");if(!box)return;
+    const adm=isAdm();
+    box.innerHTML=(adm?kpis()+filters():'')
+      +'<div class="tk-actions">'+(adm?'<button type="button" class="primary" data-act="new">Новое задание</button>':'<button type="button" class="primary" data-act="problem">Сообщить о проблеме / предложение</button>')
+      +(adm?'':'<button type="button" data-act="done" aria-pressed="'+S.showDone+'">'+(S.showDone?'Скрыть сделанные':'Показать сделанные')+'</button>')
+      +'<button type="button" data-act="reload">Обновить</button></div>'
+      +(S.err?'<div class="tk-err" role="alert">'+esc(S.err)+'</div>':'')
+      +(S.form==="new"&&adm?formAdmin():'')+(S.form==="problem"&&!adm?formProblem():'')
+      +'<div id="tkList">'+listHtml()+'</div>';
+  }
+  const drawList=()=>{const l=$("tkList");if(l)l.innerHTML=listHtml()};
+
+  async function run(fn){
+    if(S.busy)return;
+    S.busy=true;S.err="";
+    try{await fn()}catch(e){S.err=errMsg(e)}
+    S.busy=false;
+    if(!S.err)await load();else draw();
+  }
+
+  function onClick(e){
+    const el=e.target.closest("[data-act]");if(!el)return;
+    const act=el.dataset.act,cardEl=el.closest("[data-id]"),id=cardEl&&cardEl.dataset.id;
+    if(act==="new"){S.form=S.form==="new"?null:"new";draw()}
+    else if(act==="problem"){S.form=S.form==="problem"?null:"problem";draw()}
+    else if(act==="cancel"){S.form=null;S.err="";S.nf={};S.pf={};draw()}
+    else if(act==="reload")load();
+    else if(act==="done"){S.showDone=!S.showDone;draw()}
+    else if(act==="toggle"&&id){S.open.has(id)?S.open.delete(id):S.open.add(id);drawList()}
+    else if(act==="status"&&id&&isAdm())run(async()=>{const r=await sb().from("tasks").update({status:el.dataset.v}).eq("id",id);if(r.error)throw r.error});
+    else if(act==="del"&&id&&isAdm()){
+      if(!confirm("Удалить задание вместе с комментариями?"))return;
+      run(async()=>{const r=await sb().from("tasks").delete().eq("id",id);if(r.error)throw r.error;S.open.delete(id)});
+    }
+  }
+  function onKey(e){
+    if((e.key==="Enter"||e.key===" ")&&e.target.matches&&e.target.matches(".tk-head")){e.preventDefault();e.target.click()}
+  }
+  function onSubmit(e){
+    const f=e.target.closest("form[data-form]");if(!f)return;
+    e.preventDefault();
+    const v=n=>((f.elements[n]&&f.elements[n].value)||"").trim();
+    const kind=f.dataset.form;
+    if(kind==="new"&&isAdm()){
+      if(!v("title"))return;
+      run(async()=>{
+        const r=await sb().from("tasks").insert({point:v("point"),title:v("title"),body:v("body"),priority:v("priority")||"normal",due:v("due")||null,assignee:v("assignee")||null,source:"owner",created_by:window.__sbEmail||null});
+        if(r.error)throw r.error;S.form=null;S.nf={};
+      });
+    }else if(kind==="problem"&&!isAdm()){
+      if(!v("title")){S.err="Напишите заголовок";draw();return}
+      run(async()=>{const r=await sb().rpc("tasks_problem",{p_title:v("title"),p_body:v("body")});if(r.error)throw r.error;S.form=null;S.pf={}});
+    }else if(kind==="comment"){
+      const id=f.closest("[data-id]").dataset.id;
+      if(!v("body"))return;
+      run(async()=>{
+        if(isAdm()){
+          const r=await sb().from("task_comments").insert({task_id:id,author_email:window.__sbEmail||null,author_label:"Владелец",kind:"comment",body:v("body")});
+          if(r.error)throw r.error;
+        }else{
+          const r=await sb().rpc("tasks_comment",{p_task:id,p_body:v("body")});
+          if(r.error)throw r.error;
+        }
+        delete S.drafts[id];
+      });
+    }
+  }
+  function onInput(e){
+    const t=e.target;
+    if(t.dataset&&t.dataset.f){S.f[t.dataset.f]=t.value;if(t.dataset.f==="q")drawList();else draw();return}
+    const fm=t.closest&&t.closest("form[data-form]");
+    if(fm&&t.name&&fm.dataset.form==="new"){S.nf[t.name]=t.value;return}
+    if(fm&&t.name&&fm.dataset.form==="problem"){S.pf[t.name]=t.value;return}
+    if(t.tagName==="TEXTAREA"&&t.closest("form[data-form=comment]")){const c=t.closest("[data-id]");if(c)S.drafts[c.dataset.id]=t.value}
+  }
+
+  function render(){
+    const box=$("tasksBody");if(!box)return;
+    if(!bound){
+      bound=true;
+      box.addEventListener("click",onClick);
+      box.addEventListener("keydown",onKey);
+      box.addEventListener("submit",onSubmit);
+      box.addEventListener("input",onInput);
+    }
+    load();
+  }
+  window.__TASKS={render};
 })();
 
 </script>
