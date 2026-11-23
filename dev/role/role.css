@@ -16,11 +16,11 @@ html[data-role-none] .tabs{display:none!important}
 .dx-tpl button{min-height:30px;padding:4px 12px;border-radius:999px;border:1px solid var(--line);background:var(--accent-soft,var(--surface));color:var(--accent);font:inherit;font-size:13px;cursor:pointer}
 .more-acc small{display:block;color:var(--muted);font-size:12px}
 /* ---- «Пользователи» владельца (role/users.js) ---- */
-#roleUsers{margin-top:16px}
-#roleUsers .ru-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+#roleUsers{margin:16px auto 0;max-width:1068px;width:100%}
+#roleUsers .ru-head{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
 #roleUsers h2{margin:0;font-size:18px}
 #roleUsers h3{margin:16px 0 8px;font-size:15px}
-#roleUsers .ru-wrap{overflow-x:auto}
+#roleUsers .ru-wrap{overflow-x:auto;max-width:100%}
 #roleUsers .ru-tbl{width:100%;border-collapse:collapse;font-size:13.5px}
 #roleUsers .ru-tbl th{text-align:left;color:var(--muted);font-weight:500;padding:6px 8px;white-space:nowrap}
 #roleUsers .ru-tbl td{padding:8px;border-top:1px solid var(--line);vertical-align:middle}
@@ -66,15 +66,20 @@ html[data-role-none] .tabs{display:none!important}
 #roleUsers input.ru-sw:checked::after{transform:translateX(14px)}
 /* ---- подразделы вкладки: сегмент, плитки прихода, сессии, select-ы в строке ---- */
 #roleUsers .ru-sub[hidden]{display:none}
-#roleUsers .ru-seg{display:flex;width:100%;margin-bottom:14px}
-#roleUsers .ru-seg button{flex:1;min-height:36px;padding:7px 10px;cursor:pointer;border:0;font:inherit;font-size:13.5px}
-#roleUsers .ru-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+#roleUsers .ru-seg{display:flex;width:100%;max-width:1068px;margin:0 auto 14px}
+#roleUsers .ru-seg button{flex:1 1 0;min-width:0;min-height:36px;padding:7px 10px;cursor:pointer;border:0;font:inherit;font-size:13.5px;text-align:center}
+#roleUsers .ru-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;align-items:stretch;width:100%}
+#roleUsers .ru-tiles>p{grid-column:1/-1}
+#roleUsers .ru-tile{display:flex;flex-direction:column;min-width:0}
 #roleUsers .ru-tile,#roleUsers .ru-user{padding:12px 14px;border-radius:16px;border:1px solid var(--line);background:var(--surface)}
-#roleUsers .ru-th{display:flex;justify-content:space-between;gap:8px;align-items:baseline;font-size:15px}
-#roleUsers .ru-cnt{display:flex;flex-wrap:wrap;gap:6px 14px;margin:6px 0 8px;font-size:13px;font-weight:600}
+#roleUsers .ru-th{display:flex;justify-content:space-between;gap:8px;align-items:baseline;font-size:15px;flex-wrap:nowrap;white-space:nowrap}
+#roleUsers .ru-th b{overflow:hidden;text-overflow:ellipsis;min-width:0}
+#roleUsers .ru-th span{flex:none;font-size:12.5px}
+#roleUsers .ru-cnt{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;min-height:34px;margin:6px 0 8px;font-size:13px;font-weight:600}
 #roleUsers .ru-emp,#roleUsers .ru-sess{list-style:none;margin:0;padding:0}
-#roleUsers .ru-emp li{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px solid var(--line);font-size:13.5px}
-#roleUsers .ru-emp li span:last-child{text-align:right}
+#roleUsers .ru-emp li{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:10px;padding:6px 0;border-top:1px solid var(--line);font-size:13.5px}
+#roleUsers .ru-emp li span:last-child{text-align:right;white-space:nowrap}
+#roleUsers .ru-emp li span:first-child{overflow-wrap:anywhere}
 #roleUsers .ru-ok{color:var(--plus)}
 #roleUsers .ru-warn{color:var(--warn)}
 #roleUsers .ru-bad{color:var(--minus)}
@@ -89,4 +94,7 @@ html[data-role-none] .tabs{display:none!important}
 @media (max-width:640px){
   #roleUsers .ru-seg{flex-direction:column}
   #roleUsers .ru-tiles{grid-template-columns:1fr}
+}
+@media (min-width:641px) and (max-width:1099px){
+  #roleUsers .ru-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
