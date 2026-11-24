@@ -1,21 +1,29 @@
 // «Настроить план»: сумма месяца, доли точек, продавцы. Сохраняет settings/plan в том же формате, что рабочий сайт.
 import { useState } from "react";
-import { ChevronDown, Save, Wand2 } from "lucide-react";
+import { Save, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card } from "@/components/Card";
+import { RowCards, type RowColumn } from "@/components/RowCards";
 import { cn } from "@/lib/utils";
 import type { Data } from "@/lib/types";
 import { useMutations } from "@/lib/useData";
+import { useIsPhone } from "@/lib/useMedia";
 import { buildPlanDoc, fmt, parseAmt, plPrevShares, type PlanCalc, type PlanCfg, type PlanEnv } from "./logic";
 import { DUR } from "@/lib/motion";
 
 const comma = (v: number | undefined) => String(v ?? 0).replace(".", ",");
 
-export function PlanSettings({ d, env, cfg, month, K, open, setOpen }: { d: Data; env: PlanEnv; cfg: PlanCfg; month: string; K: PlanCalc; open: boolean; setOpen: (f: (o: boolean) => boolean) => void }) {
-  const mu = useMutations();
+// поля внутри строки не должны раскрывать карточку
+const Stop = ({ children }: { children: React.ReactNode }) => (
+  <span className="contents" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>{children}</span>
+);
+
+export function PlanSettings({ i = 0, d, env, cfg, month, K, open, setOpen }: { i?: number; d: Data; env: PlanEnv; cfg: PlanCfg; month: string; K: PlanCalc; open: boolean; setOpen: (f: (o: boolean) => boolean) => void }) {
+  const mu = useMutations(), phone = useIsPhone();
   const [total, setTotal] = useState(K.c.total ? fmt(K.c.total) : "");
   const [sh, setSh] = useState<Record<string, string>>(() => Object.fromEntries(env.points.map((p) => [p, comma(K.shares[p])])));
   const [sel, setSel] = useState<Record<string, string>>(() => Object.fromEntries(env.points.map((p) => [p, cfg.sellers[p] || ""])));
@@ -33,38 +41,35 @@ export function PlanSettings({ d, env, cfg, month, K, open, setOpen }: { d: Data
     finally { setBusy(false); }
   };
 
+  const cols: RowColumn<string>[] = [
+    { key: "p", title: "Точка", main: true, cell: (p) => p },
+    { key: "s", title: "Продавец", sub: phone, cell: (p) => <Stop><Input value={sel[p] ?? ""} placeholder="Имя продавца" aria-label={p + " · продавец"} className="h-8 w-44 sm:w-60" onChange={(e) => setSel((s) => ({ ...s, [p]: e.target.value }))} /></Stop> },
+    { key: "h", title: "Доля, %", align: "right", width: "120px", cell: (p) => <Stop><Input value={sh[p] ?? ""} inputMode="decimal" aria-label={p + " · доля, %"} className="num ml-auto h-8 w-20 text-right" onChange={(e) => setSh((s) => ({ ...s, [p]: e.target.value }))} /></Stop> },
+  ];
+
   return (
-    <section className="glass rounded-[26px]">
-      <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="flex w-full items-center justify-between gap-3 rounded-[26px] p-5 text-left">
-        <span className="min-w-0"><b className="text-[17px] tracking-tight">Настроить план</b><span className="block text-[13px] text-muted-foreground sm:ml-2 sm:inline">· сумма месяца, доли точек, продавцы</span></span>
-        <ChevronDown className={cn("size-5 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
-      </button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: DUR.base }} className="overflow-hidden">
-            <form className="flex flex-col gap-4 px-5 pb-5" onSubmit={(e) => { e.preventDefault(); void save(); }}>
-              <div className="grid gap-1.5 sm:max-w-sm">
-                <Label htmlFor="plTotal">План месяца, сум</Label>
-                <Input id="plTotal" value={total} inputMode="numeric" autoComplete="off" className="num" onChange={(e) => { const v = parseAmt(e.target.value); setTotal(isNaN(v) ? "" : fmt(v)); }} />
-              </div>
-              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                {env.points.map((p) => (
-                  <div key={p} className="glass-inner grid grid-cols-[minmax(0,1fr)_96px] gap-2 rounded-2xl p-3">
-                    <div className="grid gap-1.5"><Label htmlFor={"ps-" + p} className="truncate">{p} · продавец</Label><Input id={"ps-" + p} value={sel[p] ?? ""} placeholder="Имя" onChange={(e) => setSel((s) => ({ ...s, [p]: e.target.value }))} /></div>
-                    <div className="grid gap-1.5"><Label htmlFor={"psh-" + p}>Доля, %</Label><Input id={"psh-" + p} value={sh[p] ?? ""} inputMode="decimal" className="num" onChange={(e) => setSh((s) => ({ ...s, [p]: e.target.value }))} /></div>
-                  </div>
-                ))}
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Button type="submit" disabled={busy}><Save />Сохранить план</Button>
-                <Button type="button" variant="secondary" onClick={fillAuto}><Wand2 />Доли по прошлому месяцу</Button>
-                <span className="num text-[13px] text-muted-foreground">сумма долей {String(Math.round(sumShares * 10) / 10).replace(".", ",")}%</span>
-                <span role="status" className={cn("text-[13px]", msg.bad ? "text-minus" : "text-plus")}>{msg.t}</span>
-              </div>
-            </form>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </section>
+    <div id="plan-settings" className="scroll-mt-4">
+      <Card i={i} title="Настроить план" note="сумма месяца, доли, продавцы" action={{ label: open ? "Свернуть" : "Развернуть", onClick: () => setOpen((o) => !o) }}>
+        <AnimatePresence initial={false}>
+          {open && (
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: DUR.base }} className="overflow-hidden">
+              <form className="flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); void save(); }}>
+                <div className="grid gap-1.5 sm:max-w-sm">
+                  <Label htmlFor="plTotal">План месяца, сум</Label>
+                  <Input id="plTotal" value={total} inputMode="numeric" autoComplete="off" className="num" onChange={(e) => { const v = parseAmt(e.target.value); setTotal(isNaN(v) ? "" : fmt(v)); }} />
+                </div>
+                <RowCards columns={cols} rows={env.points} rowKey={(p) => p} dense
+                  footer={<div className="flex justify-between gap-3 font-semibold"><span>Сумма долей</span><span className="num">{String(Math.round(sumShares * 10) / 10).replace(".", ",")}%</span></div>} />
+                <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+                  <Button type="submit" disabled={busy} className="max-sm:w-full"><Save />Сохранить план</Button>
+                  <Button type="button" variant="secondary" onClick={fillAuto} className="max-sm:w-full"><Wand2 />Доли по прошлому месяцу</Button>
+                  <span role="status" className={cn("text-[13px]", msg.bad ? "text-minus" : "text-plus")}>{msg.t}</span>
+                </div>
+              </form>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Card>
+    </div>
   );
 }

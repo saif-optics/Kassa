@@ -1,6 +1,7 @@
 // Графики Аналитики, Линз и Склада на Recharts: линия, столбцы, группы столбцов, кольцо, водопад, Парето, мини-линия и полосы.
 import { Area, Bar, BarChart, CartesianGrid, Cell, ComposedChart, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { cn } from "@/lib/utils";
+import { useIsPhone } from "@/lib/useMedia";
 import type { Bar as HBar } from "./base";
 import { fmt, fmtM, niceStep } from "./util";
 
@@ -32,7 +33,8 @@ export function MiniRing({ p, color = "var(--primary)", light }: { p: number; co
   );
 }
 
-export function LineC({ labels, series, h = 240 }: { labels: string[]; series: { name: string; color: string; vals: (number | null)[]; area?: boolean; dash?: boolean }[]; h?: number }) {
+export function LineC({ labels, series, h = 280 }: { labels: string[]; series: { name: string; color: string; vals: (number | null)[]; area?: boolean; dash?: boolean }[]; h?: number }) {
+  const phone = useIsPhone();
   if (!labels.length) return <None />;
   const data = labels.map((l, i) => { const o: Record<string, unknown> = { l }; series.forEach((s, k) => (o["s" + k] = s.vals[i])); return o; });
   const mx = Math.max(1, ...series.flatMap((s) => s.vals.filter((v): v is number => v != null && !isNaN(v)))), T = top(mx);
@@ -42,8 +44,8 @@ export function LineC({ labels, series, h = 240 }: { labels: string[]; series: {
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={data} margin={{ top: 10, right: 12, bottom: 0, left: 0 }}>
             <CartesianGrid stroke={GRID} vertical={false} />
-            <XAxis dataKey="l" tick={TICK} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={18} />
-            <YAxis tick={TICK} tickLine={false} axisLine={false} width={60} domain={[0, T]} tickFormatter={(v: number) => fmtM(v)} />
+            <XAxis dataKey="l" tick={TICK} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={phone ? 40 : 18} />
+            <YAxis tick={TICK} tickLine={false} axisLine={false} width={phone ? 46 : 60} domain={[0, T]} tickFormatter={(v: number) => fmtM(v)} />
             <Tooltip {...TT} formatter={(v: unknown, n: unknown) => [fmt(+(v as number)), String(n)]} />
             {series.map((s, k) => s.area
               ? <Area key={k} type="monotone" name={s.name} dataKey={"s" + k} stroke={s.color} strokeWidth={2.5} fill={s.color} fillOpacity={0.12} dot={false} isAnimationActive={false} connectNulls={false} />
@@ -57,6 +59,7 @@ export function LineC({ labels, series, h = 240 }: { labels: string[]; series: {
 }
 
 export function BarsC({ labels, vals, colors, color = "var(--chart-2)", hl, fmtV = fmt, lblV, h = 200 }: { labels: string[]; vals: number[]; colors?: string[]; color?: string; hl?: boolean; fmtV?: (v: number) => string; lblV?: (v: number) => string; h?: number }) {
+  const phone = useIsPhone();
   if (!labels.length) return <None />;
   const best = vals.indexOf(Math.max(...vals));
   const data = labels.map((l, i) => ({ l, v: vals[i] }));
@@ -66,8 +69,8 @@ export function BarsC({ labels, vals, colors, color = "var(--chart-2)", hl, fmtV
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 18, right: 6, bottom: 0, left: 0 }}>
           <CartesianGrid stroke={GRID} vertical={false} />
-          <XAxis dataKey="l" tick={TICK} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={10} />
-          <YAxis tick={TICK} tickLine={false} axisLine={false} width={60} tickFormatter={(v: number) => (lblV ? lblV(v) : fmtM(v))} />
+          <XAxis dataKey="l" tick={TICK} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={phone ? 28 : 10} />
+          <YAxis tick={TICK} tickLine={false} axisLine={false} width={phone ? 46 : 60} tickFormatter={(v: number) => (lblV ? lblV(v) : fmtM(v))} />
           <Tooltip {...TT} cursor={{ fill: "var(--muted)" }} formatter={(v: unknown) => [fmtV(+(v as number)), ""]} separator="" />
           <Bar dataKey="v" radius={[5, 5, 0, 0]} maxBarSize={44} isAnimationActive={false} label={small ? { position: "top", fontSize: 10, fill: "var(--foreground)", formatter: (v: unknown) => (+(v as number) ? (lblV || fmtM)(+(v as number)) : "") } : undefined}>
             {data.map((_, i) => <Cell key={i} fill={colors ? colors[i] : hl && i === best ? "var(--primary)" : color} />)}
@@ -79,16 +82,17 @@ export function BarsC({ labels, vals, colors, color = "var(--chart-2)", hl, fmtV
 }
 
 export function GroupBarsC({ labels, series }: { labels: string[]; series: { name: string; color: string; vals: number[]; dash?: boolean }[] }) {
+  const phone = useIsPhone();
   if (!labels.length) return <None />;
   const data = labels.map((l, i) => { const o: Record<string, unknown> = { l }; series.forEach((s, k) => (o["s" + k] = s.vals[i] || 0)); return o; });
   return (
     <>
-      <div className="h-[220px]">
+      <div className="h-[260px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 16, right: 6, bottom: 0, left: 0 }}>
             <CartesianGrid stroke={GRID} vertical={false} />
-            <XAxis dataKey="l" tick={TICK} tickLine={false} axisLine={false} />
-            <YAxis tick={TICK} tickLine={false} axisLine={false} width={60} tickFormatter={(v: number) => fmtM(v)} />
+            <XAxis dataKey="l" tick={TICK} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={phone ? 28 : 10} />
+            <YAxis tick={TICK} tickLine={false} axisLine={false} width={phone ? 46 : 60} tickFormatter={(v: number) => fmtM(v)} />
             <Tooltip {...TT} cursor={{ fill: "var(--muted)" }} formatter={(v: unknown, n: unknown) => [fmt(+(v as number)), String(n)]} />
             {series.map((s, k) => <Bar key={k} name={s.name} dataKey={"s" + k} fill={s.dash ? "var(--chart-5)" : s.color} fillOpacity={s.dash ? 0.45 : 1} radius={[4, 4, 0, 0]} maxBarSize={36} isAnimationActive={false} />)}
           </BarChart>
@@ -145,6 +149,7 @@ export function HBars({ items, rank, dot }: { items: HBar[]; rank?: boolean; dot
 }
 
 export function WaterfallC({ steps }: { steps: { label: string; value: number; type: "start" | "minus" | "total" }[] }) {
+  const phone = useIsPhone();
   let run = 0;
   const data = steps.map((s) => {
     let lo: number, hi: number, col: string;
@@ -153,12 +158,12 @@ export function WaterfallC({ steps }: { steps: { label: string; value: number; t
     return { l: s.label, base: lo, d: hi - lo, v: s.value, col };
   });
   return (
-    <div className="h-[230px]">
+    <div className="h-[260px]">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 22, right: 6, bottom: 0, left: 0 }}>
           <CartesianGrid stroke={GRID} vertical={false} />
           <XAxis dataKey="l" tick={{ ...TICK, fontSize: 11.5 }} tickLine={false} axisLine={false} />
-          <YAxis tick={TICK} tickLine={false} axisLine={false} width={60} tickFormatter={(v: number) => fmtM(v)} />
+          <YAxis tick={TICK} tickLine={false} axisLine={false} width={phone ? 46 : 60} tickFormatter={(v: number) => fmtM(v)} />
           <Tooltip {...TT} cursor={{ fill: "var(--muted)" }} formatter={(_: unknown, __: unknown, p: { payload?: { v: number } }) => [fmt(p.payload?.v || 0), ""]} separator="" />
           <Bar dataKey="base" stackId="w" fill="transparent" isAnimationActive={false} />
           <Bar dataKey="d" stackId="w" radius={[5, 5, 0, 0]} maxBarSize={70} minPointSize={4} isAnimationActive={false} label={{ position: "top", fontSize: 10.5, fill: "var(--foreground)", formatter: (_: unknown) => "" }}>
@@ -172,17 +177,18 @@ export function WaterfallC({ steps }: { steps: { label: string; value: number; t
 }
 
 export function ParetoC({ items }: { items: { k: string; r: number; cs: number; abc: "A" | "B" | "C" }[] }) {
+  const phone = useIsPhone();
   const it = items.slice(0, 30); if (!it.length) return <None />;
   const col = (a: string) => (a === "A" ? "var(--primary)" : a === "B" ? "var(--chart-2)" : "var(--border)");
   const data = it.map((x, i) => ({ l: String(i + 1), name: x.k, r: x.r, cs: Math.round(x.cs * 100), abc: x.abc }));
   return (
     <>
-      <div className="h-[240px]">
+      <div className="h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={data} margin={{ top: 10, right: 6, bottom: 0, left: 0 }}>
             <CartesianGrid stroke={GRID} vertical={false} />
-            <XAxis dataKey="l" tick={TICK} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={8} />
-            <YAxis yAxisId="a" tick={TICK} tickLine={false} axisLine={false} width={60} tickFormatter={(v: number) => fmtM(v)} />
+            <XAxis dataKey="l" tick={TICK} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={phone ? 20 : 8} />
+            <YAxis yAxisId="a" tick={TICK} tickLine={false} axisLine={false} width={phone ? 46 : 60} tickFormatter={(v: number) => fmtM(v)} />
             <YAxis yAxisId="b" orientation="right" domain={[0, 100]} tick={TICK} tickLine={false} axisLine={false} width={34} tickFormatter={(v: number) => v + "%"} />
             <Tooltip {...TT} cursor={{ fill: "var(--muted)" }} labelFormatter={(_, p) => { const x = (p as unknown as { payload?: { name?: string } }[])?.[0]?.payload; return x?.name || ""; }} formatter={(v: unknown, n: unknown, p: { payload?: { abc?: string } }) => (n === "cs" ? [v + "%", "накоплено"] : [fmt(+(v as number)) + " · класс " + (p.payload?.abc || ""), "выручка"])} />
             <Bar yAxisId="a" dataKey="r" radius={[3, 3, 0, 0]} maxBarSize={22} isAnimationActive={false}>{data.map((x, i) => <Cell key={i} fill={col(x.abc)} />)}</Bar>
