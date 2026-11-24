@@ -3,6 +3,7 @@ import { motion } from "motion/react";
 import { AppWindow, CircleDollarSign, Ellipsis, House, Landmark, ReceiptText, Users, Zap, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { dDiff, pl, type MonthRow, type Status } from "./logic";
+import { land } from "@/lib/motion";
 
 const ICONS: Record<string, LucideIcon> = { credit: Landmark, rent: House, tax: ReceiptText, salary: Users, service: AppWindow, utility: Zap, debt: CircleDollarSign, other: Ellipsis };
 
@@ -43,7 +44,7 @@ export function Ring({ p, className }: { p: number; className?: string }) {
 
 export function Kpi({ label, value, sub, tone, extra, i = 0 }: { label: string; value: string; sub?: React.ReactNode; tone?: "plus" | "primary"; extra?: React.ReactNode; i?: number }) {
   return (
-    <motion.div initial={{ opacity: 0, y: 12, filter: "blur(6px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ delay: i * 0.05, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+    <motion.div {...land(i)}
       whileHover={{ y: -4 }} className="glass flex min-w-0 flex-col gap-1 rounded-[22px] px-5 py-4">
       <span className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{label}</span>
       <div className="flex items-center justify-between gap-3">

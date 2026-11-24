@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "kassa-web", "runtimeExecutable": "powershell", "runtimeArgs": ["-NoProfile", "-Command", "$env:PATH='C:\Users\user\.local\node;'+$env:PATH; Set-Location web; npm run dev -- --port 5173 --strictPort"], "port": 5173 }
+  ]
+}

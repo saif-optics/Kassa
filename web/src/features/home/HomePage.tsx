@@ -12,6 +12,7 @@ import { pointColor } from "../plan/Points";
 import { fmt } from "../plan/logic";
 import { homeData, dateTitle, partsText, type Part } from "./logic";
 import { WeekChart } from "./WeekChart";
+import { land } from "@/lib/motion";
 
 const GO = (id: string, field?: string) => () => {
   location.hash = id; window.scrollTo({ top: 0, behavior: "smooth" });
@@ -101,7 +102,7 @@ export function HomePage({ d }: { d: Data }) {
         <div><h2 className="text-[17px] font-semibold tracking-tight">Разделы</h2><p className="mt-0.5 text-[13px] text-muted-foreground">Нажмите на карточку, чтобы открыть раздел.</p></div>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {h.cards.map((c, i) => (
-            <motion.button key={c.id} type="button" onClick={GO(c.id)} initial={{ opacity: 0, y: 12, filter: "blur(6px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ delay: 0.1 + i * 0.05, duration: 0.45 }} whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }}
+            <motion.button key={c.id} type="button" onClick={GO(c.id)} {...land(i, 0.1)} whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }}
               className="glass flex min-w-0 flex-col gap-3 rounded-[24px] p-4 text-left">
               <div className="flex items-center gap-3"><IconBox icon={SEC_ICON[c.icon] ?? ReceiptText} color={SEC_COL[c.id]} /><span className="flex-1 truncate text-base font-semibold">{c.title}</span><ChevronRight className="size-5 text-muted-foreground" /></div>
               <p className="text-[12.5px] leading-snug text-muted-foreground">{c.hint}</p>

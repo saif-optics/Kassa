@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import type { PayItem } from "@/lib/types";
 import { CATS, dDiff, dLong, fmt, type MonthRow } from "./logic";
 import { CatIcon } from "./parts";
+import { DUR } from "@/lib/motion";
 
 const Card = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <motion.section whileHover={{ y: -3 }} className="glass rounded-[24px] p-5"><h3 className="mb-3 text-[15px] font-semibold">{title}</h3>{children}</motion.section>
@@ -36,7 +37,7 @@ export function Debts({ debts, onEdit, onAdd }: { debts: DebtRow[]; onEdit: (id:
         {debts.map((d) => (
           <button key={d.it.id} type="button" onClick={() => onEdit(d.it.id)} className="glass-inner flex flex-col gap-1.5 rounded-2xl px-3.5 py-3 text-left transition hover:brightness-105">
             <span className="flex justify-between gap-2 text-[13.5px]"><b className="truncate">{d.it.name}</b><span className="num font-semibold whitespace-nowrap">{d.left == null ? "сумма не указана" : fmt(d.left) + " сум"}</span></span>
-            {d.total > 0 && <span className="h-1.5 overflow-hidden rounded-full bg-muted"><motion.i initial={{ width: 0 }} animate={{ width: `${(d.pct || 0) * 100}%` }} transition={{ duration: 0.6 }} className="block h-full rounded-full bg-plus" /></span>}
+            {d.total > 0 && <span className="h-1.5 overflow-hidden rounded-full bg-muted"><motion.i initial={{ width: 0 }} animate={{ width: `${(d.pct || 0) * 100}%` }} transition={{ duration: DUR.slow }} className="block h-full rounded-full bg-plus" /></span>}
             <small className="text-xs text-muted-foreground">погашено {fmt(d.paid)}{d.total ? ` из ${fmt(d.total)} · ${Math.round((d.pct || 0) * 100)}%` : ""}</small>
           </button>
         ))}

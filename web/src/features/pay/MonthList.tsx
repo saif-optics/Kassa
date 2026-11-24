@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import type { Data } from "@/lib/types";
 import { CATS, MN, MNg, SRC, addM, baseAmount, dLong, dim, fmt, words, wd, type MonthRow } from "./logic";
 import { CatIcon, StatusChip } from "./parts";
+import { DUR, EASE } from "@/lib/motion";
 
 type Props = { d: Data; M: string; T: string; rows: MonthRow[]; open: string | null; setOpen: (id: string | null) => void;
   onPlan: (id: string, v: number | null) => void; onPaid: (r: MonthRow, v: number | null) => void; onToggle: (r: MonthRow) => void; onReset: (id: string) => void; onEdit: (id: string) => void };
@@ -54,7 +55,7 @@ export function MonthList({ d, M, T, rows, open, setOpen, onPlan, onPaid, onTogg
                   </motion.div>
                   <AnimatePresence initial={false}>
                     {sel && (
-                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }} className="overflow-hidden">
+                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: DUR.base, ease: EASE.out }} className="overflow-hidden">
                         <div className="glass-inner mx-2 mt-1 mb-2 grid gap-4 rounded-2xl p-4 lg:ml-[62px] lg:grid-cols-[1fr_auto]">
                           <div className="min-w-0">
                             <h4 className="mb-1.5 text-[13px] font-semibold">Где нашлась оплата</h4>

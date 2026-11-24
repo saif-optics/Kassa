@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import type { Data } from "@/lib/types";
 import { useMutations } from "@/lib/useData";
 import { buildPlanDoc, fmt, parseAmt, plPrevShares, type PlanCalc, type PlanCfg, type PlanEnv } from "./logic";
+import { DUR } from "@/lib/motion";
 
 const comma = (v: number | undefined) => String(v ?? 0).replace(".", ",");
 
@@ -40,7 +41,7 @@ export function PlanSettings({ d, env, cfg, month, K, open, setOpen }: { d: Data
       </button>
       <AnimatePresence initial={false}>
         {open && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden">
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: DUR.base }} className="overflow-hidden">
             <form className="flex flex-col gap-4 px-5 pb-5" onSubmit={(e) => { e.preventDefault(); void save(); }}>
               <div className="grid gap-1.5 sm:max-w-sm">
                 <Label htmlFor="plTotal">План месяца, сум</Label>
