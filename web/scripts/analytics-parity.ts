@@ -52,7 +52,7 @@ if (mode === "rows") {
     const o = ownerProfit(c, M0);
     res[name] = {
       an: { empty: an.empty, cards: an.cards.map((x) => [norm(x.label), norm(x.v), norm(x.d)]), titles: an.widgets.map((w) => w.title) },
-      margin: { tot: grpPick(md.tot), pts: md.pts.map(grpPick), cats: md.cats.map(grpPick), prods: md.prods.map(grpPick).sort((a, b) => a.k.localeCompare(b.k)), miss: md.miss.map(grpPick), nodet: R(md.nodet) },
+      margin: { tot: grpPick(md.tot), pts: md.pts.map(grpPick), cats: md.cats.map(grpPick), prods: md.prods.map(grpPick).sort((a, b) => (a.k < b.k ? -1 : a.k > b.k ? 1 : 0)), miss: md.miss.map(grpPick), nodet: R(md.nodet) },
       lens: { all: ld.all.length, list: ld.list.length, kinds, a: R(ld.a.rev), cards: lv.empty ? [] : lv.cards.map((x) => [norm(x.label), norm(x.v), norm(x.d)]), titles: lv.empty ? [] : ["Наши линзы по видам", "Линзы по точкам", "Линзы по дням"],
         cost: lc && !lv.empty ? { kpi: [fmt(lc.gp) + " сум", lc.margin], rows: lc.list.map((x) => [x.k, fmt(x.u), fmt(x.r), x.has ? fmt(x.c) : "нет цены", x.has ? fmt(x.kr - x.c) : "—", x.has && x.kr ? pctF((x.kr - x.c) / x.kr) : "—"]) } : null },
     };

@@ -36,7 +36,7 @@ const cp=document.getElementById('lnCostPanel');
 let cost=null;if(!le&&!cp.hidden){const tb=cp.querySelector('table tbody');cost={kpi:q(cp,'.kpis .kpi .v').map(T),rows:q(tb,'tr').map(r=>q(r,'td').map(T))}}
 o.lens={all:ld.all.length,list:ld.list.length,kinds,a:R(ld.a.rev),cards:le?[]:cards('#lnCards .kpi'),titles:le?[]:q(document,'#lnWidgets .panel.w > h2').map(T),cost};
 const md=S.marginData();
-o.margin={tot:G(md.tot),pts:md.pts.map(G),cats:md.cats.map(G),prods:md.prods.map(G).sort((a,b)=>a.k.localeCompare(b.k)),miss:md.miss.map(G),nodet:R(md.nodet)};
+o.margin={tot:G(md.tot),pts:md.pts.map(G),cats:md.cats.map(G),prods:md.prods.map(G).sort((a,b)=>(a.k<b.k?-1:a.k>b.k?1:0)),miss:md.miss.map(G),nodet:R(md.nodet)};
 return o}
 """
 STOCK = "()=>{" + HELP + """

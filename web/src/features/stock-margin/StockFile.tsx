@@ -1,20 +1,30 @@
 // «Склад из файла»: остатки по местам, группы, товары и загрузка файла склада в коллекцию stock (как на рабочем сайте).
 import { useMemo, useRef, useState } from "react";
-import { Upload } from "lucide-react";
 import { toast } from "sonner";
+import { Card } from "@/components/Card";
+import { FilterBar } from "@/components/FilterSheet";
+import { RowCards, type RowColumn } from "@/components/RowCards";
+import { Segments } from "@/components/Segments";
+import { Tile, TileLabel, TileSub, TileValue } from "@/components/Tile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useMutations } from "@/lib/useData";
+import { useIsPhone } from "@/lib/useMedia";
 import type { BItem, Ctx } from "../analytics/cost";
-import { Box, Dim, Empty, Seg, Tbl, Td, Th, Tile } from "../analytics/parts";
 import { dShort, fmt, pctF, today } from "../analytics/util";
+import { Field, FIELD } from "../report/ui";
+import { phoneFirst } from "../stock/cols";
 import { mergeStock, parseSheet, stockSearch, stockView } from "./logic";
 
-const SHOW = 150, MORE = 300;
+const SHOW = 50, MORE = 100;
 type Pending = { items: BItem[]; raw: number; file: string; sheet: string };
+const dim = <span className="text-muted-foreground">—</span>;
+const money = (a?: number) => (+(a || 0) ? fmt(a as number) : "—");
 
-export function StockFile({ c }: { c: Ctx }) {
+/** pick — сюда кладётся функция «выбрать файл»: её вызывает кнопка в шапке раздела */
+export function StockFile({ c, pick }: { c: Ctx; pick: React.MutableRefObject<(() => void) | null> }) {
+  const phone = useIsPhone();
   const mu = useMutations();
   const [place, setPlace] = useState("all"), [q, setQ] = useState(""), [lim, setLim] = useState(SHOW);
   const [pend, setPend] = useState<Pending | null>(null), [date, setDate] = useState(today()), [busy, setBusy] = useState(false), [msg, setMsg] = useState<{ t: string; bad?: boolean }>({ t: "" });
@@ -44,62 +54,114 @@ export function StockFile({ c }: { c: Ctx }) {
     } catch { setMsg({ t: "Не удалось сохранить склад. Попробуйте ещё раз.", bad: true }); } finally { setBusy(false); }
   };
 
+  pick.current = () => file.current?.click();
+  let k = 0; const nx = () => k++; // сквозной номер посадки сверху вниз
+
+  const pendCols: RowColumn<BItem>[] = [
+    { key: "n", title: "Модель / наименование", main: true, cell: (i) => i.m || i.n || i.s },
+    { key: "g", title: "Группа", sub: true, cell: (i) => i.g || i.c || null },
+    { key: "q", title: "Кол-во", align: "right", cell: (i) => fmt(+i.q || 0) },
+    { key: "s", title: "Артикул", cell: (i) => i.s || "—" },
+    { key: "cp", title: "Цена покупки", align: "right", cell: (i) => money(i.cp) },
+    { key: "p", title: "Цена продажи", align: "right", cell: (i) => money(i.p) },
+  ];
   const importPanel = (
-    <Box title="Загрузить склад" note="Excel или CSV (например, выгрузка из Billz): модель или артикул, наименование, группа или категория, количество, цена покупки, цена продажи. Столбцы найдутся по названиям. Если есть столбец «Место» (склад или точка), остатки разделятся по местам. Новая загрузка заменяет предыдущую.">
-      <div className="flex flex-wrap items-end gap-4">
-        <label className="flex flex-col gap-1 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">Дата остатков<Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-[160px]" /></label>
+    <Card i={nx()} title="Загрузить склад" note="Excel или CSV">
+      <p className="text-[12.5px] text-muted-foreground">Например, выгрузка из Billz: модель или артикул, наименование, группа или категория, количество, цена покупки, цена продажи. Столбцы найдутся по названиям. Если есть столбец «Место» (склад или точка), остатки разделятся по местам. Новая загрузка заменяет предыдущую.</p>
+      <div className="flex flex-wrap items-end gap-3">
+        <Field label="Дата остатков" className="w-full sm:w-44"><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></Field>
         <input ref={file} type="file" hidden accept=".xlsx,.xls,.xlsm,.csv" onChange={(e) => { onFile(e.target.files?.[0]); e.target.value = ""; }} />
-        <Button variant="secondary" size="lg" onClick={() => file.current?.click()}><Upload />Выбрать Excel</Button>
+        <Button variant="secondary" size="lg" className="max-sm:w-full" onClick={() => file.current?.click()}>Выбрать файл</Button>
       </div>
       {pend && (
-        <div className="mt-4">
-          <p className="mb-2 text-[13px] text-muted-foreground">Файл «{pend.file}», лист «{pend.sheet}»: <b className="text-foreground">{fmt(pend.items.length)} позиций, {fmt(pend.items.reduce((a, i) => a + (+i.q || 0), 0))} шт</b>{pend.raw > pend.items.length ? ` (${fmt(pend.raw)} строк, повторы по точкам сложены)` : ""}. Цена покупки есть у {fmt(pend.items.filter((i) => +(i.cp || 0) > 0).length)} позиций.</p>
-          <Tbl><thead><tr><Th>Модель / наименование</Th><Th>Артикул</Th><Th>Группа</Th><Th r>Кол-во</Th><Th r>Цена покупки</Th><Th r>Цена продажи</Th></tr></thead>
-            <tbody>{pend.items.slice(0, 6).map((i, k) => <tr key={k}><Td>{i.m || i.n || i.s}</Td><Td>{i.s || ""}</Td><Td>{i.g || i.c || ""}</Td><Td r>{fmt(+i.q || 0)}</Td><Td r>{i.cp ? fmt(i.cp) : "—"}</Td><Td r>{i.p ? fmt(i.p) : "—"}</Td></tr>)}</tbody></Tbl>
-          <div className="mt-3 flex gap-2"><Button onClick={save} disabled={busy}>Сохранить склад</Button><Button variant="secondary" onClick={() => { setPend(null); setMsg({ t: "" }); }}>Отмена</Button></div>
+        <div className="flex flex-col gap-3">
+          <p className="text-[13px] text-muted-foreground">Файл «{pend.file}», лист «{pend.sheet}»: <b className="text-foreground">{fmt(pend.items.length)} позиций, {fmt(pend.items.reduce((a, i) => a + (+i.q || 0), 0))} шт</b>{pend.raw > pend.items.length ? ` (${fmt(pend.raw)} строк, повторы по точкам сложены)` : ""}. Цена покупки есть у {fmt(pend.items.filter((i) => +(i.cp || 0) > 0).length)} позиций. Первые 6:</p>
+          <RowCards columns={phoneFirst(pendCols, "q", phone)} rows={pend.items.slice(0, 6)} rowKey={(i) => String(i.k)} dense />
+          <div className="flex gap-2"><Button onClick={save} disabled={busy}>Сохранить склад</Button><Button variant="secondary" onClick={() => { setPend(null); setMsg({ t: "" }); }}>Отмена</Button></div>
         </div>
       )}
-      {msg.t && <p role="status" className={cn("mt-3 text-[13px]", msg.bad ? "text-minus" : "text-plus")}>{msg.t}</p>}
-    </Box>
+      {msg.t && <p role="status" className={cn("text-[13px]", msg.bad ? "text-minus" : "text-plus")}>{msg.t}</p>}
+    </Card>
   );
 
-  if (!v) return <><Empty>Склад ещё не загружен. Загрузите Excel ниже или отправьте файл Claude в чат.</Empty>{importPanel}</>;
-  const list = stockSearch(v.sorted, q), showPt = pl0 === "all";
+  if (!v) return <><Card i={nx()} title="Склад ещё не загружен"><p className="text-[13.5px] text-muted-foreground">Загрузите Excel ниже или отправьте файл Claude в чат.</p></Card>{importPanel}</>;
+  const list = stockSearch(v.sorted, q), showPt = pl0 === "all", shown = list.slice(0, lim).map((it, i) => ({ it, i }));
+  const sc = v.pr.reduce((a, o) => a + o.c, 0), sv = v.pr.reduce((a, o) => a + o.v, 0);
+  const catSum = (cat?: string) => v.all.filter((i) => !cat || (i.c || "Без категории") === cat).reduce((a, i) => a + (+i.q || 0) * (+(i.p || 0)), 0);
+  const fc = q ? 1 : 0;
+
+  type PR = (typeof v.pr)[number]; type GR = (typeof v.groups)[number];
+  const prCols: RowColumn<PR>[] = [
+    { key: "p", title: "Место", main: true, cell: (o) => o.p },
+    { key: "pos", title: "Позиций", sub: true, align: "right", cell: (o) => fmt(o.pos) + " поз." },
+    { key: "n", title: "Штук", align: "right", cell: (o) => <b>{fmt(o.n)}</b> },
+    { key: "src", title: "Источник", cell: (o) => <span className="text-[12px] text-muted-foreground">{o.src || "—"}</span> },
+    { key: "sh", title: "Доля", align: "right", cell: (o) => pctF(v.QA ? o.n / v.QA : 0) },
+    { key: "c", title: "Сумма закупки", align: "right", cell: (o) => fmt(o.c) },
+    { key: "v", title: "Сумма продажи", align: "right", cell: (o) => fmt(o.v) },
+    { key: "mk", title: "Наценка", align: "right", cell: (o) => pctF(o.mk) },
+    { key: "s", title: "Продано с " + dShort(v.from), align: "right", cell: (o) => (o.s ? fmt(o.s) : dim) },
+  ];
+  const catCols: RowColumn<string>[] = [
+    { key: "c", title: "Категория", main: true, cell: (cat) => cat },
+    ...v.places.map((p): RowColumn<string> => ({ key: "p" + p, title: p + ", шт", align: "right", cell: (cat) => { const x = v.cell(cat, p); return x ? fmt(x) : dim; } })),
+    { key: "tot", title: "Всего, шт", align: "right", cell: (cat) => <b>{fmt(v.cell(cat))}</b> },
+    { key: "sum", title: "Сумма продажи", align: "right", cell: (cat) => fmt(catSum(cat)) },
+  ];
+  const grCols: RowColumn<GR>[] = [
+    { key: "k", title: "Группа", main: true, cell: (o) => o.k },
+    { key: "n", title: "Позиций", sub: true, align: "right", cell: (o) => fmt(o.n) + " поз." },
+    { key: "q", title: "Штук", align: "right", cell: (o) => <b>{fmt(o.q)}</b> },
+    { key: "vc", title: "Сумма закупки", align: "right", cell: (o) => fmt(o.vc) },
+    { key: "vp", title: "Сумма продажи", align: "right", cell: (o) => fmt(o.vp) },
+    { key: "mg", title: "Маржа в цене", align: "right", cell: (o) => (o.vp && o.vc ? pctF((o.vp - o.vc) / o.vp) : "—") },
+    { key: "s", title: "Продано с " + dShort(v.from), align: "right", cell: (o) => (o.s ? fmt(o.s) : dim) },
+  ];
+  type IR = { it: BItem; i: number };
+  const itCols: RowColumn<IR>[] = [
+    { key: "n", title: "Модель / наименование", main: true, cell: ({ it }) => <>{[it.m || it.n || it.s, it.col].filter(Boolean).join(" · ")}{it.note && <small className="block text-[12px] font-normal text-muted-foreground">{it.note}</small>}</> },
+    { key: "g", title: "Группа", sub: true, cell: ({ it }) => it.g || it.c || null },
+    ...(showPt ? [{ key: "pt", title: "Место", sub: true, cell: ({ it }: IR) => it.pt || null } as RowColumn<IR>] : []),
+    { key: "s", title: "Артикул", cell: ({ it }) => <span className="text-[12px] text-muted-foreground">{it.s && it.s !== it.m ? it.s : "—"}</span> },
+    { key: "q", title: "Кол-во по файлу", align: "right", cell: ({ it }) => fmt(+it.q || 0) },
+    { key: "sd", title: "Продано с " + dShort(v.from), align: "right", cell: ({ it }) => { const x = v.sold.get(it) || 0; return x ? <b>{fmt(x)}</b> : dim; } },
+    { key: "now", title: "≈ Сейчас", align: "right", cell: ({ it }) => { const x = (+it.q || 0) - (v.sold.get(it) || 0); return <b className={x < 0 ? "text-minus" : undefined}>{fmt(x)}</b>; } },
+    { key: "cp", title: "Цена покупки", align: "right", cell: ({ it }) => money(it.cp) },
+    { key: "p", title: "Цена продажи", align: "right", cell: ({ it }) => money(it.p) },
+    { key: "mg", title: "Маржа в цене", align: "right", cell: ({ it }) => (+(it.cp || 0) && +(it.p || 0) ? pctF(((it.p as number) - (it.cp as number)) / (it.p as number)) : "—") },
+  ];
+
   return (
     <>
-      <div className="glass flex gap-3 rounded-[22px] p-4 text-[13px] leading-snug"><span aria-hidden>ℹ️</span><span>Остатки взяты из файла как есть: {v.places.map((p, i) => <span key={p}>{i ? "; " : ""}<b>{p}</b>{v.src[p] ? ` — ${v.src[p]}` : ""}</span>)}. Продажи после этих дат в файле не вычтены, поэтому рядом показано, сколько продано с {dShort(v.from)}, и примерный остаток сейчас. После инвентаризации загрузите точные остатки.</span></div>
-      <Seg label="Место" value={pl0} onChange={(p) => { setPlace(p); setLim(SHOW); }} items={[["all", "Все места"], ...v.places.map((p) => [p, p] as [string, string])]} />
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 @5xl/main:grid-cols-4">{v.cards.map((k, i) => <Tile key={k.label} c={k} i={i} hintsOn={null} />)}</div>
-      <Box title="По местам" note="Склад и каждая точка отдельно. Нажмите место сверху, чтобы видеть только его товары.">
-        <Tbl>
-          <thead><tr><Th>Место</Th><Th>Источник</Th><Th r>Позиций</Th><Th r>Штук</Th><Th r>Доля</Th><Th r>Сумма закупки</Th><Th r>Сумма продажи</Th><Th r>Наценка</Th><Th r>Продано с {dShort(v.from)}</Th></tr></thead>
-          <tbody>{v.pr.map((o) => <tr key={o.p} className={pl0 === o.p ? "bg-primary/5" : ""}><Td b>{o.p}</Td><Td className="text-[12px] text-muted-foreground">{o.src}</Td><Td r>{fmt(o.pos)}</Td><Td r>{fmt(o.n)}</Td><Td r>{pctF(v.QA ? o.n / v.QA : 0)}</Td><Td r>{fmt(o.c)}</Td><Td r>{fmt(o.v)}</Td><Td r>{pctF(o.mk)}</Td><Td r>{o.s ? fmt(o.s) : <Dim />}</Td></tr>)}</tbody>
-          <tfoot>{(() => { const sc = v.pr.reduce((a, o) => a + o.c, 0), sv = v.pr.reduce((a, o) => a + o.v, 0); return <tr><Td colSpan={2} b>Итого</Td><Td r b>{fmt(v.all.length)}</Td><Td r b>{fmt(v.QA)}</Td><Td r b>100%</Td><Td r b>{fmt(sc)}</Td><Td r b>{fmt(sv)}</Td><Td r b>{pctF(sc ? (sv - sc) / sc : null)}</Td><Td r b>{fmt(v.pr.reduce((a, o) => a + o.s, 0))}</Td></tr>; })()}</tfoot>
-        </Tbl>
-      </Box>
-      <Box title="Категории по местам, шт">
-        <Tbl>
-          <thead><tr><Th>Категория</Th>{v.places.map((p) => <Th key={p} r>{p}, шт</Th>)}<Th r>Всего, шт</Th><Th r>Сумма продажи</Th></tr></thead>
-          <tbody>{v.cats.map((cat) => <tr key={cat}><Td>{cat}</Td>{v.places.map((p) => { const x = v.cell(cat, p); return <Td key={p} r>{x ? fmt(x) : <Dim />}</Td>; })}<Td r b>{fmt(v.cell(cat))}</Td><Td r>{fmt(v.all.filter((i) => (i.c || "Без категории") === cat).reduce((a, i) => a + (+i.q || 0) * (+(i.p || 0)), 0))}</Td></tr>)}</tbody>
-          <tfoot><tr><Td b>Итого</Td>{v.places.map((p) => <Td key={p} r b>{fmt(v.all.filter((i) => (i.pt || "Без места") === p).reduce((a, i) => a + (+i.q || 0), 0))}</Td>)}<Td r b>{fmt(v.QA)}</Td><Td r b>{fmt(v.all.reduce((a, i) => a + (+i.q || 0) * (+(i.p || 0)), 0))}</Td></tr></tfoot>
-        </Tbl>
-      </Box>
-      <Box title={"По группам" + (pl0 === "all" ? "" : " · " + pl0)}>
-        <Tbl>
-          <thead><tr><Th>Группа</Th><Th r>Позиций</Th><Th r>Штук</Th><Th r>Сумма закупки</Th><Th r>Сумма продажи</Th><Th r>Маржа в цене</Th><Th r>Продано с {dShort(v.from)}</Th></tr></thead>
-          <tbody>{v.groups.map((o) => <tr key={o.k}><Td>{o.k}</Td><Td r>{fmt(o.n)}</Td><Td r>{fmt(o.q)}</Td><Td r>{fmt(o.vc)}</Td><Td r>{fmt(o.vp)}</Td><Td r>{o.vp && o.vc ? pctF((o.vp - o.vc) / o.vp) : "—"}</Td><Td r>{o.s ? fmt(o.s) : <Dim />}</Td></tr>)}</tbody>
-          <tfoot><tr><Td b>Итого</Td><Td r b>{fmt(v.items.length)}</Td><Td r b>{fmt(v.Q)}</Td><Td r b>{fmt(v.vC)}</Td><Td r b>{fmt(v.vP)}</Td><Td r b>{v.vP && v.vC ? pctF((v.vP - v.vC) / v.vP) : "—"}</Td><Td r b>{fmt(v.soldQ)}</Td></tr></tfoot>
-        </Tbl>
-      </Box>
-      <Box title="Все товары" note={`${fmt(list.length)} из ${fmt(v.items.length)} позиций. Сначала — те, что продавались с ${dShort(v.from)}.`}
-        action={<label className="flex flex-col gap-1 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">Поиск<Input value={q} onChange={(e) => { setQ(e.target.value); setLim(SHOW); }} placeholder="Модель, артикул, группа" className="w-[240px] max-sm:w-full" /></label>}>
-        <Tbl>
-          <thead><tr>{showPt && <Th>Место</Th>}<Th>Модель / наименование</Th><Th>Артикул</Th><Th>Группа</Th><Th r>Кол-во по файлу</Th><Th r>Продано с {dShort(v.from)}</Th><Th r>≈ Сейчас</Th><Th r>Цена покупки</Th><Th r>Цена продажи</Th><Th r>Маржа в цене</Th></tr></thead>
-          <tbody>{list.slice(0, lim).map((i, k) => { const sd = v.sold.get(i) || 0, qn = +i.q || 0; return (
-            <tr key={k}>{showPt && <Td>{i.pt || ""}</Td>}<Td>{[i.m || i.n || i.s, i.col].filter(Boolean).join(" · ")}{i.note && <small className="block text-[12px] text-muted-foreground">{i.note}</small>}</Td><Td className="text-[12px] text-muted-foreground">{i.s && i.s !== i.m ? i.s : ""}</Td><Td>{i.g || i.c || ""}</Td><Td r>{fmt(qn)}</Td><Td r>{sd ? <b>{fmt(sd)}</b> : <Dim />}</Td><Td r>{qn - sd < 0 ? <span className="text-minus">{fmt(qn - sd)}</span> : fmt(qn - sd)}</Td><Td r>{+(i.cp || 0) ? fmt(i.cp as number) : "—"}</Td><Td r>{+(i.p || 0) ? fmt(i.p as number) : "—"}</Td><Td r>{+(i.cp || 0) && +(i.p || 0) ? pctF(((i.p as number) - (i.cp as number)) / (i.p as number)) : "—"}</Td></tr>); })}</tbody>
-        </Tbl>
-        {list.length > lim && <div className="mt-3 text-center"><Button variant="secondary" onClick={() => setLim((x) => x + MORE)}>Показать ещё</Button></div>}
-      </Box>
+      <Card i={nx()} title="Откуда остатки" note={`${fmt(c.stockItems.length)} позиций`}>
+        <p className="text-[13px] leading-snug">Остатки взяты из файла как есть: {v.places.map((p, i) => <span key={p}>{i ? "; " : ""}<b>{p}</b>{v.src[p] ? ` — ${v.src[p]}` : ""}</span>)}. Продажи после этих дат в файле не вычтены, поэтому рядом показано, сколько продано с {dShort(v.from)}, и примерный остаток сейчас. После инвентаризации загрузите точные остатки.</p>
+      </Card>
+      <Segments aria-label="Место" items={[{ key: "all", label: "Все места" }, ...v.places.map((p) => ({ key: p, label: p }))]} value={pl0} onChange={(p) => { setPlace(p); setLim(SHOW); }} />
+      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+        {v.cards.map((cd, i) => <Tile key={cd.label} i={nx()} hero={i === 0}><TileLabel>{cd.label}</TileLabel><TileValue>{cd.v}</TileValue><TileSub>{cd.d}</TileSub></Tile>)}
+      </div>
+      <Card i={nx()} title="По местам" note="склад и точки">
+        <p className="text-[12.5px] text-muted-foreground">Склад и каждая точка отдельно. Нажмите место, чтобы видеть только его товары.</p>
+        <RowCards columns={phoneFirst(prCols, "n", phone)} rows={v.pr} rowKey={(o) => o.p} onRowClick={(o) => { setPlace(o.p); setLim(SHOW); }} dense
+          footer={<div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 font-semibold"><span>Итого</span><span className="num">{fmt(v.QA)} шт · закупка {fmt(sc)} · продажа {fmt(sv)} · наценка {pctF(sc ? (sv - sc) / sc : null)}</span></div>} />
+      </Card>
+      <Card i={nx()} title="Категории по местам" note="штуки">
+        <RowCards columns={phoneFirst(catCols, "tot", phone)} rows={v.cats} rowKey={(x) => x} dense
+          footer={<div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 font-semibold"><span>Итого</span><span className="num">{fmt(v.QA)} шт · продажа {fmt(catSum())}</span></div>} />
+      </Card>
+      <Card i={nx()} title={"По группам" + (pl0 === "all" ? "" : " · " + pl0)} note={`${fmt(v.groups.length)} групп`}>
+        <RowCards columns={phoneFirst(grCols, "q", phone)} rows={v.groups} rowKey={(o) => o.k} dense
+          footer={<div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 font-semibold"><span>Итого</span><span className="num">{fmt(v.items.length)} поз. · {fmt(v.Q)} шт · закупка {fmt(v.vC)} · продажа {fmt(v.vP)} · маржа {v.vP && v.vC ? pctF((v.vP - v.vC) / v.vP) : "—"}</span></div>} />
+      </Card>
+      <Card i={nx()} title="Все товары" note={`${fmt(list.length)} из ${fmt(v.items.length)}`}>
+        <FilterBar summary={q ? "Поиск: " + q : "Без поиска"} count={fc}>
+          <Field label="Поиск" className="sm:w-64"><input className={FIELD} placeholder="Модель, артикул, группа" value={q} onChange={(e) => { setQ(e.target.value); setLim(SHOW); }} /></Field>
+        </FilterBar>
+        <p className="text-[12.5px] text-muted-foreground">Сначала — те, что продавались с {dShort(v.from)}.</p>
+        <RowCards columns={phoneFirst(itCols, "now", phone)} rows={shown} rowKey={(r) => String(r.i)} empty="Ничего не найдено"
+          footer={list.length ? <div className="flex flex-wrap items-baseline justify-between gap-x-4 font-semibold"><span>Показано {fmt(shown.length)} из {fmt(list.length)}</span></div> : undefined} />
+        {list.length > lim && <div className="text-center"><Button variant="secondary" onClick={() => setLim((x) => x + MORE)}>Показать ещё</Button></div>}
+      </Card>
       {importPanel}
     </>
   );
