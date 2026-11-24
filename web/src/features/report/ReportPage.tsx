@@ -1,10 +1,9 @@
-// Раздел «Отчёт р/с»: отчёт по расчётному счёту (+ выписка за день и «Отчёт оптика») и фискальные модули.
+// Раздел «Отчёт р/с»: отчёт по расчётному счёту (+ Excel «Отчёт оптика») и фискальные модули.
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, FileSpreadsheet, Plus, Upload } from "lucide-react";
+import { FileSpreadsheet, Plus, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Panel } from "@/components/kit";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import type { Data } from "@/lib/types";
 import { useMutations } from "@/lib/useData";
 import { DayReport } from "./DayReport";
@@ -22,7 +21,6 @@ const ls = { get: (k: string, d: string) => { try { return localStorage.getItem(
 export function ReportPage({ d }: { d: Data }) {
   const [view, setView] = useState<"rs" | "fm">(() => (ls.get("view", "rs") === "fm" ? "fm" : "rs"));
   const [fm, setFm] = useState<FmState>({ m: "", d: "", open: null, edit: null });
-  const [ed, setEd] = useState(false), [req, setReq] = useState<{ day: string; n: number } | null>(null);
   const file = useRef<HTMLInputElement>(null), mu = useMutations(), T = todayTash();
   // переход из «Сверки → Фискальные модули ↔ Касса»: открыть нужный день и точку
   useEffect(() => {
@@ -33,10 +31,6 @@ export function ReportPage({ d }: { d: Data }) {
   const patchFm = (x: Partial<FmState>) => setFm((f) => ({ ...f, ...x }));
   const pickView = (v: "rs" | "fm") => { setView(v); ls.set("view", v); };
 
-  const openEditor = (day: string | null) => {
-    setEd(true); if (day) setReq({ day, n: Date.now() });
-    setTimeout(() => document.getElementById("rs-old")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
-  };
   const addFm = () => {
     const P = d.points.filter((x) => fmIsOn(d, x)), days = fmDays(d);
     patchFm({ d: T, m: T.slice(0, 7), open: P.find((x) => !days[T]?.pts?.[x]) || P[0] || d.points[0], edit: null });
@@ -80,8 +74,7 @@ export function ReportPage({ d }: { d: Data }) {
         </div>
         <div className="flex flex-wrap gap-2">
           {view === "rs" ? <>
-            <Button variant="secondary" size="lg" onClick={xlsx}><FileSpreadsheet />Выгрузить Excel</Button>
-            <Button size="lg" onClick={() => openEditor(null)}><Plus />Внести выписку за день</Button></> : <>
+            <Button variant="secondary" size="lg" onClick={xlsx}><FileSpreadsheet />Выгрузить Excel</Button></> : <>
             <Button variant="secondary" size="lg" onClick={() => file.current?.click()}><Upload />Загрузить отчёт Rahmat</Button>
             <Button size="lg" onClick={addFm}><Plus />Внести гросс за день</Button>
             <input ref={file} type="file" accept=".zip,.xlsx,.xls" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) importRahmat(f); }} /></>}
@@ -90,13 +83,10 @@ export function ReportPage({ d }: { d: Data }) {
       <Seg value={view} onChange={pickView} label="Вид" options={[["rs", "Расчётный счёт"], ["fm", "Фискальные модули"]]} />
 
       {view === "fm" ? <FiscalView d={d} F={fm} setF={patchFm} /> : <>
-        <RsView d={d} onEdit={openEditor} />
-        <div id="rs-old">
-          <Panel title="Выписка за день и ежедневный отчёт оптика" note="Ввод остатков и расходов по р/с, выручка по точкам, гросс нал/безнал, расходы с Б/Ч и Excel «Отчёт оптика»"
-            action={<Button variant="secondary" aria-expanded={ed} onClick={() => setEd((v) => !v)}>{ed ? "Свернуть" : "Развернуть"}<ChevronDown className={cn("transition-transform", ed && "rotate-180")} /></Button>}>
-            {ed ? <DayReport d={d} open={req} /> : null}
-          </Panel>
-        </div>
+        <RsView d={d} />
+        <Panel title="Отчёт оптика" note="Excel: отдельный лист на каждый день">
+          <DayReport d={d} />
+        </Panel>
       </>}
     </div>
   );

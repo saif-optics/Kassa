@@ -58,7 +58,7 @@ export function HomePage({ d }: { d: Data }) {
       </header>
 
       {/* итоги */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 @5xl/main:grid-cols-4">
         {h.hero.map((c, i) => (
           <Tile key={c.kind} i={i} hero={c.kind === "main"} className={cn(c.warn && "ring-2 ring-minus/50")}>
             <Eyebrow light={c.kind === "main"}>{c.label}</Eyebrow>

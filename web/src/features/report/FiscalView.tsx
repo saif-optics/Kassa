@@ -49,7 +49,7 @@ export function FiscalView({ d, F, setF }: { d: Data; F: FmState; setF: (f: Part
       </div>
       <DayChips days={md} value={day} onPick={(x) => setF({ d: x, m: x.slice(0, 7) })} label="День" stat={(x) => fmDayStat(d, x)} title={(x) => dLong(x)} />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 @5xl/main:grid-cols-4">
         <Kpi i={0} label={"Гросс нал · " + dShort(day)} value={fmt(dayT.c) + " сум"} sub={`по ${on} ${pl(on, "модулю", "модулям", "модулям")} за ${dLong(day)}`} />
         <Kpi i={1} label={"Гросс безнал · " + dShort(day)} value={fmt(dayT.n) + " сум"} sub="карты и QR через фискальный модуль" />
         <Kpi i={2} label="Гросс нал · всё время" value={fmt(totT.c) + " сум"} tone="primary" sub={"нарастающим итогом по " + dShort(day)} />
@@ -57,7 +57,7 @@ export function FiscalView({ d, F, setF }: { d: Data; F: FmState; setF: (f: Part
       </div>
 
       <Panel title="Точки и фискальные модули" note={`Нажмите карточку, чтобы внести гросс за ${dLong(day)} или изменить данные модуля`} action={<Badge>{on} из {P.length} подключено</Badge>}>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{P.map((p) => <Card key={p} d={d} p={p} day={day} sel={F.open === p} onClick={() => setF({ open: F.open === p ? null : p, edit: null })} />)}</div>
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 @5xl/main:grid-cols-4">{P.map((p) => <Card key={p} d={d} p={p} day={day} sel={F.open === p} onClick={() => setF({ open: F.open === p ? null : p, edit: null })} />)}</div>
       </Panel>
 
       {F.open && <div ref={edRef}><Editor key={F.open + day + (F.edit || "")} d={d} p={F.open} day={day} tab={F.edit || (fmIsOn(d, F.open) ? "day" : "mod")} setTab={(t) => setF({ edit: t })}

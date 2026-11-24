@@ -55,7 +55,7 @@ export function KassaPage({ d, focus }: { d: Data; focus?: "expense" | "cash" | 
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div><div className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">Saif-Optics · наличные (Б/Ч) · Премиум и Яшнабад</div>
           <h1 className="text-[34px] leading-tight font-bold tracking-tight">Касса</h1>
-          <p className="text-[15px] text-muted-foreground">Б/Ч Премиума и Яшнабада + приходы − расходы дня − прочие расходы</p></div>
+          <p className="max-w-[72ch] text-[15px] text-muted-foreground">Б/Ч Премиума и Яшнабада + приходы − расходы дня − прочие расходы</p></div>
         <Button variant="secondary" size="lg" onClick={xlsx}><FileSpreadsheet />Выгрузить Excel</Button>
       </header>
       {ms.length > 1 && <Tabs value={M} onValueChange={setSel}><TabsList className="h-auto flex-wrap">{ms.map((m) => <TabsTrigger key={m} value={m} className="px-4 py-1.5">{monthName(m)}</TabsTrigger>)}</TabsList></Tabs>}
@@ -72,7 +72,7 @@ export function KassaPage({ d, focus }: { d: Data; focus?: "expense" | "cash" | 
           <Panel title="Выводы"><Insights items={a.insights} /></Panel>
         </div>
       </div>
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px] 2xl:grid-cols-[minmax(0,1fr)_420px]">
         <Panel title="Б/Ч по дням" note="Наличные продаж Премиума и Яшнабада за каждый день месяца."><DayChart days={c.days} /></Panel>
         <Panel title="Расходы с Б/Ч по статьям"><Articles a={a} /></Panel>
       </div>

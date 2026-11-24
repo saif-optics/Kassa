@@ -73,14 +73,14 @@ export function PayPage({ d }: { d: Data }) {
         <span className="rounded-full bg-warn-soft px-3 py-1.5 text-[12.5px] text-warn">Новая версия · раздел в доработке: цифры можно менять, всё сохраняется</span>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 @5xl/main:grid-cols-4">
         <Kpi i={0} label={"Платежи за " + MN[+M.slice(5, 7) - 1].toLowerCase()} value={fmt(t.tot) + " сум"} sub={`${rows.length} ${pl(rows.length, "платёж", "платежа", "платежей")}`} />
         <Kpi i={1} label="Оплачено" value={fmt(t.paid) + " сум"} tone="plus" sub={`${t.okN} из ${rows.length}`} extra={<Ring p={t.tot ? t.paid / t.tot : 0} />} />
         <Kpi i={2} label="Осталось оплатить" value={fmt(t.left) + " сум"} tone="primary" sub={t.late ? <b className="text-minus">просрочено: {t.late}</b> : next ? `ближайший — ${dLong(next.due)}, ${next.it.name}` : "всё оплачено"} />
         <Kpi i={3} label="Остаток долгов" value={dLeft ? fmt(dLeft) + " сум" : "—"} sub={debts.length ? `${debts.length} ${pl(debts.length, "долг", "долга", "долгов")}` : "долгов нет"} />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px] 2xl:grid-cols-[minmax(0,1fr)_400px]">
         <Panel title={`Платежи · ${MN[+M.slice(5, 7) - 1].toLowerCase()}`} note="Сумма — нажмите, чтобы поставить другую только на этот месяц. «Оплачено» — поправить, сколько уже заплатили. Статус — отметить оплату одним нажатием."
           action={<Button variant="secondary" onClick={() => addNew("fixed")}><Plus />Платёж</Button>}>
           {rows.length ? <MonthList d={d} M={M} T={T} rows={rows} open={open} setOpen={setOpen} onPlan={onPlan} onPaid={onPaid} onToggle={onToggle}

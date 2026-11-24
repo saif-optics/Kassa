@@ -41,9 +41,9 @@ export function Tile({ c, i = 0, hintsOn = true }: { c: Card; i?: number; hintsO
 export function Wd({ title, note, hintsOn = true, wide, children, className }: { title: string; note?: string; hintsOn?: boolean | null; wide?: boolean; children: React.ReactNode; className?: string }) {
   const { show, h, toggle } = useHint(title, hintsOn);
   return (
-    <section className={cn("glass min-w-0 rounded-[26px] p-5", wide && "md:col-span-2 xl:col-span-3", className)}>
+    <section className={cn("glass min-w-0 rounded-[26px] p-5", wide && "md:col-span-2 xl:col-span-3 min-[1920px]:col-span-4", className)}>
       <h2 className={cn("text-[17px] font-semibold tracking-tight", toggle && "cursor-pointer")} onClick={toggle}>{title}</h2>
-      {show && <p className="mt-0.5 text-[13px] leading-snug text-muted-foreground">{h}</p>}
+      {show && <p className="mt-0.5 max-w-[72ch] text-[13px] leading-snug text-muted-foreground">{h}</p>}
       {note && !(h && hintsOn === true && !/\d/.test(note)) && <p className="mt-0.5 text-[13px] leading-snug text-muted-foreground">{note}</p>}
       <div className="mt-3 min-w-0">{children}</div>
     </section>

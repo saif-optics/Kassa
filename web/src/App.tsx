@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
-import { BarChart3, CalendarCheck, FileText, Glasses, Home, LogOut, Moon, Package, Scale, ShoppingBag, Sun, Target, Wallet, type LucideIcon } from "lucide-react";
+import { BarChart3, CalendarCheck, FileText, Glasses, ChevronsLeft, ChevronsRight, Home, LogOut, Moon, Package, Scale, ShoppingBag, Sun, Target, Wallet, type LucideIcon } from "lucide-react";
 import { Toaster } from "sonner";
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
@@ -26,9 +26,10 @@ import { StockPage } from "@/features/stock/StockPage";
 import type { Data } from "@/lib/types";
 
 const PAGES: Record<string, (p: { d: Data }) => React.ReactNode> = { home: HomePage, kassa: KassaPage, report: ReportPage, pay: PayPage, sales: SalesPage, recon: ReconPage, analytics: AnalyticsPage, plan: PlanPage, lens: LensPage, batch: StockPage };
+// ширина страницы: true — «данные», на всю ширину; false — «сводка», не шире 1600px по центру
+const WIDE: Record<string, boolean> = { home: false, pay: false, plan: false, kassa: false, sales: true, report: true, recon: true, analytics: true, lens: true, batch: true };
 
 const qc = new QueryClient({ defaultOptions: { queries: { refetchOnWindowFocus: false, retry: 1 } } });
-const OLD = "https://samandaragzamov278-png.github.io/Kassa/";
 const NAV: { id: string; label: string; icon: LucideIcon; ready?: boolean }[] = [
   { id: "home", label: "Главная", icon: Home, ready: true }, { id: "kassa", label: "Касса", icon: Wallet, ready: true }, { id: "report", label: "Отчёт р/с", icon: FileText, ready: true },
   { id: "pay", label: "Платежи", icon: CalendarCheck, ready: true }, { id: "sales", label: "Продажи", icon: ShoppingBag, ready: true }, { id: "recon", label: "Сверка", icon: Scale, ready: true },
@@ -40,6 +41,15 @@ function useTheme() {
   const [dark, setDark] = useState(() => { try { const v = localStorage.getItem("kassa-web.theme"); return v ? v === "dark" : sys(); } catch { return sys(); } });
   useEffect(() => { document.documentElement.classList.toggle("dark", dark); }, [dark]);
   return { dark, toggle: () => setDark((x) => { try { localStorage.setItem("kassa-web.theme", !x ? "dark" : "light"); } catch { /* нет хранилища */ } return !x; }) };
+}
+// сайдбар: свёрнут/развёрнут; без выбора пользователя на 1024–1279px свёрнут
+function useSidebar() {
+  const narrow = () => matchMedia("(max-width: 1279px)").matches;
+  const [pref, setPref] = useState<string | null>(() => { try { return localStorage.getItem("kassa-web.sidebar"); } catch { return null; } });
+  const [nar, setNar] = useState(narrow);
+  useEffect(() => { const m = matchMedia("(max-width: 1279px)"), f = () => setNar(m.matches); m.addEventListener("change", f); return () => m.removeEventListener("change", f); }, []);
+  const min = pref ? pref === "min" : nar;
+  return { min, toggle: () => { const v = min ? "max" : "min"; setPref(v); try { localStorage.setItem("kassa-web.sidebar", v); } catch { /* нет хранилища */ } } };
 }
 function Clock() {
   const [n, setN] = useState(Date.now()); useEffect(() => { const id = setInterval(() => setN(Date.now()), 15000); return () => clearInterval(id); }, []);
@@ -56,30 +66,57 @@ function useTab() {
   return [t, (x: string) => { location.hash = x; window.scrollTo({ top: 0, behavior: "smooth" }); }] as const;
 }
 
+// кнопка боковой панели: Tooltip всегда на месте (подсказка только в свёрнутом виде), чтобы фокус не терялся
+function SideBtn({ min, label, icon: Icon, on, current, expanded, onClick }: { min: boolean; label: string; icon: LucideIcon; on?: boolean; current?: boolean; expanded?: boolean; onClick: () => void }) {
+  return (
+    <Tooltip><TooltipTrigger asChild>
+      <button type="button" aria-label={label} aria-current={current ? "page" : undefined} aria-expanded={expanded} onClick={onClick}
+        className={cn("flex h-11 w-full items-center gap-3 rounded-full px-3 text-left text-[14px] font-medium whitespace-nowrap transition outline-none focus-visible:ring-2 focus-visible:ring-primary/40", on ? "bg-popover text-primary shadow-md" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
+        <Icon className="size-5 shrink-0" strokeWidth={1.8} /><span className={cn(min && "hidden")}>{label}</span>
+      </button>
+    </TooltipTrigger><TooltipContent side="right" hidden={!min}>{label}</TooltipContent></Tooltip>
+  );
+}
+
 function Shell({ email }: { email: string }) {
   const { dark, toggle } = useTheme();
   const q = useData();
   const [tab, go] = useTab();
+  const sb = useSidebar();
   return (
     <div className="min-h-dvh">
       {/* панель разделов: на телефоне — снизу */}
-      <nav aria-label="Разделы" className="glass fixed z-30 flex gap-1 rounded-[30px] p-2 max-lg:inset-x-3 max-lg:bottom-3 max-lg:justify-around max-lg:overflow-x-auto lg:top-1/2 lg:left-4 lg:-translate-y-1/2 lg:flex-col">
-        <div className="mb-1.5 hidden size-11 place-items-center rounded-2xl bg-gradient-to-br from-cyan-400 to-primary text-[11px] font-black text-white shadow-lg lg:grid">SO</div>
+      <nav aria-label="Разделы" className="glass fixed inset-x-3 bottom-3 z-30 flex justify-around gap-1 overflow-x-auto rounded-[30px] p-2 lg:hidden">
         {NAV.map((n) => {
           const on = n.id === tab;
-          const inner = <span className={cn("grid size-11 shrink-0 place-items-center rounded-full transition", on ? "bg-popover text-primary shadow-md" : "text-muted-foreground hover:bg-muted hover:text-foreground")}><n.icon className="size-5" strokeWidth={1.8} /></span>;
           return (
-            <Tooltip key={n.id}><TooltipTrigger asChild>{n.ready ? <button type="button" aria-current={on ? "page" : undefined} aria-label={n.label} onClick={() => go(n.id)}>{inner}</button> : <a href={OLD + "#" + n.id} aria-label={n.label + " — на рабочем сайте"}>{inner}</a>}</TooltipTrigger>
-              <TooltipContent side="right">{n.label}{!n.ready && " · пока на рабочем сайте"}</TooltipContent></Tooltip>
+            <button key={n.id} type="button" aria-current={on ? "page" : undefined} aria-label={n.label} onClick={() => go(n.id)}>
+              <span className={cn("grid size-11 shrink-0 place-items-center rounded-full transition", on ? "bg-popover text-primary shadow-md" : "text-muted-foreground hover:bg-muted hover:text-foreground")}><n.icon className="size-5" strokeWidth={1.8} /></span>
+            </button>
           );
         })}
       </nav>
-      <div className="mx-auto max-w-[1360px] px-4 pt-5 pb-28 lg:pr-8 lg:pl-28">
-        <div className="mb-6 flex items-center gap-2.5">
+      {/* боковая панель на компьютере */}
+      <aside aria-label="Разделы" className={cn("glass fixed inset-y-0 left-0 z-30 hidden flex-col overflow-x-hidden overflow-y-auto rounded-none border-y-0 border-l-0 py-4 transition-[width] duration-200 lg:flex", sb.min ? "w-16" : "w-64")}>
+        <div className="mb-3 flex h-11 items-center gap-3 px-3">
+          <div className="grid size-10 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-cyan-400 to-primary text-[11px] font-black text-white shadow-lg">SO</div>
+          <b className={cn("text-[15px] whitespace-nowrap", sb.min && "hidden")}>Saif-Optics</b>
+        </div>
+        <nav className="flex flex-1 flex-col gap-1 px-3">
+          {NAV.map((n) => <SideBtn key={n.id} min={sb.min} label={n.label} icon={n.icon} on={n.id === tab} current={n.id === tab} onClick={() => go(n.id)} />)}
+        </nav>
+        <div className="mt-3 flex flex-col gap-1 px-3">
+          <SideBtn key="theme" min={sb.min} label={dark ? "Светлая тема" : "Тёмная тема"} icon={dark ? Sun : Moon} onClick={toggle} />
+          <SideBtn key="fold" min={sb.min} label={sb.min ? "Развернуть панель" : "Свернуть панель"} icon={sb.min ? ChevronsRight : ChevronsLeft} expanded={!sb.min} onClick={sb.toggle} />
+        </div>
+      </aside>
+      <div className={cn("transition-[padding] duration-200", sb.min ? "lg:pl-16" : "lg:pl-64")}>
+      <div className={cn("mx-auto px-4 @container/main pt-5 pb-28 sm:px-6 lg:px-8 lg:pb-10 2xl:px-10", !WIDE[tab] && "max-w-[1600px]")}>
+        <div className="mb-6 flex min-h-11 items-center gap-2.5">
           <span className="glass flex items-center gap-2 rounded-full px-4 py-2.5 text-[13.5px]"><b>Saif-Optics</b><span className="text-muted-foreground">›</span><span className="text-muted-foreground">{NAV.find((n) => n.id === tab)?.label}</span></span>
           <div className="ml-auto flex items-center gap-2">
             <Clock />
-            <Button variant="secondary" size="icon-lg" className="glass rounded-full" onClick={toggle} aria-label="Сменить тему">{dark ? <Sun /> : <Moon />}</Button>
+            <Button variant="secondary" size="icon-lg" className="glass rounded-full lg:hidden" onClick={toggle} aria-label="Сменить тему">{dark ? <Sun /> : <Moon />}</Button>
             <span className="glass hidden items-center gap-2 rounded-full py-1 pr-1 pl-4 text-[13px] sm:flex"><i className="size-2 rounded-full bg-plus" />{email}
               <Button variant="ghost" size="sm" className="rounded-full" onClick={() => { signOut(); qc.clear(); }}><LogOut />Выйти</Button></span>
           </div>
@@ -93,6 +130,7 @@ function Shell({ email }: { email: string }) {
             <motion.div key={tab} initial={{ opacity: 0, y: 8, filter: "blur(8px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} exit={{ opacity: 0, filter: "blur(6px)" }} transition={{ duration: 0.35 }}>{(() => { const P = PAGES[tab] || KassaPage; return <P d={q.data} />; })()}</motion.div>
           ) : null}
         </AnimatePresence>
+      </div>
       </div>
       <Toaster theme={dark ? "dark" : "light"} position="bottom-right" richColors />
     </div>

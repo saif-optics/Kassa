@@ -85,7 +85,7 @@ export function homeData(d: Data, today: string) {
     { id: "sales", icon: "receipt", title: "Продажи", hint: "Внести продажу или расход дня, касса дня по точкам", nums: [[fmtM(dayRev), "выручка " + lbl], [String(dayList.length), "позиций " + lbl]] },
     { id: "analytics", icon: "chart", title: "Аналитика", hint: "58 показателей и графиков за любой период", nums: [[fmtM(mRev), "за месяц"], [gr == null ? "—" : (gr >= 0 ? "+" : "") + gr + "%", "к прошлому месяцу"]] },
     { id: "plan", icon: "target", title: "План", hint: "План месяца, точки и продавцы", nums: [[pt ? pctF(mRev / pt) : "—", "выполнено"], [S && !K.past ? fmtM(S.needDay) : "—", "нужно в день"]] },
-    { id: "lens", icon: "glasses", title: "Линзы", hint: "Очковые линзы: виды, индексы, покрытия", nums: [[fmt(lensU) + " шт", "за месяц"], [fmtM(sum(lensM)), "выручка"]] },
+    { id: "lens", icon: "glasses", title: "Линзы", hint: "Очковые линзы: виды, точки, дни", nums: [[fmt(lensU) + " шт", "за месяц"], [fmtM(sum(lensM)), "выручка"]] },
     { id: "batch", icon: "tag", title: "Склад", hint: "Маржа, остатки по местам и новая партия", nums: [[mg.m != null ? pctF(mg.m) : "—", "маржа месяца"], [bb ? fmt(bS) + " / " + fmt(bL) : "—", "партия: продано / осталось"]] },
   ];
 

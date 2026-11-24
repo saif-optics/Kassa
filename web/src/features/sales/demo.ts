@@ -27,7 +27,6 @@ export function demoExtra(): Row[] {
           const mixed = !i && r() < 0.18 && sum >= 100000, data: Record<string, unknown> = { date: day, point: p, cat, product, qty, price, sum, check: String(c), createdAt: now - 864e5 + ++n };
           if (mixed) { const a = Math.round(sum / 2 / 1000) * 1000; data.pay = "Смешанная"; data.pays = { "Наличные": a, "Терминал": sum - a }; } else { data.pay = pay; data.pays = null; }
           if (!mixed && r() < 0.05) data.debt = 50000;
-          if (cat === "Очковые линзы" && r() < 0.5) data.lens = { type: "Однофокальные", index: "1.61", coat: "Блю-блок" };
           out.push({ col: "sales", id: "sales_" + n, data });
         }
       }

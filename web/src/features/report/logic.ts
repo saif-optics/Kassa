@@ -9,11 +9,10 @@ export { fmt, pl, MN, MNg, WD, todayTash, dLong } from "../pay/logic";
 /** продажа Кассы со всеми полями, которые пишет рабочий сайт (в общем типе их нет) */
 export type KSale = Sale & { qty?: number; debt?: number; cat?: string; product?: string; check?: string; billz?: string; photo?: string; branch?: string };
 export interface BankRow { n: string; a: number | null; c?: string }
-export interface Adj { c?: number; t?: number; q?: number; e?: number }
-/** report/<день>: остатки р/с, гросс, расходы с р/с, поправки по долгам */
+/** report/<день>: остатки р/с, гросс, расходы с р/с */
 export interface RepDoc {
   date?: string; rsStart?: number | null; rsEnd?: number | null; grossCash?: number | null; grossNon?: number | null;
-  bank?: BankRow[]; adj?: Record<string, Adj>; adjNote?: string; tr?: Record<string, unknown>; updatedAt?: number;
+  bank?: BankRow[]; tr?: Record<string, unknown>; updatedAt?: number;
 }
 export const repDocs = (d: Data): Record<string, RepDoc> => (d.rows.report || {}) as Record<string, RepDoc>;
 export const kSales = (d: Data) => d.sales as KSale[];
@@ -59,7 +58,6 @@ function rpTQ(d: Data, day: string) {
     const add = (p: string, v: number) => { if (p === "Терминал") t += v; else if (p === "QR/Payme" || p === "QR" || p === "Payme") q += v; };
     if (s.pay === "Смешанная" && s.pays) Object.entries(s.pays).forEach(([k, v]) => add(k, +v || 0)); else add(s.pay, +s.sum || 0);
   });
-  const adj = repDocs(d)[day]?.adj; if (adj) Object.values(adj).forEach((v) => { t += Number(v?.t) || 0; q += Number(v?.q) || 0; });
   return { t, q };
 }
 const gnCache = new WeakMap<Data, { T: string; m: Record<string, GNx> }>();
@@ -110,8 +108,6 @@ export function rpCalc(d: Data, m: string, withToday: boolean, T = todayTash()) 
     if (!dset.has(s.date)) return; const p = s.point || "—"; if (!RP_PTS.includes(p)) extra.add(p); const o = cellOf(s.date, p);
     if (s.pay === "Смешанная" && s.pays) Object.entries(s.pays).forEach(([k, v]) => rpAdd(o, k, +v || 0)); else rpAdd(o, s.pay, +s.sum || 0);
   });
-  // долги: деньги учитываются в день оплаты, а не в день продажи
-  days.forEach((x) => { const adj = R[x]?.adj; if (!adj) return; Object.entries(adj).forEach(([p, v]) => { if (!RP_PTS.includes(p)) extra.add(p); const o = cellOf(x, p); K4.forEach((k) => { o[k] += Number(v?.[k]) || 0; }); }); });
   dayExp(d).forEach((e) => { if (!dset.has(e.date)) return; const a = expAmt(e); if (a) byDay[e.date].bc.push({ n: expName(e), a, p: e.branch || "" }); });
   const pts = RP_PTS.concat([...extra]);
   const cum = { c: 0, t: 0, q: 0, e: 0, bank: 0, bc: 0, pts: {} as Record<string, number> };

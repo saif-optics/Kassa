@@ -26,12 +26,6 @@ export function demoExtra(): Row[] {
     if (i === days.length - 4) doc.rsStart = (doc.rsStart as number) + 15_000;
     out.push({ col: "report", id: x.id, data: doc });
   });
-  // поправка по долгу: деньги учтены в день оплаты, а не в день продажи
-  const dd = days[Math.max(0, days.length - 6)]?.id;
-  if (dd) {
-    const r = out.find((o) => o.id === dd && o.col === "report");
-    if (r) Object.assign(r.data, { adj: { "Яшнабад": { c: 350_000, t: 0, q: 0, e: 0 } }, adjNote: "Яшнабад: клиент закрыл долг за линзы (продано в августе)" });
-  }
   // фискальные модули: Премиум и Сергели подключены, Яшнабад и C1 — нет
   out.push({ col: "settings", id: "fiscal", data: { mods: {
     "Премиум": { kassa: "P3B-DEMO-0101", fm: "VG-DEMO-0001", tp: "Saif Optics Премиум", on: true, c0: 20_000_000, n0: 31_000_000 },

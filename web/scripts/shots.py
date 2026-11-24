@@ -1,15 +1,20 @@
 # Скриншоты всех разделов новой версии (1440 тёмная, 390 светлая) + ошибки консоли + горизонтальная прокрутка.
+# Ширины: --widths 1280,1440,1920,2560,390 (по умолчанию 1440 тёмная и 390 светлая; 390 и уже — светлая, остальные — тёмная).
 # Запуск: uv run --no-project -q --with playwright python -X utf8 -I scripts/shots.py http://localhost:5173
 # Картинки кладёт рядом со скриптом в scripts/.out/shots (в .gitignore).
-import json, os, sys
+import argparse, json, os, sys
 from playwright.sync_api import sync_playwright
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".out", "shots"); os.makedirs(OUT, exist_ok=True); BASE = sys.argv[1]
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".out", "shots"); os.makedirs(OUT, exist_ok=True); BASE = None
+ap = argparse.ArgumentParser(); ap.add_argument("base"); ap.add_argument("--widths", default="1440,390", help="ширины через запятую, например 1280,1920,390")
+args = ap.parse_args(); BASE = args.base
+try: WS = [(int(x), "light" if int(x) < 600 else "dark") for x in args.widths.split(",") if x.strip()]
+except ValueError: ap.error("--widths: нужны числа через запятую, например 1280,1920,390")
 tabs = ["home","kassa","report","pay","sales","recon","analytics","plan","lens","batch"]
 res = {}
 with sync_playwright() as pw:
     b = pw.chromium.launch()
-    for w, scheme in [(1440,"dark"),(390,"light")]:
-        p = b.new_page(viewport={"width": w, "height": 900}, color_scheme=scheme); errs=[]
+    for w, scheme in WS:
+        p = b.new_page(viewport={"width": w, "height": 1200 if w >= 2560 else 900}, color_scheme=scheme); errs=[]
         p.on("pageerror", lambda e: errs.append(str(e)[:200])); p.on("console", lambda m: m.type=="error" and errs.append(m.text[:200]))
         for t in tabs:
             errs.clear(); p.goto(f"{BASE}/?demo#{t}"); p.wait_for_timeout(1800)

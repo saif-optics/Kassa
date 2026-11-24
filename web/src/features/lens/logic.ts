@@ -21,9 +21,6 @@ export function lensInfo(s: S) {
   const brand = l.brand || (bm ? bm[0].replace(/\b\w/g, (ch) => ch.toUpperCase()) : "");
   return { type, idx: idx || "не указан", coat, brand };
 }
-export const LTYPES = ["Однофокальные", "Прогрессивные", "Бифокальные", "Офисные", "Замена линз"];
-export const LIDX = ["1.50", "1.56", "1.59", "1.60", "1.61", "1.67", "1.74"];
-export const LCOAT = ["Без покрытия", "Антиблик", "Блю-блок", "Фотохром", "Фотохром + блю-блок", "4в1", "Тонированные", "Поляризация"];
 
 export interface LRow { s: S; kind: string; type: string; idx: string; coat: string; brand: string }
 export function lensData(c: Ctx, F: Flt) {

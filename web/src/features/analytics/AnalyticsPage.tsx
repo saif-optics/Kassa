@@ -50,7 +50,7 @@ export function AnalyticsPage({ d }: { d: Data }) {
     const w = wd[i];
     if (w.group === "trio") {
       const grp: Widget[] = []; while (i < wd.length && wd[i].group === "trio") grp.push(wd[i++]); i--;
-      out.push(<div key={"trio" + w.ids[0]} className="grid gap-4 md:col-span-2 md:grid-cols-3 xl:col-span-3">{grp.map((g) => <Wd key={g.ids[0]} title={g.title} note={g.note} hintsOn={hintsOn}>{renderW(g, c.points, setPgCat)}</Wd>)}</div>);
+      out.push(<div key={"trio" + w.ids[0]} className="grid gap-4 md:col-span-2 md:grid-cols-3 xl:col-span-3 min-[1920px]:col-span-4">{grp.map((g) => <Wd key={g.ids[0]} title={g.title} note={g.note} hintsOn={hintsOn}>{renderW(g, c.points, setPgCat)}</Wd>)}</div>);
     } else out.push(<Wd key={w.ids[0] + w.title} title={w.title} note={w.kind === "owner" && !w.o ? undefined : w.note} hintsOn={hintsOn} wide={w.wide}>{renderW(w, c.points, setPgCat)}</Wd>);
   }
 
@@ -105,8 +105,8 @@ export function AnalyticsPage({ d }: { d: Data }) {
         : !sel.size ? <Empty>Все показатели выключены. Включите нужные в списке выше.</Empty>
         : (
           <>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{m.cards.map((k, i) => <Tile key={k.id + k.label} c={k} i={i} hintsOn={hintsOn} />)}</div>
-            <div className="grid grid-flow-row-dense gap-4 md:grid-cols-2 xl:grid-cols-3">{out.map((x, i) => <Fragment key={i}>{x}</Fragment>)}</div>
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 @5xl/main:grid-cols-4">{m.cards.map((k, i) => <Tile key={k.id + k.label} c={k} i={i} hintsOn={hintsOn} />)}</div>
+            <div className="grid grid-flow-row-dense gap-4 md:grid-cols-2 xl:grid-cols-3 min-[1920px]:grid-cols-4">{out.map((x, i) => <Fragment key={i}>{x}</Fragment>)}</div>
           </>
         )}
     </div>
@@ -214,7 +214,6 @@ function renderW(w: Widget, points: string[], setPgCat: (c: string) => void): Re
           {w.showBest && w.best && <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[13px]">{w.pts.map((p, pi) => <span key={p}><Sw color={pointColor(points, p)} />{p}: <b>{WDN[w.best![pi]]}</b> · {fmtM(w.avg[pi][w.best![pi]])} в среднем</span>)}</div>}
         </>
       );
-    case "reorder": return <Tbl><thead><tr><Th>Модель</Th><Th r>Пришло</Th><Th r>Продано</Th><Th r>Осталось</Th></tr></thead><tbody>{w.rows.map((i) => <tr key={i.k}><Td>{[i.m || i.n || i.s, i.col].filter(Boolean).join(" · ")}</Td><Td r>{i.q}</Td><Td r b>{i.sold}</Td><Td r>{i.left === 0 ? <span className="text-minus">0</span> : i.left}</Td></tr>)}</tbody></Tbl>;
     case "text": return <p className="text-[13px] text-muted-foreground">{w.text}</p>;
   }
 }

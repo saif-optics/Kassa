@@ -25,8 +25,8 @@ function rows(): Row[] {
   r.push({ col: "sales", id: "rp_nodet", data: { date: d3, point: "C1", sum: 700000, pay: "Наличные", cat: "Без детализации", createdAt: now - 7e5 } });
   r.push({ col: "sales", id: "rp_tr", data: { date: d3, point: "Яшнабад", sum: 2000000, pay: "Перечисление", createdAt: now - 8e5 } });
   r.push({ col: "sales", id: "rp_c1", data: { date: d1, point: "C1", sum: 450000, pay: "QR/Payme", qty: 1, product: "Оправа", cat: "Оправы", check: "902", createdAt: now - 9e5 } });
-  // день с поправкой по долгам в другой точке (колонка «C1» в отчёте оптика) и день только с выпиской
-  r.push({ col: "report", id: d3, data: { date: d3, rsStart: 1000000, rsEnd: 1500000, grossCash: 500, bank: [{ n: "Комиссия", a: 5000 }, { n: "Налог с оборота", a: 120000.5, c: "Прочее" }], adj: { "C1": { c: 100000, t: 50000, q: 20000, e: 0 } }, adjNote: "тест" } });
+  // день только с выпиской
+  r.push({ col: "report", id: d3, data: { date: d3, rsStart: 1000000, rsEnd: 1500000, grossCash: 500, bank: [{ n: "Комиссия", a: 5000 }, { n: "Налог с оборота", a: 120000.5, c: "Прочее" }] } });
   r.push({ col: "entries", id: "rp_e1", data: { date: d1, name: "такси", type: "exp", cat: "op", amount: 40000, fact: 35000, branch: "Премиум", source: "day", createdAt: now } });
   r.push({ col: "entries", id: "rp_e2", data: { date: d1, name: "Яшнабад вода", type: "exp", cat: "op", amount: 20000, branch: "Яшнабад", source: "day", createdAt: now } });
   return r;

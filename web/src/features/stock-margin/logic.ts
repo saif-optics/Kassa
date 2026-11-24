@@ -1,80 +1,8 @@
-// Расчёты «Склада»: маржа (marginData), склад из файла (stockSold, список), новая партия (batchStats, reorderList) и разбор файлов Excel.
+// Расчёты «Склада»: маржа (marginData), склад из файла (stockSold, список), и разбор файлов Excel.
 // Перенос один в один из dev/base.html.
-import { NODET, unitPrice, type BItem, type Batch, type Ctx, type S } from "../analytics/cost";
+import { NODET, unitPrice, type BItem, type Ctx, type S } from "../analytics/cost";
 import { filtered, type Card, type Flt } from "../analytics/base";
-import { addD, daysBetween, dLong, dShort, fmt, fmtM, normS, pctF, pl, reEsc, sum, today } from "../analytics/util";
-
-// ---------- какая партия выбрана (общая для Склада и Аналитики, как на рабочем сайте) ----------
-let bSelId: string | null = null;
-export const getBatchSel = () => bSelId;
-export const setBatchSel = (id: string | null) => { bSelId = id; };
-export function curBatch(c: Ctx): Batch | null {
-  const s = [...c.batches].sort((a, b) => (b.date || "").localeCompare(a.date || "") || (b.createdAt || 0) - (a.createdAt || 0));
-  return s.find((b) => b.id === bSelId) || s[0] || null;
-}
-export const itemLabel = (it: BItem) => [it.m || it.n || it.s, it.col].filter(Boolean).join(" · ");
-
-// ---------- новая партия ----------
-export interface BStat extends BItem { sold: number; rev: number; byPt: Record<string, number>; last: string; pSold: number; pRev: number; pByPt: Record<string, number>; left: number; pct: number }
-export function batchStats(c: Ctx, b: Batch, ptFilter: string, pf?: string, pt?: string) {
-  const items = (b.items || []).map((it) => Object.assign({}, it, { sold: 0, rev: 0, byPt: {} as Record<string, number>, last: "", pSold: 0, pRev: 0, pByPt: {} as Record<string, number> })) as BStat[];
-  const byKey: Record<string, number> = {}; items.forEach((it, i) => { if (it.k != null) byKey[it.k] = i; });
-  const res: { i: number; len: number; re: RegExp }[] = [];
-  items.forEach((it, i) => { [it.m, it.s, it.n].forEach((v) => { const t = normS(v); if (t.length >= 3) res.push({ i, len: t.length, re: new RegExp("(^|[^a-zа-я0-9])" + reEsc(t) + "($|[^a-zа-я0-9])", "i") }); }); });
-  res.sort((x, y) => y.len - x.len);
-  const used: S[] = [], byDay: Record<string, number> = {};
-  c.sales.forEach((s) => {
-    if (b.date && s.date < b.date) return;
-    if (ptFilter !== "all" && s.point !== ptFilter) return;
-    let idx = s.batchKey && s.batchId === b.id && byKey[s.batchKey] != null ? byKey[s.batchKey] : -1;
-    if (idx < 0) { const p = normS(s.product); for (const r of res) { if (r.re.test(p)) { idx = r.i; break; } } }
-    if (idx < 0) return;
-    const it = items[idx], q = +(s.qty || 0);
-    if ((!pf || s.date >= pf) && (!pt || s.date <= pt)) { it.pSold += q; it.pRev += +s.sum || 0; it.pByPt[s.point] = (it.pByPt[s.point] || 0) + q; }
-    it.sold += q; it.rev += +s.sum || 0; it.byPt[s.point] = (it.byPt[s.point] || 0) + q; if (s.date > it.last) it.last = s.date; used.push(s); byDay[s.date] = (byDay[s.date] || 0) + q;
-  });
-  items.forEach((it) => { it.q = +it.q || 0; it.left = Math.max(0, it.q - it.sold); it.pct = it.q ? Math.min(1, it.sold / it.q) : 0; });
-  return { items, used, byDay };
-}
-export const reorderList = (items: BStat[]) => items.filter((i) => i.sold > 0 && (i.left === 0 || i.left / i.q <= 0.2)).sort((x, y) => x.left - y.left || y.sold - x.sold);
-
-export type BatchView = ReturnType<typeof batchView>;
-/** вкладка «Проданные из новой партии»: итоги и плитки (renderBatch) */
-export function batchView(c: Ctx, b: Batch, bPt: string) {
-  const { items, used, byDay } = batchStats(c, b, bPt);
-  const Q = sum(items, (i) => i.q), S = sum(items, (i) => i.sold), R = sum(items, (i) => i.rev), L = sum(items, (i) => i.left), SC = Q - L;
-  const withCost = items.filter((i) => +(i.cp || 0) > 0 && i.sold), cogs = sum(withCost, (i) => i.sold * (i.cp as number)), revC = sum(withCost, (i) => i.rev);
-  const t = today(), start = b.date || t, days = Math.max(1, daysBetween(start, t));
-  const rate = S / days, fc = rate > 0 && L > 0 ? Math.ceil(L / rate) : null;
-  const valueLeft = sum(items, (i) => i.left * (+(i.p || 0)));
-  const totalSince = sum(c.sales.filter((s) => s.date >= start && (bPt === "all" || s.point === bPt)), (s) => +s.sum || 0);
-  const unsold = items.filter((i) => !i.sold).length, ro = reorderList(items);
-  const cards: Card[] = [
-    { id: 48, label: "Продано из партии", v: fmt(S) + " шт", d: `из ${fmt(Q)} шт` + (S > SC ? ` · ${fmt(S - SC)} шт сверх прихода: проверьте названия` : ""), ring: { p: Q ? SC / Q : 0 }, main: true },
-    { id: 49, label: "Осталось", v: fmt(L) + " шт", d: valueLeft ? `на ${fmt(valueLeft)} сум по цене продажи` : "" },
-    { id: 52, label: "Темп продаж", v: (rate >= 10 ? fmt(rate) : rate.toFixed(1).replace(".", ",")) + " шт/день", d: `за ${days} ${pl(days, "день", "дня", "дней")} с прихода` },
-    { id: 53, label: "Прогноз распродажи", v: L === 0 ? "распродано" : fc != null ? `~${fmt(fc)} дн.` : "—", d: L === 0 ? "остатка нет" : fc != null ? `остаток уйдёт примерно к ${dLong(addD(t, fc))}` : "пока нет продаж" },
-    { id: 54, label: "Без единой продажи", v: fmt(unsold) + " " + pl(unsold, "модель", "модели", "моделей"), d: `${pctF(items.length ? unsold / items.length : 0)} позиций партии` },
-    { id: 55, label: "На дозаказ", v: fmt(ro.length) + " " + pl(ro.length, "модель", "модели", "моделей"), d: "закончились или осталось ≤20%" },
-    { id: 56, label: "Выручка с партии", v: fmt(R) + " сум", d: revC ? `маржа ${pctF((revC - cogs) / revC)} · прибыль ${fmt(revC - cogs)}` : "нет цен покупки в списке" },
-    { id: 57, label: "Доля партии в продажах", v: pctF(totalSince ? R / totalSince : 0), d: `от всей выручки с ${dShort(start)}` },
-  ];
-  const info = `${b.name || "Партия"}: ${fmt(items.length)} позиций, ${fmt(Q)} шт, приход ${dLong(b.date)}. Найдено продаж из партии: ${used.length}` + (bPt !== "all" ? ` (${bPt})` : "") + ".";
-  return { items, used, byDay, Q, S, R, L, SC, cogs, revC, days, rate, fc, valueLeft, totalSince, unsold, ro, start, today: t, cards, info };
-}
-/** график «остаток и прогноз»: подписи и два ряда (null — разрыв) */
-export function batchRest(v: BatchView) {
-  const dl: string[] = []; let d = v.start, g = 0; while (d <= v.today && g++ < 400) { dl.push(d); d = addD(d, 1); }
-  let cum = 0; const cumV = dl.map((x) => (cum += v.byDay[x] || 0));
-  const restV = cumV.map((x) => Math.max(0, v.Q - x)); let lbl = dl.map(dShort), proj: (number | null)[] | null = null;
-  if (v.rate > 0 && v.L > 0) {
-    const ext = Math.min(v.fc as number, 180), step = Math.max(1, Math.ceil(ext / 30)); const pl2: string[] = [], pv2: number[] = [];
-    for (let k = step; k <= ext + step - 1; k += step) { pl2.push(dShort(addD(v.today, Math.min(k, ext)))); pv2.push(Math.max(0, v.L - v.rate * Math.min(k, ext))); }
-    lbl = lbl.concat(pl2); proj = restV.map(() => null); proj[proj.length - 1] = v.L; proj = proj.concat(pv2);
-  }
-  const rest: (number | null)[] = restV.concat(proj ? new Array(lbl.length - restV.length).fill(null) : []);
-  return { days: dl, labels: lbl, rest, proj };
-}
+import { dShort, fmt, fmtM, normS, pctF, sum } from "../analytics/util";
 
 // ---------- маржа ----------
 export interface MGroup { k: string; rev: number; revC: number; cogs: number; n: number; u: number; uC: number; cp?: number; gp: number; mg: number | null; cov: number }
@@ -132,14 +60,6 @@ export function stockView(c: Ctx, place: string) {
   return { places, src, from, sold, items, sorted, Q, vC, vP, soldQ, pr, QA, cats, cell, groups, cards, meta, all };
 }
 export const stockSearch = (items: BItem[], qy: string) => { const q = normS(qy); return items.filter((i) => !q || normS([i.m, i.n, i.s, i.g, i.c, i.col, i.pt].join(" ")).includes(q)); };
-export const batchSearch = (items: BStat[], qy: string, view: string) => {
-  const q = normS(qy); let list = items.filter((i) => !q || normS([i.m, i.n, i.s, i.g, i.col].join(" ")).includes(q));
-  if (view === "selling") list = list.filter((i) => i.sold > 0 && i.left > 0);
-  if (view === "none") list = list.filter((i) => !i.sold);
-  if (view === "out") list = list.filter((i) => i.q && i.left === 0);
-  return list.sort((x, y) => y.sold - x.sold || y.pct - x.pct || String(itemLabel(x)).localeCompare(itemLabel(y)));
-};
-
 // ---------- разбор файлов Excel ----------
 const COLRULES: [string, RegExp][] = [["cp", /покуп|постав|закуп|себест|вход|закупоч/], ["p", /продаж|розн|цена/], ["q", /кол-?во|колич|шт\b|^шт|остат|кол\./], ["m", /модел/], ["s", /артикул|sku|^код|штрих|баркод/], ["n", /наимен|товар|назван|позици/], ["g", /групп/], ["c", /катег|^тип|вид товар/], ["col", /цвет/], ["pt", /^место|магазин|точк|филиал|локац/]];
 function mapHeader(row: unknown[]) {

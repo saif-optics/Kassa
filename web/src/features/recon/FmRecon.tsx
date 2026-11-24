@@ -33,7 +33,7 @@ export function FmRecon({ d, F }: { d: Data; F: Filters }) {
     <>
       <PrepBanner d={d} />
       <Controls F={F} points={d.points} />
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 @5xl/main:grid-cols-4">
         <Kpi i={0} label="Нал · Касса / ФМ" value={`${fmt(A.kc)} / ${fmt(A.fc)}`} sub={<>разница <b className={Math.abs(dc) < 1 ? "text-plus" : "text-minus"}>{sgn(dc)}</b></>} />
         <Kpi i={1} label="Безнал · Касса / ФМ" value={`${fmt(A.kn)} / ${fmt(A.fn)}`} sub={<>разница <b className={Math.abs(dn) < 1 ? "text-plus" : "text-minus"}>{sgn(dn)}</b></>} />
         <Kpi i={2} label="Не пробито через ФМ" value={fmt(Math.max(0, -dc) + Math.max(0, -dn)) + " сум"} sub={`нал ${fmt(Math.max(0, -dc))} · безнал ${fmt(Math.max(0, -dn))}`} />

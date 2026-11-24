@@ -86,7 +86,7 @@ function BzRecon({ d, F }: { d: Data; F: Filters }) {
   return (
     <>
       {ctl}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 @5xl/main:grid-cols-4">
         <Kpi i={0} label="Billz · продано" value={fmt(B.s) + " сум"} sub={`${B.n} ${pl(B.n, "чек", "чека", "чеков")} · ${fq(B.q)} шт`} />
         <Kpi i={1} label="Касса · записано" value={fmt(K.s) + " сум"} sub={`${fq(K.q)} шт${K.nodet ? " · есть дни без детализации" : ""}`} />
         <Kpi i={2} label="Разница" value={sgn(K.s - B.s) + " сум"} tone={Math.abs(K.s - B.s) < 1 ? "plus" : undefined} sub="Касса минус Billz" />

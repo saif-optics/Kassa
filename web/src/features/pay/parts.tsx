@@ -58,7 +58,7 @@ export function Panel({ title, note, action, children, className }: { title: str
   return (
     <section className={cn("glass min-w-0 rounded-[26px] p-5", className)}>
       <div className="mb-4 flex items-start justify-between gap-3">
-        <div className="min-w-0"><h2 className="text-[17px] font-semibold tracking-tight">{title}</h2>{note && <p className="mt-0.5 text-[13px] leading-snug text-muted-foreground">{note}</p>}</div>
+        <div className="min-w-0"><h2 className="text-[17px] font-semibold tracking-tight">{title}</h2>{note && <p className="mt-0.5 max-w-[72ch] text-[13px] leading-snug text-muted-foreground">{note}</p>}</div>
         {action}
       </div>
       {children}

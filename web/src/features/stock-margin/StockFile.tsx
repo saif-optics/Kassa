@@ -69,7 +69,7 @@ export function StockFile({ c }: { c: Ctx }) {
     <>
       <div className="glass flex gap-3 rounded-[22px] p-4 text-[13px] leading-snug"><span aria-hidden>ℹ️</span><span>Остатки взяты из файла как есть: {v.places.map((p, i) => <span key={p}>{i ? "; " : ""}<b>{p}</b>{v.src[p] ? ` — ${v.src[p]}` : ""}</span>)}. Продажи после этих дат в файле не вычтены, поэтому рядом показано, сколько продано с {dShort(v.from)}, и примерный остаток сейчас. После инвентаризации загрузите точные остатки.</span></div>
       <Seg label="Место" value={pl0} onChange={(p) => { setPlace(p); setLim(SHOW); }} items={[["all", "Все места"], ...v.places.map((p) => [p, p] as [string, string])]} />
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{v.cards.map((k, i) => <Tile key={k.label} c={k} i={i} hintsOn={null} />)}</div>
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 @5xl/main:grid-cols-4">{v.cards.map((k, i) => <Tile key={k.label} c={k} i={i} hintsOn={null} />)}</div>
       <Box title="По местам" note="Склад и каждая точка отдельно. Нажмите место сверху, чтобы видеть только его товары.">
         <Tbl>
           <thead><tr><Th>Место</Th><Th>Источник</Th><Th r>Позиций</Th><Th r>Штук</Th><Th r>Доля</Th><Th r>Сумма закупки</Th><Th r>Сумма продажи</Th><Th r>Наценка</Th><Th r>Продано с {dShort(v.from)}</Th></tr></thead>

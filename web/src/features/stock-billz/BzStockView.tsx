@@ -66,7 +66,7 @@ function Stock({ reg }: { reg: Reg }) {
     <>
       <Panel title="Выгрузка и фильтры" className="py-4">
         <div className="flex flex-col gap-3">
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 @5xl/main:grid-cols-4">
             <Field label="Остатки на"><select className={FIELD} value={D.cur.d} onChange={(e) => { setSd(e.target.value); setCmp(""); }}>{D.dates.slice().reverse().map((x) => <option key={x.d} value={x.d}>{dL(x.d)} · {hm(x.at)}</option>)}</select></Field>
             <Field label="Сравнить с"><select className={FIELD} value={D.cmp && q.data?.cmp ? D.cmp.d : ""} onChange={(e) => setCmp(e.target.value)}>
               <option value="">{D.dates.length > 1 ? "предыдущей выгрузкой" : "—"}</option>{D.dates.filter((x) => x.d < D.cur.d).reverse().map((x) => <option key={x.d} value={x.d}>{dL(x.d)}</option>)}</select></Field>
@@ -79,7 +79,7 @@ function Stock({ reg }: { reg: Reg }) {
           </div>
         </div>
       </Panel>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 @5xl/main:grid-cols-4">
         <Kpi i={0} label={pt === "all" ? "Всего на остатке" : "Остаток · " + pt} value={fmt(Q) + " шт"} sub={`${L.filter((l) => l.now).length} позиций · ${dL(D.cur.d)} ${hm(D.cur.at)}`} />
         <Kpi i={1} label="В розничных ценах" value={fmt(V) + " сум"} sub={C ? `закупка ≈ ${fmt(C)} сум` : "закупочные цены Billz не отдаёт"} />
         <Kpi i={2} label={"Изменение " + cmpTxt} value={D.cmp ? sgn(sumBy(L, (l) => l.delta)) + " шт" : "—"} tone={D.cmp && sumBy(L, (l) => l.delta) >= 0 ? "plus" : undefined} sub={D.cmp ? `продано ${fq(sumBy(L, (l) => l.sold))} · пришло ${fq(sumBy(L, (l) => l.tin))} · ушло ${fq(sumBy(L, (l) => l.tout))}` : "история копится с первой выгрузки"} />
@@ -133,7 +133,7 @@ function Transfers({ reg }: { reg: Reg }) {
         </div>
       </Panel>
       {q.isLoading ? <p className="glass rounded-3xl p-6 text-muted-foreground">Загружаю перемещения…</p> : q.error ? <p className="glass rounded-3xl p-6 text-minus">Не удалось загрузить перемещения: {String((q.error as Error).message || q.error)}</p> : <>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 @5xl/main:grid-cols-4">
           <Kpi i={0} label="Перемещений" value={String(L.length)} sub={`${dS(f)} — ${dS(t)}`} />
           <Kpi i={1} label="Отправлено" value={fmt(sent) + " шт"} sub={`принято ${fmt(arr)} шт`} />
           <Kpi i={2} label="В пути" value={String(way.length)} sub={way.length ? "ещё не приняты на точке" : "всё принято"} />

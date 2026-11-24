@@ -2,7 +2,6 @@
 import { useMemo, useState } from "react";
 import { Bar, CartesianGrid, ComposedChart, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Kpi, Panel } from "@/components/kit";
-import { Button } from "@/components/ui/button";
 import type { Data } from "@/lib/types";
 import { useMutations } from "@/lib/useData";
 import { toast } from "sonner";
@@ -40,7 +39,7 @@ function Chart({ L }: { L: RsDay[] }) {
   );
 }
 
-export function RsView({ d, onEdit }: { d: Data; onEdit: (day: string | null) => void }) {
+export function RsView({ d }: { d: Data }) {
   const mu = useMutations();
   const BM = useMemo(() => rsByMonth(d), [d]);
   const [m0, setM] = useState(ls.get), [open, setOpen] = useState<string | null>(null);
@@ -50,7 +49,7 @@ export function RsView({ d, onEdit }: { d: Data; onEdit: (day: string | null) =>
   const L = useMemo(() => C.days.slice().reverse(), [C]);
   const openIdx = L.findIndex((x) => x.d === open);
   const pg = usePaging(L.length, "rs-days", openIdx, m);
-  if (!ms.length) return <Panel title="Выписок по счёту ещё нет" note="Нажмите «Внести выписку за день» — остатки и расходы со счёта появятся здесь.">{null}</Panel>;
+  if (!ms.length) return <Panel title="Выписок по счёту ещё нет" note="Выписка Анор Банка загружается в базу — остатки и расходы со счёта появятся здесь.">{null}</Panel>;
   const lbl = m === "all" ? "за всё время" : "за " + mn(m).toLowerCase(), per = m === "all" ? "" : " · " + mn(m).toLowerCase();
   const cats = CAT_NAMES.filter((c) => ms.some((x) => BM.rows[x].cat[c])).sort((a, b) => ms.reduce((s, x) => s + (BM.rows[x].cat[b] || 0), 0) - ms.reduce((s, x) => s + (BM.rows[x].cat[a] || 0), 0));
   const tot = (c: string) => ms.reduce((s, x) => s + (BM.rows[x].cat[c] || 0), 0), mx = Math.max(1, ...cats.map(tot));
@@ -63,7 +62,7 @@ export function RsView({ d, onEdit }: { d: Data; onEdit: (day: string | null) =>
   return (
     <div className="flex flex-col gap-5">
       <Seg value={m} onChange={pick} label="Месяц" options={[...ms.map((x) => [x, mn(x)] as [string, string]), ...(ms.length > 1 ? [["all", "Все месяцы"] as [string, string]] : [])]} />
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 @5xl/main:grid-cols-4">
         <Kpi i={0} label={"Остаток на " + (C.startD ? dShort(C.startD) : "начало")} value={C.start != null ? fmt(C.start) + " сум" : "—"} sub="утро первого дня с выпиской" />
         <Kpi i={1} label={"Поступило " + lbl} value={"+" + fmt(C.in) + " сум"} tone="plus" sub="терминал, Payme, перечисления" />
         <Kpi i={2} label={"Списано " + lbl} value={"−" + fmt(C.out) + " сум"} sub={`${C.outDays} ${pl(C.outDays, "день", "дня", "дней")} со списаниями`} />
@@ -103,7 +102,6 @@ export function RsView({ d, onEdit }: { d: Data; onEdit: (day: string | null) =>
                 {x.bank.map((b, i) => (<Tr key={i}><Td h>{b.n}</Td><Td l="Статья"><select aria-label="Статья расхода" value={catOf(b)} onChange={(e) => setCat(x.d, i, e.target.value)} className="h-8 max-w-full rounded-lg border border-input bg-transparent px-2 text-[13px] dark:bg-input/30">
                   {CAT_NAMES.map((c) => <option key={c}>{c}</option>)}</select>{b.c ? <span className="ml-2 text-[12px] text-muted-foreground">вручную</span> : null}</Td><Td r l="Сумма">{fmt(+(b.a as number))}</Td></Tr>))}</Tbl>
                 : <p className="text-[13px] text-muted-foreground">Списаний в этот день не было.</p>}
-              <Button variant="secondary" className="mt-3" onClick={() => onEdit(x.d)}>Исправить выписку за {dShort(x.d)}</Button>
             </td></tr>]; })}
           {!L.length && <Tr><Td colSpan={6} className="py-4 text-center text-muted-foreground">Нет выписок за период</Td></Tr>}
         </Tbl>

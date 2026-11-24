@@ -35,14 +35,8 @@ const le=!document.getElementById('lnEmpty').hidden;
 const cp=document.getElementById('lnCostPanel');
 let cost=null;if(!le&&!cp.hidden){const tb=cp.querySelector('table tbody');cost={kpi:q(cp,'.kpis .kpi .v').map(T),rows:q(tb,'tr').map(r=>q(r,'td').map(T))}}
 o.lens={all:ld.all.length,list:ld.list.length,kinds,a:R(ld.a.rev),cards:le?[]:cards('#lnCards .kpi'),titles:le?[]:q(document,'#lnWidgets .panel.w > h2').map(T),cost};
-click('.tab[data-tab=batch]');click('#stViewSeg button[data-sv=margin]');
 const md=S.marginData();
 o.margin={tot:G(md.tot),pts:md.pts.map(G),cats:md.cats.map(G),prods:md.prods.map(G).sort((a,b)=>a.k.localeCompare(b.k)),miss:md.miss.map(G),nodet:R(md.nodet)};
-o.mgCards=cards('#mKpis .kpi').slice(0,3).map(c=>[c[0],c[1]]);
-click('#stViewSeg button[data-sv=batch]');
-const bs=[...S.batches].sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.createdAt||0)-(a.createdAt||0))[0];
-const st=S.batchStats(bs,f.point,f.from,f.to);
-o.batch={items:st.items.map(i=>[i.k,i.sold,R(i.rev),i.left,i.pSold,R(i.pRev),i.last,JSON.stringify(i.byPt),JSON.stringify(i.pByPt)]),used:st.used.length,byDay:st.byDay,cards:cards('#bKpis .kpi')};
 return o}
 """
 STOCK = "()=>{" + HELP + """

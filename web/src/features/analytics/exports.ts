@@ -4,8 +4,7 @@ import { checkKey, discOf, entAmt, PAYS, payOf, type Ctx, type S } from "./cost"
 import { dLong, WD, wdIdx } from "./util";
 import { xlToday, type XSheet } from "./xl";
 import { lensData, type LRow } from "../lens/logic";
-import { batchStats, itemLabel, marginData, reorderList, stockSold } from "../stock-margin/logic";
-import type { Batch } from "./cost";
+import { marginData, stockSold } from "../stock-margin/logic";
 
 export const fname = (c: Ctx, F: Flt, pre: string, ext: string) => { const r = rangeOf(F, filtered(c, F)); return `${pre}_${r.from}_${r.to}${F.point !== "all" ? "_" + F.point : ""}.${ext}`; };
 
@@ -46,11 +45,8 @@ export function lensSheets(c: Ctx, F: Flt): XSheet[] | null {
   rows.forEach((x) => { const k = x.kind + "|" + x.idx + "|" + x.coat; const o = m[k] || (m[k] = { t: x.kind, i: x.idx, c: x.coat, u: 0, r: 0 }); o.u += +(x.s.qty || 0); o.r += +x.s.sum || 0; });
   const sum = Object.values(m).sort((a, b) => b.u - a.u).map((o) => Object.assign(o, { avg: o.u ? Math.round(o.r / o.u) : 0 }));
   const T = (arr: Record<string, unknown>[], k: string) => arr.reduce((a, r) => a + (+(r[k] as number) || 0), 0);
-  const by = (key: "idx" | "coat") => { const g: Record<string, { k: string; u: number; r: number }> = {}; rows.forEach((x) => { const k = x[key] || "—"; const o = g[k] || (g[k] = { k, u: 0, r: 0 }); o.u += +(x.s.qty || 0); o.r += +x.s.sum || 0; }); return Object.values(g).sort((a, b) => b.u - a.u); };
-  const simple = (name: string, title: string, key: "idx" | "coat"): XSheet => ({ name, title: name, subtitle: sub, columns: [{ header: title, key: "k", type: "text", width: 22 }, { header: "Штук", key: "u", type: "int", width: 9 }, { header: "Выручка, сум", key: "r", type: "money", width: 16 }], rows: by(key), total: { k: "Итого", u: T(det, "q"), r: T(det, "sm") } });
   return [
     { name: "Виды линз", title: "Проданные линзы по видам", subtitle: sub, columns: [{ header: "Вид", key: "t", type: "text", width: 16 }, { header: "Индекс", key: "i", type: "text", width: 10 }, { header: "Покрытие", key: "c", type: "text", width: 20 }, { header: "Штук", key: "u", type: "int", width: 8 }, { header: "Выручка, сум", key: "r", type: "money", width: 16 }, { header: "Ср. цена, сум", key: "avg", type: "money", width: 14 }], rows: sum, total: { t: "Итого", u: T(sum, "u"), r: T(sum, "r") } },
-    simple("По индексу", "Индекс", "idx"), simple("По покрытию", "Покрытие", "coat"),
     { name: "Все продажи линз", title: "Все продажи линз", subtitle: sub, columns: [{ header: "Дата", key: "d", type: "text", width: 12 }, { header: "Точка", key: "p", type: "text", width: 11 }, { header: "Товар", key: "pr", type: "text", width: 30 }, { header: "Вид", key: "t", type: "text", width: 15 }, { header: "Индекс", key: "i", type: "text", width: 9 }, { header: "Покрытие", key: "c", type: "text", width: 18 }, { header: "Бренд", key: "b", type: "text", width: 11 }, { header: "Штук", key: "q", type: "int", width: 7 }, { header: "Цена, сум", key: "pc", type: "money", width: 13 }, { header: "Оплачено, сум", key: "sm", type: "money", width: 14 }], rows: det, total: { d: "Итого", q: T(det, "q"), sm: T(det, "sm") } },
   ];
 }
@@ -76,23 +72,4 @@ export function stockSheets(c: Ctx): XSheet[] | null {
   return [{ name: "Склад", title: "Товары по складу и точкам", subtitle: `Файл «${meta.file || ""}» · продано считается с ${dLong(meta.soldFrom || meta.date)} · выгружено ${xlToday()}`, columns: [{ header: "Место", key: "pt", type: "text", width: 11 }, { header: "Модель / наименование", key: "m", type: "text", width: 28 }, { header: "Наименование", key: "n", type: "text", width: 26 }, { header: "Артикул", key: "s", type: "text", width: 14 }, { header: "Группа", key: "g", type: "text", width: 18 }, { header: "Кол-во по файлу", key: "q", type: "int", width: 11 }, { header: "Цена покупки", key: "cp", type: "money", width: 13 }, { header: "Цена продажи", key: "p", type: "money", width: 13 }, { header: "Маржа в цене", key: "mg", type: "pct", width: 10 }, { header: "Стоимость по закупке", key: "vc", type: "money", width: 16 }, { header: "Продано", key: "sold", type: "int", width: 10 }, { header: "≈ Сейчас", key: "now", type: "int", width: 10 }], rows, total: { pt: "Итого", q: T("q"), vc: T("vc"), sold: T("sold"), now: T("now") } }];
 }
 
-export function batchSheets(c: Ctx, b: Batch, bPt: string): XSheet[] {
-  const { items } = batchStats(c, b, bPt); const pts = bPt === "all" ? c.points : [bPt];
-  const sub = `${b.name || "Партия"} · приход ${dLong(b.date)}` + (bPt !== "all" ? ` · ${bPt}` : "") + ` · выгружено ${xlToday()}`;
-  const mk = (i: (typeof items)[number]) => { const r: Record<string, unknown> = { m: i.m || i.n || i.s, col: i.col || "", s: i.s && i.s !== i.m ? i.s : "", g: i.g || i.c || "", p: +(i.p || 0) || null, cp: +(i.cp || 0) || null, q: i.q, sold: i.sold, left: i.left, pct: i.pct, rev: i.rev, last: i.last ? dLong(i.last) : "" }; pts.forEach((p, k) => (r["p" + k] = i.byPt[p] || 0)); return r; };
-  const rows = [...items].sort((x, y) => y.sold - x.sold).map(mk);
-  const Tt = (k: string) => rows.reduce((a, r) => a + (+(r[k] as number) || 0), 0);
-  const total: Record<string, unknown> = { m: "Итого", q: Tt("q"), sold: Tt("sold"), left: Tt("left"), rev: Tt("rev"), pct: Tt("q") ? Tt("sold") / Tt("q") : 0 }; pts.forEach((_, k) => (total["p" + k] = Tt("p" + k)));
-  const gm: Record<string, { k: string; n: number; q: number; s: number; r: number; l?: number; pct?: number }> = {};
-  items.forEach((i) => { const k = i.g || i.c || "Без группы"; const o = gm[k] || (gm[k] = { k, n: 0, q: 0, s: 0, r: 0 }); o.n++; o.q += i.q; o.s += i.sold; o.r += i.rev; });
-  const groups = Object.values(gm).sort((x, y) => y.s - x.s).map((o) => Object.assign(o, { l: o.q - o.s, pct: o.q ? o.s / o.q : 0 }));
-  const cols = [{ header: "Модель / наименование", key: "m", type: "text" as const, width: 26 }, { header: "Цвет", key: "col", type: "text" as const, width: 9 }, { header: "Артикул", key: "s", type: "text" as const, width: 13 }, { header: "Группа", key: "g", type: "text" as const, width: 18 }, { header: "Цена продажи", key: "p", type: "money" as const, width: 13 }, { header: "Цена покупки", key: "cp", type: "money" as const, width: 13 }, { header: "Пришло, шт", key: "q", type: "int" as const, width: 10 },
-    ...pts.map((p, k) => ({ header: "Продано " + p, key: "p" + k, type: "int" as const, width: 11 })),
-    { header: "Продано всего", key: "sold", type: "int" as const, width: 11 }, { header: "Осталось, шт", key: "left", type: "int" as const, width: 11 }, { header: "Продано, %", key: "pct", type: "pct" as const, width: 10 }, { header: "Выручка, сум", key: "rev", type: "money" as const, width: 15 }, { header: "Последняя продажа", key: "last", type: "text" as const, width: 13 }];
-  return [
-    { name: "Товары партии", title: "Продажи товаров из новой партии", subtitle: sub, columns: cols, rows, total },
-    { name: "На дозаказ", title: "Новая партия — на дозаказ", subtitle: sub + " · закончились или осталось ≤20%", columns: cols, rows: reorderList(items).map(mk) },
-    { name: "По группам", title: "Новая партия по группам", subtitle: sub, columns: [{ header: "Группа", key: "k", type: "text", width: 26 }, { header: "Моделей", key: "n", type: "int", width: 10 }, { header: "Пришло, шт", key: "q", type: "int", width: 11 }, { header: "Продано, шт", key: "s", type: "int", width: 11 }, { header: "Осталось, шт", key: "l", type: "int", width: 11 }, { header: "Продано, %", key: "pct", type: "pct", width: 10 }, { header: "Выручка, сум", key: "r", type: "money", width: 15 }], rows: groups, total: { k: "Итого", n: items.length, q: total.q, s: total.sold, l: total.left, pct: total.pct, r: total.rev } },
-  ];
-}
-void itemLabel; void discOf;
+void discOf;

@@ -42,7 +42,7 @@ export function Calendar({ c, F, jDay, onOpenDay }: { c: Ctx; F: Filter; jDay: s
         <b className="min-w-[9rem] text-center text-[14px]" aria-live="polite">{MONTHS_F[+M.slice(5, 7) - 1]} {M.slice(0, 4)}</b>
         <Button type="button" variant="secondary" size="icon-sm" aria-label="Следующий месяц" disabled={M >= months[months.length - 1]} onClick={() => shift(1)}><ChevronRight /></Button>
         <Button type="button" variant="secondary" size="sm" className="ml-2" onClick={() => go(today.slice(0, 7), today)}>Сегодня</Button></div>
-      <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-5">
+      <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4 @7xl/main:grid-cols-5">
         <Sum l="Выручка за месяц" v={fmt(total)} /><Sum l="Дней с продажами" v={String(wd)} /><Sum l="В среднем за день" v={fmt(wd ? total / wd : 0)} />
         {best && <Sum l="Лучший день" v={`${+best[0].slice(8)} ${monthGen(M)} · ${calShort(best[1].rev)}`} />}
         {F.point !== "all" && <Sum l="Точка" v={F.point} />}

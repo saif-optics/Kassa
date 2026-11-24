@@ -3,8 +3,7 @@
 import type { Data } from "../../lib/types";
 import { agg, CATCOL, dayList, expFiltered, filtered, inRange, matchOf, PAYCOL, pointColor, prevList, rangeOf, type Bar, type Card, type Flt } from "./base";
 import { checkKey, entAmt, isFrame, isLens, KASSA_POINTS, PAYS, payOf, type Ctx, type S } from "./cost";
-import { addD, daysBetween, dLong, dow, dShort, fmt, fmtM, MONTHS, monthEnd, normS, pctF, pl, today, WD, weekStart, wdIdx } from "./util";
-import { batchStats, curBatch, itemLabel, reorderList } from "../stock-margin/logic";
+import { addD, dLong, dow, dShort, fmt, fmtM, MONTHS, monthEnd, normS, pctF, pl, today, WD, weekStart, wdIdx } from "./util";
 import { cashState, compute, lastM, recFor } from "../kassa/logic";
 
 // ---------- план: нужен для показателей 4 и 5 ----------
@@ -93,7 +92,6 @@ export type Widget = { ids: number[]; title: string; note?: string; wide?: boole
   | { kind: "marginPts"; rows: { k: string; all: number; rev: number; cogs: number; gp: number; m: number | null; cov: number; tc: { k: string; gp: number } | undefined }[]; T: { all: number; rev: number; cogs: number; gp: number }; has: boolean }
   | { kind: "owner"; o: Owner | null; months: string[]; live: boolean }
   | { kind: "heat"; pts: string[]; avg: number[][]; hmax: number; best: number[] | null; showBest: boolean }
-  | { kind: "reorder"; rows: ReturnType<typeof reorderList> }
   | { kind: "text"; text: string }
 );
 export interface AnalyticsModel {
@@ -269,30 +267,6 @@ export function buildAnalytics(c: Ctx, F: Flt, on: (id: number) => boolean, pgCa
     const best = pts.map((p) => { let bi = 0; WD.forEach((_, i) => { if (avg(p, i) > avg(p, bi)) bi = i; }); return bi; });
     W([46, 47], on(46) ? "Точки × дни недели" : "Лучший день недели каждой точки", "Средняя выручка за один такой день. Чем темнее, тем больше" + (on(47) ? "; лучший день точки обведён" : ""), { kind: "heat", pts, avg: pts.map((p) => WD.map((_, i) => avg(p, i))), hmax, best: on(47) ? best : null, showBest: on(47) }, true);
   }
-  // ----- новая партия -----
-  const bb = curBatch(c), BIDS = [48, 49, 50, 51, 52, 53, 54, 55, 56, 57];
-  if (bb && (bb.items || []).length && BIDS.some(on)) {
-    const { items } = batchStats(c, bb, F.point, r.from, r.to);
-    const Q = items.reduce((x, i) => x + i.q, 0), S = items.reduce((x, i) => x + i.sold, 0), L = items.reduce((x, i) => x + i.left, 0);
-    const PS = items.reduce((x, i) => x + i.pSold, 0), PR = items.reduce((x, i) => x + i.pRev, 0), pFrom = bb.date && r.from < bb.date ? bb.date : r.from, perTxt = pFrom === r.to ? dLong(r.to) : `${dShort(pFrom)}–${dShort(r.to)}`;
-    const start = bb.date || t, bd = Math.max(1, daysBetween(start, t)), rate = S / bd, fc = rate > 0 && L > 0 ? Math.ceil(L / rate) : null;
-    const vl = items.reduce((x, i) => x + i.left * (+(i.p || 0)), 0);
-    const wc = items.filter((i) => +(i.cp || 0) > 0 && i.pSold), cg = wc.reduce((x, i) => x + i.pSold * (i.cp as number), 0), rc = wc.reduce((x, i) => x + i.pRev, 0);
-    const totPer = c.sales.filter((x) => x.date >= pFrom && x.date <= r.to && (F.point === "all" || x.point === F.point)).reduce((q, x) => q + (+x.sum || 0), 0);
-    const ro = reorderList(items), uns = items.filter((i) => !i.sold).length, nm = `«${bb.name || "Партия"}»`;
-    if (on(48)) C({ id: 48, label: "Продано из партии", v: fmt(PS) + " шт", d: `за ${perTxt} · ${nm}: из ${fmt(Q)} шт`, ring: { p: Q ? PS / Q : 0 } });
-    if (on(49)) C({ id: 49, label: "Осталось из партии", v: fmt(L) + " шт", d: `на сегодня` + (vl ? ` · на ${fmt(vl)} сум по цене продажи` : "") });
-    if (on(52)) C({ id: 52, label: "Темп продаж партии", v: (rate >= 10 ? fmt(rate) : rate.toFixed(1).replace(".", ",")) + " шт/день", d: `на сегодня: в среднем за ${bd} дн. с ${dShort(start)}` });
-    if (on(53)) C({ id: 53, label: "Прогноз распродажи", v: L === 0 ? "распродано" : fc != null ? `~${fmt(fc)} дн.` : "—", d: fc != null ? `примерно к ${dLong(addD(t, fc))}` : "" });
-    if (on(54)) C({ id: 54, label: "Модели без продаж", v: fmt(uns), d: `на сегодня · из ${items.length} моделей партии` });
-    if (on(56)) C({ id: 56, label: "Выручка с партии", v: fmt(PR) + " сум", d: `за ${perTxt}` + (rc ? ` · маржа ${pctF((rc - cg) / rc)} · прибыль ${fmt(rc - cg)}` : "") });
-    if (on(57)) C({ id: 57, label: "Доля партии в продажах", v: pctF(totPer ? PR / totPer : 0), d: `от всей выручки за ${perTxt}` });
-    if (on(50)) { const bp: Record<string, number> = {}; items.forEach((i) => Object.entries(i.pByPt).forEach(([k, v]) => (bp[k] = (bp[k] || 0) + v))); W([50], "Партия: продажи по точкам", `${nm} · за ${perTxt}`, Object.keys(bp).length ? { kind: "hbars", items: Object.entries(bp).sort((x, y) => y[1] - x[1]).map(([k, v]) => ({ label: k, value: v, valTxt: v + " шт", color: PC(k) })) } : { kind: "text", text: "За этот период продаж из партии нет" }); }
-    if (on(51)) { const gm: Record<string, { k: string; q: number; s: number }> = {}; items.forEach((i) => { const k = i.g || i.c || "Без группы"; const o = gm[k] || (gm[k] = { k, q: 0, s: 0 }); o.q += i.q; o.s += Math.min(i.pSold, i.q); }); W([51], "Партия: продажи по группам", `Процент от пришедшего, проданный за ${perTxt}`, { kind: "hbars", items: Object.values(gm).sort((x, y) => y.s / (y.q || 1) - x.s / (x.q || 1)).slice(0, 12).map((o) => ({ label: o.k, value: o.q ? (o.s / o.q) * 100 : 0, valTxt: pctF(o.q ? o.s / o.q : 0), color: "var(--chart-3)", sub: `${o.s} из ${o.q} шт` })) }); }
-    if (on(55)) W([55], "Партия: на дозаказ", "Закончились или осталось 20% и меньше", ro.length ? { kind: "reorder", rows: ro.slice(0, 15) } : { kind: "text", text: "Пока ничего не заканчивается." });
-  } else if (BIDS.some(on)) {
-    W(BIDS, "Новая партия", "", { kind: "text", text: "Список партии ещё не загружен. Загрузите его на вкладке «Склад» → «Проданные из новой партии», и здесь появятся показатели 48–57." });
-  }
-  void itemLabel; void inRange;
+  void inRange;
   return { empty: false, period, ...base, mg, cards, widgets, exp: expSum };
 }

@@ -1,4 +1,4 @@
-// Раздел «Линзы»: проданные очковые линзы по видам, индексам, покрытиям, брендам и точкам; маржа по видам и правка цен пары.
+// Раздел «Линзы»: проданные очковые линзы по видам и точкам; маржа по видам и правка цен пары.
 import { useMemo, useState } from "react";
 import { FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
@@ -12,7 +12,7 @@ import { lensKinds, lensCostView, lensView } from "./logic";
 import { lensSheets, fname } from "../analytics/exports";
 import { saveXlsx } from "../analytics/xl";
 import { FilterBar, useFlt } from "../analytics/filter";
-import { BarsC, DonutC, HBars } from "../analytics/charts";
+import { BarsC, HBars } from "../analytics/charts";
 import { Dim, Empty, Tbl, Td, Th, Tile, Wd } from "../analytics/parts";
 import { fmt, fmtM, pctF } from "../analytics/util";
 
@@ -40,26 +40,12 @@ export function LensPage({ d }: { d: Data }) {
 
       {v.empty ? <Empty>За выбранный период продаж очковых линз нет. Сюда попадают только продажи категории «Очковые линзы». Контактные линзы, растворы и капли сюда не входят.</Empty> : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{v.cards.map((k, i) => <Tile key={k.label} c={k} i={i} hintsOn={null} />)}</div>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 @5xl/main:grid-cols-3">{v.cards.map((k, i) => <Tile key={k.label} c={k} i={i} hintsOn={null} />)}</div>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 min-[1920px]:grid-cols-4">
             <Wd title="Наши линзы по видам" note="ET, Блок, 4в1, Star, Essilor, Seiko и другие — по количеству" hintsOn={null} wide><HBars items={v.kindBars} /></Wd>
-            <Wd title="Виды линз" note="По количеству" hintsOn={null}><DonutC items={v.types} center={fmt(v.la.units)} sub="шт" /></Wd>
-            <Wd title="Индекс (толщина)" note="1.50 — стандарт, 1.67 и 1.74 — тонкие для сильных диоптрий" hintsOn={null}><HBars items={v.idxBars} /></Wd>
-            <Wd title="Покрытия" hintsOn={null}><HBars items={v.coatBars} /></Wd>
             <Wd title="Линзы по точкам" hintsOn={null}><HBars items={v.ptEntries.map(([k, o]) => ({ label: k, value: o.u, valTxt: o.u + " шт", color: pointColor(c.points, k), sub: fmtM(o.r) }))} /></Wd>
-            <Wd title="Средняя цена по видам" hintsOn={null}><HBars items={v.avgType} /></Wd>
-            {v.brandBars.length > 0 && <Wd title="Бренды" hintsOn={null}><HBars items={v.brandBars} /></Wd>}
             <Wd title="Линзы по дням" note="Сколько штук продано каждый день" hintsOn={null} wide><BarsC labels={v.byDay.days.map((x) => x.slice(8, 10) + "." + x.slice(5, 7))} vals={v.byDay.vals} color="var(--chart-3)" fmtV={(x) => x + " шт"} lblV={String} /></Wd>
           </div>
-          <section className="glass min-w-0 rounded-[26px] p-5">
-            <h2 className="text-[17px] font-semibold tracking-tight">Все виды проданных линз</h2>
-            <p className="mt-0.5 text-[13px] text-muted-foreground">Вид × индекс × покрытие: сколько продано, на какую сумму и по какой средней цене</p>
-            <Tbl className="mt-3">
-              <thead><tr><Th>Вид</Th><Th>Индекс</Th><Th>Покрытие</Th>{c.points.map((p) => <Th key={p} r>{p}</Th>)}<Th r>Всего, шт</Th><Th r>Выручка</Th><Th r>Ср. цена</Th></tr></thead>
-              <tbody>{v.table.map((o) => <tr key={o.t + o.i + o.c}><Td>{o.t}</Td><Td num>{o.i}</Td><Td>{o.c}</Td>{c.points.map((p) => <Td key={p} r>{o.pts[p] || <Dim />}</Td>)}<Td r b>{o.u}</Td><Td r>{fmt(o.r)}</Td><Td r>{fmt(o.u ? o.r / o.u : 0)}</Td></tr>)}</tbody>
-              <tfoot><tr><Td colSpan={3} b>Итого</Td>{c.points.map((p) => <Td key={p} r b>{v.ptTotals[p] || ""}</Td>)}<Td r b>{v.la.units}</Td><Td r b>{fmt(v.la.rev)}</Td><Td r b>{fmt(v.la.unitPrice)}</Td></tr></tfoot>
-            </Tbl>
-          </section>
           {cost && <CostPanel c={c} cost={cost} />}
         </>
       )}

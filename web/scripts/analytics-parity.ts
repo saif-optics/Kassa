@@ -12,7 +12,7 @@ import { defaultFlt, type Flt } from "../src/features/analytics/base";
 import { buildAnalytics } from "../src/features/analytics/logic";
 import { ownerProfit } from "../src/features/analytics/logic";
 import { lensCostView, lensData, lensView } from "../src/features/lens/logic";
-import { batchStats, batchView, curBatch, marginData, stockView } from "../src/features/stock-margin/logic";
+import { marginData, stockView } from "../src/features/stock-margin/logic";
 import { addD, fmt, pctF, today } from "../src/features/analytics/util";
 
 const OUT = path.resolve(import.meta.dirname, ".out"); fs.mkdirSync(OUT, { recursive: true });
@@ -45,20 +45,16 @@ if (mode === "rows") {
   const R0 = rows(); fs.writeFileSync(path.join(OUT, "an-rows.json"), JSON.stringify(R0));
   fs.writeFileSync(path.join(OUT, "an-scen.json"), JSON.stringify(SCEN));
   const d = toData(R0), c = makeCtx(d), res: Record<string, unknown> = {};
-  const b = curBatch(c)!;
   for (const [name, f] of Object.entries(SCEN)) {
     const an = buildAnalytics(c, f, () => true, "Оправы");
     const md = marginData(c, f), ld = lensData(c, f), lv = lensView(c, f), lc = lensCostView(c, lv.rows);
     const kinds: Record<string, number> = {}; ld.rows.forEach((x) => { const k = [x.kind, x.type, x.idx, x.coat, x.brand].join("|"); kinds[k] = (kinds[k] || 0) + 1; });
     const o = ownerProfit(c, M0);
-    const bs = batchStats(c, b, f.point, f.from, f.to), bv = batchView(c, b, "all");
     res[name] = {
       an: { empty: an.empty, cards: an.cards.map((x) => [norm(x.label), norm(x.v), norm(x.d)]), titles: an.widgets.map((w) => w.title) },
       margin: { tot: grpPick(md.tot), pts: md.pts.map(grpPick), cats: md.cats.map(grpPick), prods: md.prods.map(grpPick).sort((a, b) => a.k.localeCompare(b.k)), miss: md.miss.map(grpPick), nodet: R(md.nodet) },
-      lens: { all: ld.all.length, list: ld.list.length, kinds, a: R(ld.a.rev), cards: lv.empty ? [] : lv.cards.map((x) => [norm(x.label), norm(x.v), norm(x.d)]), titles: lv.empty ? [] : ["Наши линзы по видам", "Виды линз", "Индекс (толщина)", "Покрытия", "Линзы по точкам", "Средняя цена по видам", ...(lv.brandBars.length ? ["Бренды"] : []), "Линзы по дням"],
+      lens: { all: ld.all.length, list: ld.list.length, kinds, a: R(ld.a.rev), cards: lv.empty ? [] : lv.cards.map((x) => [norm(x.label), norm(x.v), norm(x.d)]), titles: lv.empty ? [] : ["Наши линзы по видам", "Линзы по точкам", "Линзы по дням"],
         cost: lc && !lv.empty ? { kpi: [fmt(lc.gp) + " сум", lc.margin], rows: lc.list.map((x) => [x.k, fmt(x.u), fmt(x.r), x.has ? fmt(x.c) : "нет цены", x.has ? fmt(x.kr - x.c) : "—", x.has && x.kr ? pctF((x.kr - x.c) / x.kr) : "—"]) } : null },
-      mgCards: [["Валовая прибыль", fmt(md.tot.gp) + " сум"], ["Маржа", pctF(md.tot.mg)], ["Покрытие", pctF(md.tot.cov)]],
-      batch: { items: bs.items.map((i) => [i.k, i.sold, R(i.rev), i.left, i.pSold, R(i.pRev), i.last, JSON.stringify(i.byPt), JSON.stringify(i.pByPt)]), used: bs.used.length, byDay: bs.byDay, cards: bv.cards.map((x) => [norm(x.label), norm(x.v), norm(x.d)]) },
     };
     if (name === "месяц") (res[name] as Record<string, unknown>).owner = o ? [o.rev, -(o.rev - o.gp), o.gp, -o.op, ...(o.credit ? [-o.credit] : []), ...(o.tp ? [-o.tax] : []), o.before, ...(o.mgr ? [-o.mgr.a] : []), o.owner].map((x) => Math.round(x)) : null;
   }

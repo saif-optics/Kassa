@@ -1,16 +1,15 @@
-// Форма «Новая продажа» / «Изменить продажу»: одна строка — одна позиция; смешанная оплата, линзы, долг.
+// Форма «Новая продажа» / «Изменить продажу»: одна строка — одна позиция; смешанная оплата, долг.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Panel } from "@/components/kit";
 import { cn } from "@/lib/utils";
 import { Field, Sel, digits, fmtIn } from "./parts";
-import { LCOAT, LIDX, LTYPES, PAYS, fmt, normPay, normS, payOf, pointColor, todayTash, type SaleX, type Settings } from "./logic";
+import { PAYS, fmt, normPay, normS, payOf, pointColor, todayTash, type SaleX, type Settings } from "./logic";
 
 export type SaleRec = Record<string, unknown>;
-type St = { date: string; point: string; check: string; cat: string; product: string; qty: string; price: string; sum: string; pay: string; mx: string[]; debt: string; lType: string; lIndex: string; lCoat: string };
-const isLensCat = (c: string) => /очков.*линз/i.test(c);
-const empty = (s: Settings, date = todayTash(), point = s.points[0]): St => ({ date, point, check: "", cat: s.cats[0], product: "", qty: "1", price: "", sum: "", pay: PAYS[0], mx: ["", "", "", ""], debt: "", lType: "", lIndex: "", lCoat: "" });
+type St = { date: string; point: string; check: string; cat: string; product: string; qty: string; price: string; sum: string; pay: string; mx: string[]; debt: string };
+const empty = (s: Settings, date = todayTash(), point = s.points[0]): St => ({ date, point, check: "", cat: s.cats[0], product: "", qty: "1", price: "", sum: "", pay: PAYS[0], mx: ["", "", "", ""], debt: "" });
 const MIXED = "Смешанная";
 
 export function SaleForm({ sales, settings, editing, onSave, onCancel }: { sales: SaleX[]; settings: Settings; editing: SaleX | null; onSave: (id: string | null, rec: SaleRec) => Promise<void>; onCancel: () => void }) {
@@ -23,8 +22,8 @@ export function SaleForm({ sales, settings, editing, onSave, onCancel }: { sales
 
   useEffect(() => {
     if (!editing) return;
-    const s = editing, mixed = !!(s.pays && Object.keys(s.pays).length > 1), o = payOf(s), l = s.lens || {};
-    setF({ date: s.date, point: s.point, check: s.check || "", cat: s.cat || settings.cats[0], product: s.product || "", qty: String(s.qty ?? 1), price: fmt(s.price || 0), sum: fmt(s.sum), pay: mixed ? MIXED : normPay(s.pay), mx: PAYS.map((p) => (mixed && o[p] ? fmt(o[p]) : "")), debt: s.debt ? fmt(s.debt) : "", lType: l.type || "", lIndex: l.index || "", lCoat: l.coat || "" });
+    const s = editing, mixed = !!(s.pays && Object.keys(s.pays).length > 1), o = payOf(s);
+    setF({ date: s.date, point: s.point, check: s.check || "", cat: s.cat || settings.cats[0], product: s.product || "", qty: String(s.qty ?? 1), price: fmt(s.price || 0), sum: fmt(s.sum), pay: mixed ? MIXED : normPay(s.pay), mx: PAYS.map((p) => (mixed && o[p] ? fmt(o[p]) : "")), debt: s.debt ? fmt(s.debt) : "" });
     setTouched(true); root.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [editing, settings.cats]);
   // точка могла исчезнуть из настроек
@@ -59,7 +58,6 @@ export function SaleForm({ sales, settings, editing, onSave, onCancel }: { sales
       if (tot !== sum) return note(`Сумма частей (${fmt(tot)}) не равна оплаченному (${fmt(sum)}).`, true);
       rec.pays = pays; rec.pay = MIXED;
     } else { rec.pay = f.pay; rec.pays = null; }
-    if (isLensCat(String(rec.cat))) { const l: Record<string, string> = {}; if (f.lType) l.type = f.lType; if (f.lIndex) l.index = f.lIndex; if (f.lCoat) l.coat = f.lCoat; rec.lens = Object.keys(l).length ? l : null; }
     const debt = digits(f.debt); rec.debt = !isNaN(debt) && debt > 0 ? debt : undefined;
     setBusy(true);
     try {
@@ -93,10 +91,6 @@ export function SaleForm({ sales, settings, editing, onSave, onCancel }: { sales
         {mixed && <div className="glass-inner grid gap-3 rounded-2xl p-3 sm:grid-cols-2">
           {PAYS.map((p, i) => <Field key={p} label={p === "Наличные" ? "Наличные" : p === "Терминал" ? "Терминал" : p}><Input inputMode="numeric" value={f.mx[i]} aria-label={"Оплачено: " + p} className="num" onChange={(e) => setF((x) => ({ ...x, mx: x.mx.map((v, j) => (j === i ? fmtIn(e.target.value, fmt) : v)) }))} /></Field>)}
           <p className={cn("text-[12.5px] sm:col-span-2", mxTot && mxTot === (digits(f.sum) || 0) ? "text-plus" : "text-muted-foreground")}>Сумма частей: <b className="num">{fmt(mxTot)}</b> из <b className="num">{fmt(digits(f.sum) || 0)}</b></p></div>}
-        {isLensCat(f.cat) && <div className="glass-inner grid gap-3 rounded-2xl p-3 sm:grid-cols-3">
-          <Field label="Вид линзы"><Sel label="Вид линзы" value={f.lType} onChange={(v) => set("lType", v)} options={[{ v: "", l: "определить по названию" }, ...LTYPES]} /></Field>
-          <Field label="Индекс"><Sel label="Индекс" value={f.lIndex} onChange={(v) => set("lIndex", v)} options={[{ v: "", l: "определить по названию" }, ...LIDX]} /></Field>
-          <Field label="Покрытие"><Sel label="Покрытие" value={f.lCoat} onChange={(v) => set("lCoat", v)} options={[{ v: "", l: "определить по названию" }, ...LCOAT]} /></Field></div>}
         <Field label="Долг, сум (необязательно)"><Input inputMode="numeric" value={f.debt} onChange={(e) => set("debt", fmtIn(e.target.value, fmt))} placeholder="если покупатель ещё должен" aria-label="Долг" className="num" /></Field>
         <div className="flex flex-wrap items-center gap-2">
           <Button type="submit" disabled={busy}>{editing ? "Сохранить изменения" : "Добавить продажу"}</Button>
