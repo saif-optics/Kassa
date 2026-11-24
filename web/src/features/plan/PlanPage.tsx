@@ -76,7 +76,7 @@ export function PlanPage({ d }: { d: Data }) {
             </Tile>
             <Tile i={1} hero>
               <TileLabel>Нужно в день</TileLabel>
-              {K.past ? <TileValue>—</TileValue> : <TileValue count={S.needDay} suffix=" сум" />}
+              {K.past ? <TileValue>—</TileValue> : S.needDay <= 0 ? <span><Chip tone="plus" className="px-3 py-1 text-[15px]">план выполнен</Chip></span> : <TileValue count={S.needDay} suffix=" сум" />}
               <TileSub>{K.past ? "месяц закрыт" : `на ${left} ${plural(left, "рабочий день", "рабочих дня", "рабочих дней")} до конца`}</TileSub>
             </Tile>
             <Tile i={2}>
@@ -86,12 +86,12 @@ export function PlanPage({ d }: { d: Data }) {
             </Tile>
             <Tile i={3} className="xl:col-span-2">
               <TileLabel>Текущий темп</TileLabel>
-              <div className="flex items-center justify-between gap-2"><TileValue count={S.pace} suffix=" сум" />{K.done.length > 1 && <Spark data={view.pace} color="var(--chart-2)" />}</div>
+              <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1"><TileValue count={S.pace} suffix=" сум" />{K.done.length > 1 && <Spark data={view.pace} color="var(--chart-2)" />}</div>
               <TileSub>в рабочий день · {K.done.length} {plural(K.done.length, "день", "дня", "дней")} прошло</TileSub>
             </Tile>
             <Tile i={4} className="sm:col-span-2 xl:col-span-2">
               <TileLabel>Прогноз на конец месяца</TileLabel>
-              <div className="flex items-center justify-between gap-2"><TileValue count={S.forecast} suffix=" сум" /><MiniRing p={S.fpct} color={fcol} /></div>
+              <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1"><TileValue count={S.forecast} suffix=" сум" /><MiniRing p={S.fpct} color={fcol} /></div>
               <TileSub>{pctF(S.fpct)} плана · вилка {fmtM(S.fLo)}–{fmtM(S.fHi)}</TileSub>
             </Tile>
           </div>

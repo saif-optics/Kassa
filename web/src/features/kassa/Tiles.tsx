@@ -18,7 +18,7 @@ export function Tiles({ c, M, isLast, rec, st, lastRecNote, rsv, onCash, onReser
   const diff = st ? c.expected - st.actual : null;
   const fmtIn = (s: string) => { const v = digits(s); return isNaN(v) ? "" : fmt(v); };
   const kind = diff == null ? (isLast ? "Пересчитайте кассу" : "Не пересчитывали") : diff > 0 ? "Недостача" : diff < 0 ? "Излишек" : "Касса сходится";
-  const tone = (diff == null ? "info" : diff > 0 ? "minus" : diff < 0 ? "warn" : "plus") as "info" | "minus" | "warn" | "plus";
+  const tone = (diff == null ? "muted" : diff > 0 ? "minus" : diff < 0 ? "warn" : "plus") as "muted" | "minus" | "warn" | "plus";
   return (
     <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
       <Tile i={i0} hero>
@@ -41,7 +41,7 @@ export function Tiles({ c, M, isLast, rec, st, lastRecNote, rsv, onCash, onReser
         <div className="flex flex-col gap-1">
           <TileLabel>Недостача / излишек</TileLabel>
           {diff == null ? <TileValue>—</TileValue> : <TileValue count={Math.abs(diff)} suffix=" сум" />}
-          <TileSub><Chip tone={tone} className={diff == null ? "bg-muted text-muted-foreground" : undefined}>{kind}</Chip></TileSub>
+          <TileSub><Chip tone={tone}>{kind}</Chip></TileSub>
         </div>
         <TileSub>{isLast ? "Новые расходы уменьшают и «должно быть», и фактическую наличку, поэтому разница не меняется" : "По последнему пересчёту кассы за этот месяц"}</TileSub>
       </Tile>

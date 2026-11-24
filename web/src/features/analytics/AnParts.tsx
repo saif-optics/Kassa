@@ -23,8 +23,8 @@ export function MetricTile({ c, i, hintsOn }: { c: MCard; i: number; hintsOn: bo
       <div onClick={toggle} role={toggle ? "button" : undefined} className="flex min-w-0 flex-col gap-1.5">
         <TileLabel>{c.label}</TileLabel>
         {show && <p className={cn("text-[12px] leading-snug", hero ? "text-white/85" : "text-muted-foreground")}>{h}</p>}
-        <div className="flex items-center justify-between gap-3">
-          <TileValue className={cn("min-w-0 whitespace-normal break-words", c.warn && "text-warn")}>{c.v}</TileValue>
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+          <TileValue className={cn(c.warn && "text-warn")}>{c.v}</TileValue>
           {c.spark ? <Spark vals={c.spark.vals} color={c.spark.color} light={hero} /> : c.ring ? <MiniRing p={c.ring.p} color={c.ring.color} light={hero} /> : null}
         </div>
       </div>

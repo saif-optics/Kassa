@@ -28,7 +28,7 @@ export function Segments({ items, value, onChange, size = "md", className, "aria
   return (
     <div ref={ref} role="tablist" aria-label={aria} onKeyDown={onKey}
       className={cn("relative inline-flex w-fit max-w-full gap-1 overflow-x-auto rounded-full border border-border bg-muted/60 p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", className)}>
-      <FlowPill containerRef={ref} activeKey={value} axis="x" className="bg-popover shadow-sm ring-1 ring-border" />
+      <FlowPill containerRef={ref} activeKey={value} axis="x" className="bg-popover shadow-sm ring-1 ring-border dark:bg-white/12 dark:ring-primary/30" />
       {items.map((it) => {
         const on = it.key === value;
         return (

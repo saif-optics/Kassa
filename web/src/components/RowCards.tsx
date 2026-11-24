@@ -13,6 +13,10 @@ export type RowColumn<T> = { key: string; title: ReactNode; cell: (row: T) => Re
 type Props<T> = {
   columns: RowColumn<T>[]; rows: T[]; rowKey: (row: T) => string; expand?: (row: T) => ReactNode; onRowClick?: (row: T) => void;
   empty?: ReactNode; stickyHead?: boolean; dense?: boolean; footer?: ReactNode; className?: string;
+  rowClass?: (row: T) => string | undefined;         // подсветка строки/карточки
+  expandedKey?: string | null;                        // раскрытая строка снаружи (управляемый режим)
+  onExpandChange?: (key: string | null) => void;
+  selectedKey?: string | null;                        // выбранная строка: подсветка на ≥ 640 (aria-selected)
 };
 
 const LAND_MAX = 12; // анимируем посадку только первых строк
@@ -23,9 +27,17 @@ export function RowCards<T>(p: Props<T>) {
   return phone ? <Cards {...p} /> : <Grid {...p} />;
 }
 
-function Grid<T>({ columns, rows, rowKey, expand, onRowClick, stickyHead, dense, footer, className }: Props<T>) {
-  const [open, setOpen] = useState<string | null>(null);
-  const click = (r: T, k: string) => { if (expand) setOpen((o) => (o === k ? null : k)); onRowClick?.(r); };
+// раскрытие: своё состояние, а если передан expandedKey или onExpandChange — управляет внешний код
+function useOpenKey(p: { expandedKey?: string | null; onExpandChange?: (key: string | null) => void }) {
+  const [own, setOwn] = useState<string | null>(null);
+  const open = p.expandedKey !== undefined ? p.expandedKey : own;
+  const toggle = (k: string) => { const n = open === k ? null : k; setOwn(n); p.onExpandChange?.(n); };
+  return [open, toggle] as const;
+}
+
+function Grid<T>({ columns, rows, rowKey, expand, onRowClick, stickyHead, dense, footer, className, rowClass, selectedKey, ...ex }: Props<T>) {
+  const [open, toggle] = useOpenKey(ex);
+  const click = (r: T, k: string) => { if (expand) toggle(k); onRowClick?.(r); };
   const act = !!(expand || onRowClick), py = dense ? "py-1.5" : "py-2.5";
   return (
     <div className={cn("overflow-x-auto", className)}>
@@ -40,7 +52,7 @@ function Grid<T>({ columns, rows, rowKey, expand, onRowClick, stickyHead, dense,
             const k = rowKey(r), on = open === k;
             return (
               <Fragment key={k}>
-                <TableRow className={cn(act && "cursor-pointer")} data-state={on ? "selected" : undefined} tabIndex={act ? 0 : undefined} aria-expanded={expand ? on : undefined}
+                <TableRow className={cn(act && "cursor-pointer", rowClass?.(r), selectedKey === k && "bg-primary/10 hover:bg-primary/15")} aria-selected={selectedKey != null ? selectedKey === k : undefined} data-state={on ? "selected" : undefined} tabIndex={act ? 0 : undefined} aria-expanded={expand ? on : undefined}
                   onClick={() => click(r, k)} onKeyDown={act ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); click(r, k); } } : undefined}>
                   {columns.map((c) => <TableCell key={c.key} className={cn(py, "num", c.align === "right" && "text-right", c.main && "font-semibold")}>{c.cell(r)}</TableCell>)}
                 </TableRow>
@@ -55,28 +67,28 @@ function Grid<T>({ columns, rows, rowKey, expand, onRowClick, stickyHead, dense,
   );
 }
 
-function Cards<T>({ columns, rows, rowKey, expand, onRowClick, dense, footer, className }: Props<T>) {
+function Cards<T>({ columns, rows, rowKey, expand, onRowClick, dense, footer, className, rowClass, ...ex }: Props<T>) {
+  const [open, toggle] = useOpenKey(ex);
   const main = columns.filter((c) => c.main), right = columns.find((c) => c.align === "right"), sub = columns.filter((c) => c.sub);
   const used = new Set([...main, ...sub, ...(right ? [right] : [])].map((c) => c.key));
   const more = columns.filter((c) => !used.has(c.key) && !c.hideMobile);
   return (
     <div className={cn("flex flex-col", dense ? "gap-1.5" : "gap-2", className)}>
-      {rows.map((r, i) => <RowCard key={rowKey(r)} i={i} row={r} main={main} right={right} sub={sub} more={more} expand={expand} onRowClick={onRowClick} dense={dense} />)}
+      {rows.map((r, i) => { const k = rowKey(r); return <RowCard key={k} i={i} row={r} main={main} right={right} sub={sub} more={more} expand={expand} onRowClick={onRowClick} dense={dense} open={open === k} onToggle={() => toggle(k)} className={rowClass?.(r)} />; })}
       {footer && <div className="px-1 pt-1 text-[13px]">{footer}</div>}
     </div>
   );
 }
 
-function RowCard<T>({ i, row, main, right, sub, more, expand, onRowClick, dense }: {
-  i: number; row: T; main: RowColumn<T>[]; right?: RowColumn<T>; sub: RowColumn<T>[]; more: RowColumn<T>[]; expand?: (row: T) => ReactNode; onRowClick?: (row: T) => void; dense?: boolean;
+function RowCard<T>({ i, row, main, right, sub, more, expand, onRowClick, dense, open, onToggle, className }: {
+  open: boolean; onToggle: () => void; className?: string; i: number; row: T; main: RowColumn<T>[]; right?: RowColumn<T>; sub: RowColumn<T>[]; more: RowColumn<T>[]; expand?: (row: T) => ReactNode; onRowClick?: (row: T) => void; dense?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
   const subs = sub.map((c) => ({ k: c.key, v: c.cell(row) })).filter((x) => x.v != null && x.v !== "" && x.v !== false);
   const canOpen = !!expand || more.length > 0, act = canOpen || !!onRowClick;
-  const toggle = () => { if (canOpen) setOpen((o) => !o); onRowClick?.(row); };
+  const toggle = () => { if (canOpen) onToggle(); onRowClick?.(row); };
   const anim = i < LAND_MAX ? land(i) : {};
   return (
-    <motion.div {...anim} className={cn("glass-inner rounded-2xl px-3.5", dense ? "py-2" : "py-3")}>
+    <motion.div {...anim} className={cn("glass-inner rounded-2xl px-3.5", dense ? "py-2" : "py-3", className)}>
       <div role={act ? "button" : undefined} tabIndex={act ? 0 : undefined} aria-expanded={canOpen ? open : undefined}
         onClick={toggle} onKeyDown={(e) => { if ((e.key === "Enter" || e.key === " ") && act) { e.preventDefault(); toggle(); } }}
         className={cn("flex flex-col gap-1 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-primary/40", act && "cursor-pointer")}>

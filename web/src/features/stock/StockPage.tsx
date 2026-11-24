@@ -45,7 +45,7 @@ export function StockPage({ d }: { d: Data }) {
           <Button variant="secondary" size="lg" onClick={bzXlsx}><FileSpreadsheet />Выгрузить Excel</Button></>} />
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <Segments aria-label="Вид" items={VIEWS} value={view} onChange={setView} />
-        {!file && <span className="flex min-w-0 flex-wrap items-center gap-2 text-[12.5px] text-muted-foreground"><Chip tone={cs.cls === "err" ? "minus" : cs.cls === "ok" ? "plus" : "warn"}>{cs.t}</Chip>{cs.last}</span>}
+        {!file && <span className="flex min-w-0 flex-wrap items-center gap-2 text-[12.5px] text-muted-foreground"><Chip tone={cs.cls === "err" ? "minus" : cs.cls === "ok" ? "plus" : cs.cls === "wait" ? "muted" : "warn"}>{cs.t}</Chip>{cs.last}</span>}
       </div>
       {!file && <Wip>Полностью заработает после инвентаризации Премиума и Яшнабада. Сейчас считаются остатки Склада, Сергели и C1.</Wip>}
       {view === "st" && <BzStock reg={reg} />}

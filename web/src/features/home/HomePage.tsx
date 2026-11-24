@@ -47,7 +47,7 @@ export function HomePage({ d }: { d: Data }) {
 
       <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
         <Tile i={nx()} hero>
-          <div className="flex items-center justify-between gap-2"><TileLabel>Выручка {h.lbl}</TileLabel><Spark data={t.today.spark} color="#fff" w={64} h={24} /></div>
+          <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1"><TileLabel>Выручка {h.lbl}</TileLabel><Spark data={t.today.spark} color="#fff" w={64} h={24} /></div>
           <TileValue count={t.today.value} suffix=" сум" />
           <TileSub><span>{t.today.checks} чек.{t.today.points ? ` · точек ${t.today.points}` : ""}</span>
             {t.today.deltaPct != null && <Chip tone={t.today.deltaPct >= 0 ? "plus" : "minus"}>{(t.today.deltaPct >= 0 ? "+" : "−") + Math.abs(t.today.deltaPct)}% к среднему дню</Chip>}
@@ -61,7 +61,7 @@ export function HomePage({ d }: { d: Data }) {
         </Tile>
         <Tile i={nx()}>
           <TileLabel>Выручка за месяц</TileLabel>
-          <div className="flex items-center justify-between gap-2"><TileValue count={t.plan.value} format="mln" />{t.plan.pct != null && <MiniRing p={t.plan.pct} color={planCol} />}</div>
+          <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1"><TileValue count={t.plan.value} format="mln" />{t.plan.pct != null && <MiniRing p={t.plan.pct} color={planCol} />}</div>
           <TileSub>{t.plan.pct != null ? <span>{pctF(t.plan.pct)} плана</span> : <span>план месяца не задан</span>}
             {(t.plan.needPerDay ?? 0) > 0 && <Chip tone="warn">нужно {fmtM(t.plan.needPerDay ?? 0)} в день</Chip>}
             {(t.plan.needPerDay ?? 0) > 0 && <span>осталось {t.plan.daysLeft} раб. дн.</span>}</TileSub>
@@ -116,7 +116,7 @@ export function HomePage({ d }: { d: Data }) {
       </div>
 
       <Card title="Разделы" note="по важности" i={nx()}>
-        <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-3 xl:grid-cols-4">
+        <div className={cn("grid grid-cols-2 gap-2.5 lg:grid-cols-3", h.sections.length <= 9 ? "xl:grid-cols-3" : "xl:grid-cols-4")}>
           {h.sections.map((s) => { const n = nav[s.id], I = n.icon; return (
             <button key={s.id} type="button" onClick={GO(s.id)}
               className="glass-inner relative flex min-w-0 flex-col gap-2 rounded-2xl p-3 text-left transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-md active:scale-[.98] sm:flex-row sm:items-center sm:gap-3">

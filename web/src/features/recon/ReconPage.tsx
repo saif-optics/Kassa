@@ -66,7 +66,7 @@ export function ReconPage({ d }: { d: Data }) {
 
 function CollectState({ d }: { d: Data }) {
   const s = collectState(d);
-  return <div className="flex flex-wrap items-center gap-2"><Chip tone={s.cls === "err" ? "minus" : s.cls === "ok" ? "plus" : "info"}>{s.t}</Chip>{s.last && <span className="text-[12.5px] text-muted-foreground">{s.last}</span>}</div>;
+  return <div className="flex flex-wrap items-center gap-2"><Chip tone={s.cls === "err" ? "minus" : s.cls === "ok" ? "plus" : "muted"}>{s.t}</Chip>{s.last && <span className="text-[12.5px] text-muted-foreground">{s.last}</span>}</div>;
 }
 
 const iv = { get: (): "list" | "prod" => { try { return localStorage.getItem("kassa-web.recon.iview") === "prod" ? "prod" : "list"; } catch { return "list"; } }, set: (v: string) => { try { localStorage.setItem("kassa-web.recon.iview", v); } catch { /* нет хранилища */ } } };
@@ -119,7 +119,7 @@ function DaysTable({ i, list, ch, ks, only, reset }: { i: number; list: DayRow[]
   return (
     <Card i={i} title="По дням и точкам" note="нажмите строку">
       <p className="text-[12.5px] text-muted-foreground">Красная точка — суммы не совпали, оранжевая — продажи есть только в одной системе. Нажмите строку, чтобы увидеть чеки Billz и записи Кассы за этот день. В Кассе продажи считаются вместе с отмеченными долгами, погашения долгов не входят. Линзы считаются парами.</p>
-      <RowCards columns={ord(cols, "ds", phone)} rows={list.slice(pg.from, pg.to)} rowKey={(o) => o.d + "|" + o.p} empty={only ? "Расхождений нет" : "Продаж за период нет"}
+      <RowCards columns={ord(cols, "ds", phone)} rows={list.slice(pg.from, pg.to)} rowKey={(o) => o.d + "|" + o.p} rowClass={(o) => (o.ok ? undefined : "bg-minus-soft/40")} empty={only ? "Расхождений нет" : "Продаж за период нет"}
         expand={(o) => <Detail ch={ch.filter((c) => c.d === o.d && c.point === o.p)} ks={ks.filter((s) => s.date === o.d && s.point === o.p)} d={o.d} p={o.p} />}
         footer={list.length ? <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 font-semibold"><span>Итого за период</span>
           <span className="num flex flex-wrap gap-x-4"><span><span className="font-normal text-muted-foreground">Billz </span>{fmt(T.bs)}</span><span><span className="font-normal text-muted-foreground">Касса </span>{fmt(T.ks)}</span><span><span className="font-normal text-muted-foreground">Разница </span>{sgn(T.ds)}</span></span></div> : undefined} />

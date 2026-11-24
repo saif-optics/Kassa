@@ -12,7 +12,7 @@ import { Controls, type Filters } from "./Controls";
 import { Dot, dash, ord } from "./parts";
 import { dL, dS, fmt, pl, sgn, wd } from "./logic";
 
-const ST: Record<FmStatus, [ChipTone, string]> = { ok: ["plus", "Сходится"], short: ["minus", "Не пробито"], over: ["warn", "В ФМ больше"], nofm: ["warn", "Нет отчёта ФМ"], off: ["info", "Модуль не подключён"] };
+const ST: Record<FmStatus, [ChipTone, string]> = { ok: ["plus", "Сходится"], short: ["minus", "Не пробито"], over: ["warn", "В ФМ больше"], nofm: ["warn", "Нет отчёта ФМ"], off: ["muted", "Модуль не подключён"] };
 
 export async function fmRcExport(d: Data, F: Filters) {
   const rows = fmReconRows(d, F.f, F.t, F.pt);
@@ -62,7 +62,7 @@ export function FmRecon({ d, F }: { d: Data; F: Filters }) {
       </div>
       <Card i={nx()} title="По дням и точкам" note="нажмите строку">
         <p className="text-[12.5px] text-muted-foreground">Касса: нал — «Наличные», безнал — терминал и QR. Перечисления на р/с в сверку не входят. Нажмите строку, чтобы увидеть продажи Кассы за день рядом с цифрами модуля. Точка перед датой — красная, если не пробито; оранжевая, если нет отчёта ФМ или в ФМ больше.</p>
-        <RowCards columns={ord(cols, "dt", phone)} rows={list.slice(pg.from, pg.to)} rowKey={(o) => o.d + "|" + o.p} empty={F.only ? "Расхождений нет" : "Продаж за период нет"} expand={(o) => <Det d={d} o={o} />}
+        <RowCards columns={ord(cols, "dt", phone)} rows={list.slice(pg.from, pg.to)} rowKey={(o) => o.d + "|" + o.p} rowClass={(o) => (o.st !== "ok" && o.st !== "off" ? "bg-minus-soft/40" : undefined)} empty={F.only ? "Расхождений нет" : "Продаж за период нет"} expand={(o) => <Det d={d} o={o} />}
           footer={list.length ? <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 font-semibold"><span>Итого по включённым модулям</span>
             <span className="num flex flex-wrap gap-x-4"><span><span className="font-normal text-muted-foreground">Нал, разница </span>{sgn(dc)}</span><span><span className="font-normal text-muted-foreground">Безнал, разница </span>{sgn(dn)}</span></span></div> : undefined} />
         {pg.bar}

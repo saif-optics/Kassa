@@ -44,7 +44,7 @@ export function BillzPanel({ d, i = 0 }: { d: Data; i?: number }) {
     { key: "nw", title: "В Billz", align: "right", cell: (x) => fmt(x.now) },
     { key: "df", title: "Разница", align: "right", cell: (x) => <Chip tone={x.d > 0 ? "plus" : "minus"}>{(x.d > 0 ? "+" : "") + fmt(x.d)}</Chip> },
   ];
-  const stTone = st.cls === "ok" ? "plus" : st.cls === "warn" ? "warn" : st.cls === "err" ? "minus" : "info";
+  const stTone = st.cls === "ok" ? "plus" : st.cls === "warn" ? "warn" : st.cls === "err" ? "minus" : "muted";
   return (
     <Card i={i} title="Billz → Касса" note="автозагрузка в 20:00"
       >

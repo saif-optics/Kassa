@@ -47,7 +47,7 @@ export function MiniRing({ p, color }: { p: number; color: string }) {
 }
 
 /** линия-мини график без осей */
-export function Spark({ data, color, w = 84, h = 36 }: { data: number[]; color: string; w?: number; h?: number }) {
+export function Spark({ data, color, w = 64, h = 24 }: { data: number[]; color: string; w?: number; h?: number }) {
   if (data.length < 2) return null;
   return <LineChart width={w} height={h} data={data.map((v) => ({ v }))} margin={{ top: 4, right: 3, bottom: 4, left: 3 }} className="shrink-0"><Line type="monotone" dataKey="v" stroke={color} strokeWidth={2} dot={false} isAnimationActive /></LineChart>;
 }

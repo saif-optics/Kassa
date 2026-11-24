@@ -86,7 +86,7 @@ export function lensCostView(c: Ctx, rows: LRow[]) {
   rows.forEach((x) => {
     const s = x.s, q = +(s.qty || 0), r = +s.sum || 0; revAll += r;
     const lr = c.lensRule(s), lb = c.lensBand(s);
-    const k = s.point === "Сергели" && c.lensCfg && c.lensCfg.sergeli === "journal" ? "Сергели (по журналу)" : lr && (lr.pair as number) > 0 ? lr.k : lb ? "≈ " + lb.k + " (по цене)" : lr ? lr.k : "Тип не указан";
+    const k = s.point === "Сергели" && c.lensCfg && c.lensCfg.sergeli === "journal" ? "Сергели (по журналу)" : lr && (lr.pair as number) > 0 ? lr.k : lb ? (lb.k ? "≈ " + lb.k + " (по цене)" : "≈ по цене") : lr ? lr.k : "Тип не указан";
     const cc = c.lensCostOf(s), o = m[k] || (m[k] = { k, u: 0, r: 0, c: 0, kr: 0, has: false });
     o.u += q; o.r += r; if (cc != null && cc > 0) { o.c += cc * q; o.kr += r; o.has = true; revC += r; cogs += cc * q; }
   });

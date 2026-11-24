@@ -20,7 +20,7 @@ export function Legend({ items }: { items: { label: string; color: string; dash?
 export function Spark({ vals, color = "var(--primary)", light }: { vals: number[]; color?: string; light?: boolean }) {
   if (!vals || vals.length < 2) return null;
   const data = vals.map((v, i) => ({ i, v }));
-  return <div className="h-8 w-28 shrink-0" aria-hidden><ResponsiveContainer width="100%" height="100%"><LineChart data={data} margin={{ top: 3, bottom: 3, left: 1, right: 1 }}><Line type="monotone" dataKey="v" stroke={light ? "rgb(255 255 255 / 0.95)" : color} strokeWidth={2} dot={false} isAnimationActive={false} /></LineChart></ResponsiveContainer></div>;
+  return <div className="h-6 w-16 shrink-0" aria-hidden><ResponsiveContainer width="100%" height="100%"><LineChart data={data} margin={{ top: 3, bottom: 3, left: 1, right: 1 }}><Line type="monotone" dataKey="v" stroke={light ? "rgb(255 255 255 / 0.95)" : color} strokeWidth={2} dot={false} isAnimationActive={false} /></LineChart></ResponsiveContainer></div>;
 }
 export function MiniRing({ p, color = "var(--primary)", light }: { p: number; color?: string; light?: boolean }) {
   const R = 20, C = 2 * Math.PI * R, v = Math.max(0, Math.min(1, p));

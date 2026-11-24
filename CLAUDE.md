@@ -109,6 +109,13 @@
 Мелочь (один запрос, правка до 10 строк) — делать самой: запуск помощника тоже стоит токенов.
 Новая версия (web/): проверки = `npx tsc -b`, `npm run build`, сверки `web/scripts/*-parity.ts`, скриншоты
 `web/scripts/shots.py` при запущенном сервере 5173 (launch.json «kassa-web»). Node: `C:\Users\user\.local\node`.
+Правила дизайна новой версии (решение владельца 24.11.2026, спека `docs/superpowers/specs/2026-11-24-new-design-home-design.md`):
+любой раздел собирается из общих компонентов `web/src/components/` (PageHead, Tile, Card, Segments, RowCards, FilterBar),
+все тайминги анимаций только из `web/src/lib/motion.ts`, никаких своих `duration`; на телефоне таблица = карточки (RowCards),
+фильтры = лист снизу (FilterBar), ничего шире экрана; суммы в плитках не переносятся; цвета точек только через `pointColor`;
+приёмка раздела = скриншоты 1440 и 390 в обеих темах без ошибок консоли и горизонтальной прокрутки + сверки parity.
+Сверки со старым сайтом гоняют `index.html` с фейком `dev/test/fakesb_synth.js` — фейк должен отвечать на все вызовы,
+которые делает старый сайт при старте (в т.ч. `rpc`), иначе старый сайт показывает «нет доступа» и сверка пуста.
 Сборка на Windows: `powershell -File dev\build.ps1 -Test`.
 Выкладка серверной функции: правка `supabase/functions/<имя>/index.ts`, затем `powershell -File dev\deploy-fn.ps1 <имя>`
 (Supabase CLI в `~/.local/supabase`, вход один раз `supabase login`). Не передавать код функции целиком через MCP — это дорого.

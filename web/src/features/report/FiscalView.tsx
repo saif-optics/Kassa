@@ -91,7 +91,7 @@ export function FiscalView({ d, F, setF }: { d: Data; F: FmState; setF: (f: Part
         onSaveMod={async (v) => { try { await saveCfg(F.open as string, v); setF({ edit: "day" }); toast.success(`${F.open} · данные модуля сохранены`); } catch { toast.error("Не сохранилось — проверьте связь"); } }} /></div>}
 
       <Card i={nx()} title={"По дням · " + MN[+m.slice(5, 7) - 1].toLowerCase()} note="нал / безнал">
-        <RowCards columns={dayCols} rows={L.slice(pg.from, pg.to)} rowKey={(x) => x} onRowClick={(x) => setF({ d: x, m: x.slice(0, 7) })} empty="Дней пока нет"
+        <RowCards columns={dayCols} rows={L.slice(pg.from, pg.to)} rowKey={(x) => x} selectedKey={day} onRowClick={(x) => setF({ d: x, m: x.slice(0, 7) })} empty="Дней пока нет"
           footer={<p className="text-[12.5px] text-muted-foreground">Нажмите день, чтобы выбрать его. В ячейке точки: сверху нал, снизу безнал. «Гросс всего» — нарастающий итог нал + безнал по всем модулям на конец дня.</p>} />
         {pg.bar}
       </Card>
