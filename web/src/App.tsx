@@ -27,9 +27,12 @@ import { AnalyticsPage } from "@/features/analytics/AnalyticsPage";
 import { LensPage } from "@/features/lens/LensPage";
 import { ReportPage } from "@/features/report/ReportPage";
 import { ReconPage } from "@/features/recon/ReconPage";
+import { KitDemo } from "@/features/home/KitDemo";
 import { StockPage } from "@/features/stock/StockPage";
 import type { Data } from "@/lib/types";
 
+// витрина общих компонентов — только в демо-режиме: ?demo#kit
+const KIT = () => isDemo && location.hash === "#kit";
 const PAGES: Record<string, (p: { d: Data }) => React.ReactNode> = { home: HomePage, kassa: KassaPage, report: ReportPage, pay: PayPage, sales: SalesPage, recon: ReconPage, analytics: AnalyticsPage, plan: PlanPage, lens: LensPage, batch: StockPage };
 // ширина страницы: true — «данные», на всю ширину; false — «сводка», не шире 1600px по центру
 const WIDE: Record<string, boolean> = { home: false, pay: false, plan: false, kassa: false, sales: true, report: true, recon: true, analytics: true, lens: true, batch: true };
@@ -154,7 +157,7 @@ function Shell({ email }: { email: string }) {
           ) : q.error ? (
             <motion.p key="err" className="glass rounded-3xl p-6 text-minus">Не удалось загрузить данные: {String((q.error as Error).message || q.error)}</motion.p>
           ) : q.data ? (
-            <motion.div key={tab} {...land(0)} exit={{ opacity: 0, transition: { duration: DUR.fast } }}>{(() => { const P = PAGES[tab] || KassaPage; return <P d={q.data} />; })()}</motion.div>
+            <motion.div key={tab} {...land(0)} exit={{ opacity: 0, transition: { duration: DUR.fast } }}>{KIT() ? <KitDemo /> : (() => { const P = PAGES[tab] || KassaPage; return <P d={q.data} />; })()}</motion.div>
           ) : null}
         </AnimatePresence>
       </div>
