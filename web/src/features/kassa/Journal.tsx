@@ -2,8 +2,11 @@
 import { useState } from "react";
 import { ChevronRight, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FilterBar } from "@/components/FilterSheet";
+import { RowCards, type RowColumn } from "@/components/RowCards";
+import { Segments } from "@/components/Segments";
 import { InlineNumber } from "@/components/Inline";
+import { useIsPhone } from "@/lib/useMedia";
 import { cn } from "@/lib/utils";
 import type { Entry } from "@/lib/types";
 import { dShort, fmt, fromRsv, hasFact, isBc, isRsvIn, monthName, tagOf, val } from "./logic";
@@ -19,12 +22,13 @@ function Pill({ e }: { e: Entry }) {
   if (isBc(e)) return p("bg-plus-soft text-plus", "приход · Б/Ч дня", "Остаток Б/Ч дня: уже учтён в строке Б/Ч, второй раз не прибавляется");
   if (isRsvIn(e)) return p("bg-warn-soft text-warn", `в резерв · ${e.from === "kassa" ? "из кассы" : "со стороны"}`);
   if (e.type === "inc") return p("bg-plus-soft text-plus", "приход");
-  return <span className="flex flex-wrap gap-1">{p(e.cat === "op" ? "bg-primary/12 text-primary" : "bg-warn-soft text-warn", e.cat === "op" ? "операционный" : "прочий")}{fromRsv(e) && p("bg-warn-soft text-warn", "с резерва")}</span>;
+  return <span className="inline-flex flex-wrap gap-1">{p(e.cat === "op" ? "bg-primary/12 text-primary" : "bg-warn-soft text-warn", e.cat === "op" ? "операционный" : "прочий")}{fromRsv(e) && p("bg-warn-soft text-warn", "с резерва")}</span>;
 }
 
 type Props = { list: Entry[]; M: string; editingId: string | null; onEdit: (e: Entry) => void; onDelete: (id: string) => void; onFact: (e: Entry, v: number | null) => void };
 
 export function Journal({ list, M, editingId, onEdit, onDelete, onFact }: Props) {
+  const phone = useIsPhone();
   const [f, setF] = useState<F>("all"), [open, setOpen] = useState<Set<string>>(new Set([M])), [all, setAll] = useState<Set<string>>(new Set()), [confirm, setConfirm] = useState<string | null>(null);
   let L = [...list].sort((a, b) => -byDate(a, b));
   if (f === "op") L = L.filter((e) => e.type !== "inc" && e.cat === "op"); if (f === "oth") L = L.filter((e) => e.type !== "inc" && e.cat !== "op");
@@ -36,38 +40,55 @@ export function Journal({ list, M, editingId, onEdit, onDelete, onFact }: Props)
   const s = cur.filter((e) => !isBc(e)).reduce((a, e) => a + (e.type === "inc" ? 1 : -1) * +(e.amount || 0), 0), sf = cur.filter((e) => !isBc(e)).reduce((a, e) => a + (e.type === "inc" ? 1 : -1) * val(e), 0);
   const sd = cur.reduce((a, e) => a + (e.type !== "inc" && hasFact(e) ? +(e.amount || 0) - (e.fact as number) : 0), 0);
   const del = (id: string) => { if (confirm === id) { onDelete(id); setConfirm(null); } else { setConfirm(id); setTimeout(() => setConfirm((c) => (c === id ? null : c)), 3000); } };
+
+  // факт (правка на месте) и разница с планом
+  const fact = (e: Entry) => { const d = hasFact(e) ? +(e.amount || 0) - (e.fact as number) : 0; return e.type !== "inc"
+    ? <span className="flex items-center justify-end gap-1" onClick={(ev) => ev.stopPropagation()}><InlineNumber value={hasFact(e) ? (e.fact as number) : null} placeholder={fmt(e.amount || 0)} label={"Фактически потрачено: " + e.name} onSave={(v) => onFact(e, v)} className="max-w-28" />
+      {d ? <span className={cn("num text-xs font-semibold", d > 0 ? "text-plus" : "text-minus")}>{d > 0 ? "−" : "+"}{fmt(Math.abs(d))}</span> : null}</span>
+    : <span className="text-muted-foreground">—</span>; };
+  const actions = (e: Entry) => (
+    <span className="flex justify-end gap-0.5" onClick={(ev) => ev.stopPropagation()}><Button variant="ghost" size="icon-sm" aria-label="Изменить" onClick={() => onEdit(e)}><Pencil /></Button>
+      <Button variant="ghost" size="icon-sm" aria-label="Удалить" onClick={() => del(e.id)} className={cn(confirm === e.id && "bg-minus-soft text-minus")}>{confirm === e.id ? <span className="px-1 text-[11px] font-semibold">Точно?</span> : <Trash2 />}</Button></span>);
+  const cols: RowColumn<Entry>[] = [
+    { key: "date", title: "Дата", sub: true, width: "64px", cell: (e) => dShort(e.date) },
+    { key: "name", title: "Название", main: true, cell: (e) => <span className={cn(e.id === editingId && "text-primary")}>{e.name}</span> },
+    { key: "kind", title: "Вид", sub: true, cell: (e) => <Pill e={e} /> },
+    { key: "branch", title: "Точка", sub: true, cell: (e) => e.branch || "—" },
+    { key: "sum", title: "Сумма", align: "right", cell: (e) => isBc(e) ? <span className="text-muted-foreground" title="уже учтено в Б/Ч">+{fmt(e.amount || 0)}</span> : (e.type === "inc" ? "+" : "−") + fmt(e.amount || 0) },
+    { key: "fact", title: "Факт", align: "right", hideMobile: true, cell: fact },
+    { key: "act", title: "", hideMobile: true, width: "84px", cell: actions },
+  ];
+  const expand = (e: Entry) => (
+    <div className="flex flex-col gap-2">
+      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[12.5px]">
+        {e.type !== "inc" && <><dt className="text-muted-foreground">Тег</dt><dd className="text-right">{tagOf(e)}</dd></>}
+        <dt className="text-muted-foreground">Источник</dt><dd className="text-right">{SRC[e.source || ""] || "вручную"}</dd>
+        {phone && e.type !== "inc" && <><dt className="self-center text-muted-foreground">Факт</dt><dd className="flex justify-end">{fact(e)}</dd></>}
+      </dl>
+      {phone && <div className="flex justify-end">{actions(e)}</div>}
+    </div>);
+  const label = FILTERS.find((x) => x[0] === f)![1];
   return (
-    <div>
-      <Tabs value={f} onValueChange={(v) => setF(v as F)} className="mb-3"><TabsList className="flex-wrap">{FILTERS.map(([k, l]) => <TabsTrigger key={k} value={k}>{l}</TabsTrigger>)}</TabsList></Tabs>
+    <div className="flex flex-col gap-3">
+      <FilterBar count={f === "all" ? 0 : 1} summary={`${label} · ${L.length} ${pl(L.length, "запись", "записи", "записей")}`}>
+        <Segments aria-label="Вид записей" size="sm" value={f} onChange={(v) => setF(v as F)} items={FILTERS.map(([k, l]) => ({ key: k, label: l }))} />
+      </FilterBar>
       {!L.length && <p className="text-[13px] text-muted-foreground">Записей нет.</p>}
       <div className="flex flex-col">
         {months.map((m) => { const arr = byM[m], on = open.has(m), shown = all.has(m) ? arr : arr.slice(0, LIM);
           const exp = arr.filter((e) => e.type !== "inc").reduce((a, e) => a + val(e), 0), inc = arr.filter((e) => e.type === "inc" && !isBc(e)).reduce((a, e) => a + val(e), 0);
           return (
-            <div key={m} className="border-b border-border">
-              <button type="button" onClick={() => setOpen((x) => tg(x, m))} aria-expanded={on} className="flex w-full items-center gap-2 py-3 text-left">
-                <ChevronRight className={cn("size-4 transition-transform", on && "rotate-90")} /><b>{m === "—" ? "Без даты" : monthName(m)}</b>
-                <span className="text-[13px] text-muted-foreground">· {arr.length} {pl(arr.length, "запись", "записи", "записей")} · расходы −{fmt(exp)}{inc ? ` · приходы +${fmt(inc)}` : ""}</span></button>
+            <div key={m} className="border-b border-border last:border-0">
+              <button type="button" onClick={() => setOpen((x) => tg(x, m))} aria-expanded={on} className="flex w-full flex-wrap items-center gap-x-2 gap-y-0.5 py-3 text-left">
+                <ChevronRight className={cn("size-4 shrink-0 transition-transform", on && "rotate-90")} /><b>{m === "—" ? "Без даты" : monthName(m)}</b>
+                <span className="min-w-0 text-[13px] text-muted-foreground">· {arr.length} {pl(arr.length, "запись", "записи", "записей")} · расходы −{fmt(exp)}{inc ? ` · приходы +${fmt(inc)}` : ""}</span></button>
               {on && <div className="pb-2">
-                <div className="grid grid-cols-[60px_minmax(0,1fr)_150px_100px_120px_150px_80px] gap-2 px-2 pb-1.5 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase max-xl:hidden">
-                  <span>Дата</span><span>Название</span><span>Вид</span><span>Точка</span><span className="text-right">Сумма</span><span className="text-right">Факт</span><span /></div>
-                {shown.map((e) => { const isExp = e.type !== "inc", d = hasFact(e) ? +(e.amount || 0) - (e.fact as number) : 0; return (
-                  <div key={e.id} className={cn("grid grid-cols-[60px_minmax(0,1fr)_150px_100px_120px_150px_80px] items-center gap-2 rounded-xl px-2 py-1.5 transition hover:bg-muted/70 max-xl:grid-cols-[52px_minmax(0,1fr)_auto]", e.id === editingId && "bg-accent")}>
-                    <span className="num text-[13px] text-muted-foreground max-xl:row-span-2">{dShort(e.date)}</span>
-                    <span className="min-w-0"><span className="block truncate font-medium">{e.name}</span><span className="text-xs text-muted-foreground">{isExp && <span className="mr-1 rounded bg-muted px-1.5 py-0.5">{tagOf(e)}</span>}{SRC[e.source || ""] ? "· " + SRC[e.source || ""] : ""}</span></span>
-                    <span className="max-xl:hidden"><Pill e={e} /></span>
-                    <span className="text-[13px] text-muted-foreground max-xl:hidden">{e.branch || "—"}</span>
-                    <span className="num text-right font-semibold">{isBc(e) ? <span className="text-muted-foreground" title="уже учтено в Б/Ч">+{fmt(e.amount || 0)}</span> : (e.type === "inc" ? "+" : "−") + fmt(e.amount || 0)}</span>
-                    <span className="flex items-center justify-end gap-1 max-xl:col-start-2 max-xl:justify-start">{isExp ? <><InlineNumber value={hasFact(e) ? (e.fact as number) : null} placeholder={fmt(e.amount || 0)} label={"Фактически потрачено: " + e.name} onSave={(v) => onFact(e, v)} className="max-w-28" />
-                      {d ? <span className={cn("num text-xs font-semibold", d > 0 ? "text-plus" : "text-minus")}>{d > 0 ? "−" : "+"}{fmt(Math.abs(d))}</span> : null}</> : <span className="text-muted-foreground">—</span>}</span>
-                    <span className="flex justify-end gap-0.5 max-xl:col-start-3"><Button variant="ghost" size="icon-sm" aria-label="Изменить" onClick={() => onEdit(e)}><Pencil /></Button>
-                      <Button variant="ghost" size="icon-sm" aria-label="Удалить" onClick={() => del(e.id)} className={cn(confirm === e.id && "bg-minus-soft text-minus")}>{confirm === e.id ? <span className="px-1 text-[11px] font-semibold">Точно?</span> : <Trash2 />}</Button></span>
-                  </div>); })}
+                <RowCards columns={cols} rows={shown} rowKey={(e) => e.id} expand={expand} dense />
                 {arr.length > LIM && <Button variant="ghost" className="mt-1 w-full" onClick={() => setAll((x) => tg(x, m))}>{all.has(m) ? "Свернуть" : `Показать все (${arr.length})`}</Button>}
               </div>}
             </div>); })}
       </div>
-      {cur.length > 0 && <div className="flex flex-wrap justify-end gap-x-6 gap-y-1 pt-3 text-[13.5px]"><span>Итого за {monthName(M).toLowerCase()}:</span><span>по плану <b className="num">{fmt(s)}</b></span><span>по факту <b className="num">{fmt(sf)}</b></span>{sd ? <span className={cn("font-semibold", sd > 0 ? "text-plus" : "text-minus")}>{sd > 0 ? "сэкономили" : "перерасход"} {fmt(Math.abs(sd))}</span> : null}</div>}
+      {cur.length > 0 && <div className="flex flex-wrap justify-end gap-x-6 gap-y-1 text-[13.5px]"><span>Итого за {monthName(M).toLowerCase()}:</span><span>по плану <b className="num">{fmt(s)}</b></span><span>по факту <b className="num">{fmt(sf)}</b></span>{sd ? <span className={cn("font-semibold", sd > 0 ? "text-plus" : "text-minus")}>{sd > 0 ? "сэкономили" : "перерасход"} {fmt(Math.abs(sd))}</span> : null}</div>}
     </div>
   );
 }

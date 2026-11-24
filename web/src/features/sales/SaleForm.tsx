@@ -2,9 +2,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Panel } from "@/components/kit";
+import { Card } from "@/components/Card";
+import { Segments } from "@/components/Segments";
+import { useIsPhone } from "@/lib/useMedia";
 import { cn } from "@/lib/utils";
-import { Field, Sel, digits, fmtIn } from "./parts";
+import { Field, Note, Sel, digits, fmtIn } from "./parts";
 import { PAYS, fmt, normPay, normS, payOf, pointColor, todayTash, type SaleX, type Settings } from "./logic";
 
 export type SaleRec = Record<string, unknown>;
@@ -12,7 +14,8 @@ type St = { date: string; point: string; check: string; cat: string; product: st
 const empty = (s: Settings, date = todayTash(), point = s.points[0]): St => ({ date, point, check: "", cat: s.cats[0], product: "", qty: "1", price: "", sum: "", pay: PAYS[0], mx: ["", "", "", ""], debt: "" });
 const MIXED = "Смешанная";
 
-export function SaleForm({ sales, settings, editing, onSave, onCancel }: { sales: SaleX[]; settings: Settings; editing: SaleX | null; onSave: (id: string | null, rec: SaleRec) => Promise<void>; onCancel: () => void }) {
+export function SaleForm({ sales, settings, editing, onSave, onCancel, i = 0 }: { i?: number; sales: SaleX[]; settings: Settings; editing: SaleX | null; onSave: (id: string | null, rec: SaleRec) => Promise<void>; onCancel: () => void }) {
+  const phone = useIsPhone();
   const [f, setF] = useState<St>(() => empty(settings)), [touched, setTouched] = useState(false);
   const [msg, setMsg] = useState<{ t: string; bad?: boolean } | null>(null), [busy, setBusy] = useState(false);
   const productRef = useRef<HTMLInputElement>(null), priceRef = useRef<HTMLInputElement>(null), qtyRef = useRef<HTMLInputElement>(null), root = useRef<HTMLDivElement>(null);
@@ -70,13 +73,16 @@ export function SaleForm({ sales, settings, editing, onSave, onCancel }: { sales
   const mxTot = f.mx.reduce((a, v) => a + (digits(v) || 0), 0);
 
   return (
-    <div ref={root}><Panel title={editing ? "Изменить продажу" : "Новая продажа"} note="Одна строка — одна позиция. Сумма = кол-во × цена; если заплатили меньше, впишите фактическую сумму, разница считается скидкой.">
+    <div ref={root}><Card title={editing ? "Изменить продажу" : "Новая продажа"} i={i}>
+      <Note>Одна строка — одна позиция. Сумма = кол-во × цена; если заплатили меньше, впишите фактическую сумму, разница считается скидкой.</Note>
       <form onSubmit={submit} autoComplete="off" className="grid gap-3">
         <div className="grid gap-1.5"><span className="text-[12px] text-muted-foreground">Точка</span>
-          <div role="radiogroup" aria-label="Точка" className="flex flex-wrap gap-1.5">{settings.points.map((p) => (
+          {phone
+            ? <Segments size="sm" aria-label="Точка" value={f.point} onChange={(v) => set("point", v)} items={settings.points.map((p) => ({ key: p, label: <><i className="size-2.5 rounded-full" style={{ background: pointColor(p, settings.points) }} />{p}</> }))} />
+            : <div role="radiogroup" aria-label="Точка" className="flex flex-wrap gap-1.5">{settings.points.map((p) => (
             <button key={p} type="button" role="radio" aria-checked={f.point === p} onClick={() => set("point", p)}
               className={cn("inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[13.5px] font-medium transition outline-none focus-visible:ring-3 focus-visible:ring-primary/30", f.point === p ? "border-primary bg-accent text-accent-foreground" : "border-border hover:bg-muted")}>
-              <i className="size-2.5 rounded-full" style={{ background: pointColor(p, settings.points) }} />{p}</button>))}</div></div>
+              <i className="size-2.5 rounded-full" style={{ background: pointColor(p, settings.points) }} />{p}</button>))}</div>}</div>
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Дата"><Input type="date" value={f.date} onChange={(e) => set("date", e.target.value)} aria-label="Дата" className="num" /></Field>
           <Field label="Чек №"><Input value={f.check} onChange={(e) => set("check", e.target.value)} placeholder="необязательно" aria-label="Чек №" /></Field>
@@ -93,11 +99,11 @@ export function SaleForm({ sales, settings, editing, onSave, onCancel }: { sales
           <p className={cn("text-[12.5px] sm:col-span-2", mxTot && mxTot === (digits(f.sum) || 0) ? "text-plus" : "text-muted-foreground")}>Сумма частей: <b className="num">{fmt(mxTot)}</b> из <b className="num">{fmt(digits(f.sum) || 0)}</b></p></div>}
         <Field label="Долг, сум (необязательно)"><Input inputMode="numeric" value={f.debt} onChange={(e) => set("debt", fmtIn(e.target.value, fmt))} placeholder="если покупатель ещё должен" aria-label="Долг" className="num" /></Field>
         <div className="flex flex-wrap items-center gap-2">
-          <Button type="submit" disabled={busy}>{editing ? "Сохранить изменения" : "Добавить продажу"}</Button>
-          {editing && <Button type="button" variant="secondary" onClick={cancel}>Отменить правку</Button>}
+          <Button type="submit" disabled={busy} className="max-sm:h-11 max-sm:w-full">{editing ? "Сохранить изменения" : "Добавить продажу"}</Button>
+          {editing && <Button type="button" variant="secondary" onClick={cancel} className="max-sm:h-11 max-sm:w-full">Отменить правку</Button>}
           <span role="status" className={cn("text-[13px]", msg?.bad ? "text-minus" : "text-plus")}>{msg?.t}</span>
         </div>
       </form>
-    </Panel></div>
+    </Card></div>
   );
 }

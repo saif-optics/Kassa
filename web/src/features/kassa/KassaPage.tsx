@@ -3,10 +3,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from "@/components/Card";
+import { PageHead } from "@/components/PageHead";
+import { Segments } from "@/components/Segments";
 import type { Data, Entry } from "@/lib/types";
 import { useMutations } from "@/lib/useData";
-import { Panel } from "../pay/parts";
 import { analysis, cashState, compute, fmt, kAll, kMonths, lastM, monthName, newId, recFor, recM, reserve, todayTash } from "./logic";
 import { Tiles } from "./Tiles";
 import { Steps } from "./Steps";
@@ -50,37 +51,36 @@ export function KassaPage({ d, focus }: { d: Data; focus?: "expense" | "cash" | 
     } catch (e) { toast.error("Не удалось выгрузить: " + String(e)); }
   };
 
+  const hint = (t: string) => <p className="-mt-1 text-[12.5px] leading-snug text-muted-foreground">{t}</p>;
   return (
-    <div className="flex flex-col gap-5">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div><div className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">Saif-Optics · наличные (Б/Ч) · Премиум и Яшнабад</div>
-          <h1 className="text-[34px] leading-tight font-bold tracking-tight">Касса</h1>
-          <p className="max-w-[72ch] text-[15px] text-muted-foreground">Б/Ч Премиума и Яшнабада + приходы − расходы дня − прочие расходы</p></div>
-        <Button variant="secondary" size="lg" onClick={xlsx}><FileSpreadsheet />Выгрузить Excel</Button>
-      </header>
-      {ms.length > 1 && <Tabs value={M} onValueChange={setSel}><TabsList className="h-auto flex-wrap">{ms.map((m) => <TabsTrigger key={m} value={m} className="px-4 py-1.5">{monthName(m)}</TabsTrigger>)}</TabsList></Tabs>}
-      <Tiles c={c} M={M} isLast={isLast} rec={rec} st={st} lastRecNote={lastRecNote} rsv={rsv}
+    <div className="flex flex-col gap-3.5">
+      <PageHead eyebrow="Saif-Optics · наличные (Б/Ч) · Премиум и Яшнабад" title="Касса" sub="Б/Ч Премиума и Яшнабада + приходы − расходы дня − прочие расходы"
+        actions={<Button variant="secondary" size="lg" onClick={xlsx}><FileSpreadsheet />Выгрузить Excel</Button>} />
+      {ms.length > 1 && <Segments aria-label="Месяц" items={ms.map((m) => ({ key: m, label: monthName(m) }))} value={M} onChange={setSel} />}
+      <Tiles c={c} M={M} isLast={isLast} rec={rec} st={st} lastRecNote={lastRecNote} rsv={rsv} i0={0}
         onCash={(v) => mu.saveCash(v, compute(d, LM).expected, LM, newId()).then(() => { toast.success("Пересчёт сохранён"); })}
         onReserve={(v, from) => mu.putEntry(newId(), { type: "inc", kind: "rsv", from, name: from === "kassa" ? "Пополнение резерва из кассы" : "Пополнение резерва со стороны", amount: v, cat: "", branch: "Общее", date: todayTash(), source: "manual", createdAt: Date.now() }).then(() => { toast.success("Резерв пополнен"); })} />
-      {isLast && <div ref={formRef}><Panel title={editing ? "Изменить запись" : "Добавить расход"} note="Нажмите на шаблон, чтобы заполнить форму, поправьте сумму и дату, затем «Добавить». Итог и недостача пересчитаются сразу.">
+      {isLast && <div ref={formRef}><Card i={4} title={editing ? "Изменить запись" : "Добавить расход"}>
+        {hint("Нажмите на шаблон, чтобы заполнить форму, поправьте сумму и дату, затем «Добавить». Итог и недостача пересчитаются сразу.")}
         <AddForm templates={d.templates} editing={editing} reserveBal={reserve(d).bal} onSubmit={submit} onCancel={() => setEditing(null)} focusKey={fk}
-          onDelTpl={(id) => mu.delTemplate(id).catch(() => toast.error("Не удалось удалить шаблон"))} /></Panel></div>}
-      <div className="grid gap-4 xl:grid-cols-2">
-        <Panel title="Расчёт по шагам" note="Нажмите шаг, чтобы увидеть записи."><Steps c={c} rsvBal={reserve(d, isLast ? null : M).bal} /></Panel>
-        <div className="flex flex-col gap-4">
-          <Panel title="Операционные и прочие"><Split c={c} /></Panel>
-          <Panel title="Выводы"><Insights items={a.insights} /></Panel>
+          onDelTpl={(id) => mu.delTemplate(id).catch(() => toast.error("Не удалось удалить шаблон"))} /></Card></div>}
+      <div className="grid gap-3.5 xl:grid-cols-2">
+        <Card i={5} title="Расчёт по шагам">{hint("Нажмите шаг, чтобы увидеть записи.")}<Steps c={c} rsvBal={reserve(d, isLast ? null : M).bal} /></Card>
+        <div className="flex min-w-0 flex-col gap-3.5">
+          <Card i={6} title="Операционные и прочие"><Split c={c} /></Card>
+          <Card i={7} title="Выводы"><Insights items={a.insights} /></Card>
         </div>
       </div>
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px] 2xl:grid-cols-[minmax(0,1fr)_420px]">
-        <Panel title="Б/Ч по дням" note="Наличные продаж Премиума и Яшнабада за каждый день месяца."><DayChart days={c.days} /></Panel>
-        <Panel title="Расходы с Б/Ч по статьям"><Articles a={a} /></Panel>
+      <div className="grid gap-3.5 xl:grid-cols-[minmax(0,1fr)_380px] 2xl:grid-cols-[minmax(0,1fr)_420px]">
+        <Card i={8} title="Б/Ч по дням">{hint("Наличные продаж Премиума и Яшнабада за каждый день месяца.")}<DayChart days={c.days} /></Card>
+        <Card i={9} title="Расходы с Б/Ч по статьям"><Articles a={a} /></Card>
       </div>
-      <Panel title="Журнал записей" note="Факт — нажмите на сумму, если потратили не столько, сколько планировали.">
+      <Card i={10} title="Журнал записей">
+        {hint("Факт — нажмите на сумму, если потратили не столько, сколько планировали.")}
         <Journal list={kAll(d)} M={M} editingId={editing?.id || null} onFact={onFact}
           onEdit={(e) => { setEditing(e); setSel(LM); requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })); }}
           onDelete={(id) => { if (editing?.id === id) setEditing(null); mu.delEntry(id).then(() => toast.success("Запись удалена")).catch(() => toast.error("Не удалось удалить")); }} />
-      </Panel>
+      </Card>
     </div>
   );
 }

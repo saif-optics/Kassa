@@ -40,12 +40,12 @@ export function AddForm({ templates, editing, reserveBal, onSubmit, onCancel, on
     <div>
       {templates.length ? <div className="mb-4 flex flex-col gap-2">{groups.map(([k, n]) => { const g = templates.filter((t) => (t.type === "inc" ? "inc" : t.cat) === k).sort((a, b) => (a.order || 99) - (b.order || 99) || a.name.localeCompare(b.name)); return g.length ? (
         <div key={k}><span className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{n}</span>
-          <div className="mt-1 flex flex-wrap gap-1.5">{g.map((t) => (
-            <span key={t.id} className="glass-inner inline-flex items-center gap-1.5 rounded-full py-1 pr-1 pl-3 text-[13px]">
+          <div className="mt-1 flex gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none] sm:flex-wrap sm:overflow-visible [&::-webkit-scrollbar]:hidden">{g.map((t) => (
+            <span key={t.id} className="glass-inner inline-flex shrink-0 items-center gap-1.5 rounded-full py-1 pr-1 pl-3 text-[13px]">
               <button type="button" onClick={() => tpl(t)} className="inline-flex items-center gap-1.5 font-medium"><i className={cn("size-2 rounded-full", t.type === "inc" ? "bg-plus" : t.cat === "op" ? "bg-primary" : "bg-warn")} />{t.name}{t.amount ? <span className="num text-muted-foreground">{fmt(t.amount)}</span> : null}</button>
               <Button type="button" variant="ghost" size="icon-xs" aria-label={"Удалить шаблон " + t.name} onClick={() => onDelTpl(t.id)}><X /></Button></span>))}</div></div>) : null; })}</div>
         : <p className="mb-4 text-[13px] text-muted-foreground">Шаблонов пока нет. Отметьте «сохранить как шаблон» при добавлении расхода.</p>}
-      <form onSubmit={submit} className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <form onSubmit={submit} className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <div className="grid gap-1.5"><Label>Тип</Label><Select value={f.type} onValueChange={(v) => set("type", v as "exp" | "inc")}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="exp">Расход</SelectItem><SelectItem value="inc">Приход</SelectItem></SelectContent></Select></div>
         <div className="grid gap-1.5 xl:col-span-2"><Label>Название</Label><Input ref={nameRef} value={f.name} onChange={(e) => set("name", e.target.value)} placeholder="Например: Премиум за такси" /></div>
         <div className="grid gap-1.5"><Label>Сумма</Label><Input ref={amtRef} value={f.amount} onChange={(e) => { const v = digits(e.target.value); set("amount", isNaN(v) ? "" : fmt(v)); }} inputMode="numeric" placeholder="0" className="num" /></div>
@@ -55,9 +55,9 @@ export function AddForm({ templates, editing, reserveBal, onSubmit, onCancel, on
         {!inc && <div className="grid gap-1.5"><Label>Откуда деньги</Label><Select value={f.fund || "kassa"} onValueChange={(v) => set("fund", v === "kassa" ? "" : v)}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="kassa">Касса</SelectItem><SelectItem value="reserve">Резерв · {fmt(reserveBal)}</SelectItem></SelectContent></Select></div>}
         {!inc && <div className="grid gap-1.5"><Label>Тег</Label><Select value={f.tag || "auto"} onValueChange={(v) => set("tag", v === "auto" ? "" : v)}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
           <SelectContent><SelectItem value="auto">Авто · {tagAuto(f.name)}</SelectItem>{[...TAGS.map((t) => t[0]), "Прочее"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>}
-        <div className="flex flex-wrap items-center gap-3 sm:col-span-2 xl:col-span-4">
-          <Button type="submit" size="lg" disabled={busy}>{editing ? "Сохранить изменения" : "Добавить"}</Button>
-          {editing && <Button type="button" variant="secondary" size="lg" onClick={onCancel}>Отмена</Button>}
+        <div className="flex flex-col gap-3 sm:col-span-2 sm:flex-row sm:flex-wrap sm:items-center xl:col-span-4">
+          <Button type="submit" size="lg" disabled={busy} className="max-sm:w-full">{editing ? "Сохранить изменения" : "Добавить"}</Button>
+          {editing && <Button type="button" variant="secondary" size="lg" onClick={onCancel} className="max-sm:w-full">Отмена</Button>}
           {!editing && <label className="flex items-center gap-2 text-[13px]"><Checkbox checked={f.saveTpl} onCheckedChange={(v) => set("saveTpl", !!v)} />сохранить как шаблон</label>}
           {msg && <span className={cn("text-[13px]", msg.bad ? "text-minus" : "text-plus")}>{msg.t}</span>}
         </div>

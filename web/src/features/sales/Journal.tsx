@@ -3,10 +3,10 @@ import { useState } from "react";
 import { ChevronLeft, ChevronRight, FileSpreadsheet, FileText, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Panel } from "@/components/kit";
+import { Card } from "@/components/Card";
 import { cn } from "@/lib/utils";
 import { PAYCOL, PAYS, PAYSHORT, WD, discOf, fmt, journalOf, payOf, plural, pointColor, wdIdx, type Ctx, type Filter, type SaleX } from "./logic";
-import { Pager, usePager } from "./parts";
+import { Note, Pager, usePager } from "./parts";
 
 type J = ReturnType<typeof journalOf>;
 
@@ -59,16 +59,17 @@ function Col({ col, points, editingId, onEdit, onDelete }: { col: J["cols"][numb
   );
 }
 
-export function Journal({ c, F, list, jDay, setJDay, editingId, onEdit, onDelete, onCsv, onXlsx, msg }: {
+export function Journal({ c, F, list, jDay, setJDay, editingId, onEdit, onDelete, onCsv, onXlsx, msg, i = 0 }: { i?: number;
   c: Ctx; F: Filter; list: SaleX[]; jDay: string; setJDay: (d: string) => void; editingId: string | null; onEdit: (s: SaleX) => void; onDelete: (id: string) => void;
   onCsv: () => void; onXlsx: () => void; msg: { t: string; bad?: boolean } | null;
 }) {
   const J = journalOf(c, F, list, jDay), n = J.dayList.length;
   return (
-    <Panel title="Журнал продаж по дням" note={`Стрелки листают дни с продажами. Выгрузка CSV и Excel берёт все записи за период фильтра (${list.length} ${plural(list.length, "позиция", "позиции", "позиций")}).`}
-      action={<div className="flex flex-wrap justify-end gap-2"><Button type="button" variant="secondary" onClick={onCsv}><FileText />CSV</Button><Button type="button" variant="secondary" onClick={onXlsx}><FileSpreadsheet />Excel</Button></div>}>
-      <p role="status" className={cn("mb-2 min-h-5 text-[13px]", msg?.bad ? "text-minus" : "text-plus")}>{msg?.t}</p>
-      <div className="mb-3 flex flex-wrap items-center gap-2">
+    <Card title="Журнал продаж по дням" i={i}>
+      <Note>{`Стрелки листают дни с продажами. Выгрузка CSV и Excel берёт все записи за период фильтра (${list.length} ${plural(list.length, "позиция", "позиции", "позиций")}).`}</Note>
+      <div className="grid grid-cols-2 gap-2 sm:flex"><Button type="button" variant="secondary" onClick={onCsv} className="max-sm:h-11"><FileText />CSV</Button><Button type="button" variant="secondary" onClick={onXlsx} className="max-sm:h-11"><FileSpreadsheet />Excel</Button></div>
+      <p role="status" className={cn("text-[13px] empty:hidden", msg?.bad ? "text-minus" : "text-plus")}>{msg?.t}</p>
+      <div className="flex flex-wrap items-center gap-2">
         <Button type="button" variant="secondary" size="icon" aria-label="Предыдущий день" disabled={!J.prev} onClick={() => setJDay(J.prev)}><ChevronLeft /></Button>
         <Input type="date" aria-label="День журнала" value={J.day} onChange={(e) => e.target.value && setJDay(e.target.value)} className="num w-40" />
         <Button type="button" variant="secondary" size="icon" aria-label="Следующий день" disabled={!J.next} onClick={() => setJDay(J.next)}><ChevronRight /></Button>
@@ -77,6 +78,6 @@ export function Journal({ c, F, list, jDay, setJDay, editingId, onEdit, onDelete
       {n ? <div className="flex flex-col gap-3">
         {J.cols.map((col) => <Col key={col.pt} col={col} points={c.settings.points} editingId={editingId} onEdit={onEdit} onDelete={onDelete} />)}</div>
         : <p className="py-6 text-center text-[13px] text-muted-foreground">В этот день продаж нет. Выберите другой день.</p>}
-    </Panel>
+    </Card>
   );
 }

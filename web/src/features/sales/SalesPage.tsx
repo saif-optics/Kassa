@@ -3,8 +3,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { Data } from "@/lib/types";
 import { useMutations } from "@/lib/useData";
-import { Kpi } from "@/components/kit";
-import { cn } from "@/lib/utils";
+import { PageHead } from "@/components/PageHead";
+import { Chip, Tile, TileLabel, TileSub, TileValue } from "@/components/Tile";
 import { SalesFilter, useSalesFilter } from "./filter";
 import { Calendar } from "./Calendar";
 import { DayCash } from "./DayCash";
@@ -17,9 +17,12 @@ import { Photos, SettingsBox } from "./Extras";
 import { downloadCsv, downloadXlsx } from "./files";
 import { agg, cmpText, csvOf, ctxOf, dayCashRows, expFiltered, expVal, filtered, fmt, fname, lowerFirst, newId, prevList, sheetsOf, type SaleX, type Settings } from "./logic";
 
+/** дельта к прошлому периоду: рост и падение — пилюлями, остальное — обычным текстом */
 function Cmp({ cur, prev }: { cur: number; prev: number | null | undefined }) {
   const t = cmpText(cur, prev);
-  return <span className={cn(t.kind === "up" && "text-plus", t.kind === "down" && "text-minus")}>{t.text || " "}</span>;
+  if (t.kind === "up") return <Chip tone="plus">{t.text}</Chip>;
+  if (t.kind === "down") return <Chip tone="minus">{t.text}</Chip>;
+  return <span>{t.text || " "}</span>;
 }
 
 export function SalesPage({ d }: { d: Data }) {
@@ -56,32 +59,30 @@ export function SalesPage({ d }: { d: Data }) {
   const saveSettings = async (v: Settings) => { await mu.putDoc("settings", "sales", v); toast.success("Настройки сохранены"); };
   const openDay = (day: string) => { setJDay(day); requestAnimationFrame(() => jRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })); };
 
+  // сквозной номер посадки сверху вниз
+  let k = 0; const nx = () => k++;
   return (
-    <div className="flex flex-col gap-5">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div><div className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">Saif-Optics · Премиум · Яшнабад · Сергели · C1</div>
-          <h1 className="text-[34px] leading-tight font-bold tracking-tight">Продажи</h1>
-          <p className="text-[15px] text-muted-foreground">Выручка, чеки и касса по дням и точкам</p></div>
-        <span className="glass inline-flex items-center gap-2 rounded-full px-4 py-2 text-[13px] text-muted-foreground"><i className="size-2 rounded-full bg-plus" />Сохраняется автоматически</span>
-      </header>
-      <SalesFilter d={d} />
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 @5xl/main:grid-cols-4">
-        <Kpi i={0} tone="primary" label="Выручка" value={fmt(a.rev) + " сум"} sub={<Cmp cur={a.rev} prev={pa && pa.rev} />} />
-        <Kpi i={1} label="Чеков / позиций" value={`${fmt(a.checks)} / ${fmt(a.n)}`} sub={<Cmp cur={a.checks} prev={pa && pa.checks} />} />
-        <Kpi i={2} label="Средний чек" value={fmt(a.avg) + " сум"} sub={<Cmp cur={a.avg} prev={pa && pa.avg} />} />
-        <Kpi i={3} label="Б/Ч − расходы дня" value={fmt(a.cash - expSum) + " сум"} sub={`наличные ${fmt(a.cash)} · расходы ${fmt(expSum)}`} />
+    <div className="flex flex-col gap-3.5">
+      <PageHead eyebrow="Saif-Optics · Премиум · Яшнабад · Сергели · C1" title="Продажи" sub="Выручка, чеки и касса по дням и точкам"
+        actions={<Chip tone="info" className="self-center">Сохраняется автоматически</Chip>} />
+      <SalesFilter d={d} i={nx()} />
+      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+        <Tile i={nx()} hero><TileLabel>Выручка</TileLabel><TileValue count={a.rev} suffix=" сум" /><TileSub><Cmp cur={a.rev} prev={pa && pa.rev} /></TileSub></Tile>
+        <Tile i={nx()}><TileLabel>Чеков / позиций</TileLabel><TileValue>{fmt(a.checks)} / {fmt(a.n)}</TileValue><TileSub><Cmp cur={a.checks} prev={pa && pa.checks} /></TileSub></Tile>
+        <Tile i={nx()}><TileLabel>Средний чек</TileLabel><TileValue count={a.avg} suffix=" сум" /><TileSub><Cmp cur={a.avg} prev={pa && pa.avg} /></TileSub></Tile>
+        <Tile i={nx()}><TileLabel>Б/Ч − расходы дня</TileLabel><TileValue count={a.cash - expSum} suffix=" сум" /><TileSub>наличные {fmt(a.cash)} · расходы {fmt(expSum)}</TileSub></Tile>
       </div>
-      <Calendar c={c} F={F} jDay={jDay} onOpenDay={openDay} />
-      <DayCash rows={rows} points={c.settings.points} F={F} />
-      <Debts sales={c.sales} F={F} />
-      <div className="grid gap-4 xl:grid-cols-2">
-        <SaleForm sales={c.sales} settings={c.settings} editing={editing} onSave={save} onCancel={() => setEditing(null)} />
-        <ExpenseBox exp={ex} settings={c.settings} onAdd={addExp} onDelete={(id) => mu.delEntry(id)} />
+      <Calendar c={c} F={F} jDay={jDay} onOpenDay={openDay} i={nx()} />
+      <DayCash rows={rows} points={c.settings.points} F={F} i={nx()} />
+      <Debts sales={c.sales} F={F} i={nx()} />
+      <div className="grid gap-3.5 xl:grid-cols-2">
+        <SaleForm sales={c.sales} settings={c.settings} editing={editing} onSave={save} onCancel={() => setEditing(null)} i={nx()} />
+        <ExpenseBox exp={ex} settings={c.settings} onAdd={addExp} onDelete={(id) => mu.delEntry(id)} i={nx()} />
       </div>
-      <Stats c={c} F={F} list={list} resetKey={resetKey} />
-      <div ref={jRef} className="scroll-mt-4"><Journal c={c} F={F} list={list} jDay={jDay} setJDay={setJDay} editingId={editing?.id || null} onEdit={setEditing} onDelete={remove} onCsv={csv} onXlsx={xlsx} msg={xmsg} /></div>
-      <Photos rows={d.rows.photos || {}} sales={c.sales} />
-      <SettingsBox key={c.settings.points.join() + c.settings.cats.join() + c.settings.plan} settings={c.settings} onSave={saveSettings} />
+      <Stats c={c} F={F} list={list} resetKey={resetKey} i={nx()} />
+      <div ref={jRef} className="scroll-mt-4"><Journal c={c} F={F} list={list} jDay={jDay} setJDay={setJDay} editingId={editing?.id || null} onEdit={setEditing} onDelete={remove} onCsv={csv} onXlsx={xlsx} msg={xmsg} i={nx()} /></div>
+      <Photos rows={d.rows.photos || {}} sales={c.sales} i={nx()} />
+      <SettingsBox key={c.settings.points.join() + c.settings.cats.join() + c.settings.plan} settings={c.settings} onSave={saveSettings} i={nx()} />
     </div>
   );
 }

@@ -2,15 +2,22 @@
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Panel } from "@/components/kit";
+import { motion } from "motion/react";
+import { Card } from "@/components/Card";
+import { DUR, EASE } from "@/lib/motion";
+import { useIsPhone } from "@/lib/useMedia";
 import { cn } from "@/lib/utils";
+import { Note } from "./parts";
 import { MONTHS_F, WD, WD_FULL, calDayOf, calDefaultSel, calOf, calShort, dLong, fmt, monthEnd, monthGen, pd, plural, pointColor, type Ctx, type Filter } from "./logic";
 
 const mS = (v: number) => (v < 0 ? "−" : "+") + calShort(Math.abs(v));
 const mln = (v: number) => (v / 1e6).toFixed(1).replace(".", ",");
+// подпись ячейки на телефоне — в млн; меньше 100 тыс. не округляем до нуля
+const mlnCell = (v: number) => (v >= 1e5 ? mln(v) : "<0,1");
 const plOff = (c: Ctx, d: string) => (c.plan.off || [0]).includes(pd(d).getDay());
 
-export function Calendar({ c, F, jDay, onOpenDay }: { c: Ctx; F: Filter; jDay: string; onOpenDay: (d: string) => void }) {
+export function Calendar({ c, F, jDay, onOpenDay, i = 0 }: { c: Ctx; F: Filter; jDay: string; onOpenDay: (d: string) => void; i?: number }) {
+  const isPhone = useIsPhone();
   const [calM, setCalM] = useState(""), [sel, setSel] = useState(""), [dir, setDir] = useState(0);
   const o = useMemo(() => calOf(c, F, calM, jDay), [c, F, calM, jDay]);
   const { M, months, byD, mx, best, total, wd, tgt, P } = o, today = c.today;
@@ -36,21 +43,21 @@ export function Calendar({ c, F, jDay, onOpenDay }: { c: Ctx; F: Filter; jDay: s
   const legend = [...new Set(o.list.map((s) => s.point))];
 
   return (
-    <Panel title="Календарь продаж" note="Чем ярче день, тем больше выручка. Нажмите на день — справа появится его итог.">
-      <div className="mb-3 flex items-center gap-1">
+    <Card title="Календарь продаж" i={i}>
+      <Note>Чем ярче день, тем больше выручка. Нажмите на день — {isPhone ? "ниже" : "справа"} появится его итог.</Note>
+      <div className="flex flex-wrap items-center gap-1">
         <Button type="button" variant="secondary" size="icon-sm" aria-label="Предыдущий месяц" disabled={M <= months[0]} onClick={() => shift(-1)}><ChevronLeft /></Button>
         <b className="min-w-[9rem] text-center text-[14px]" aria-live="polite">{MONTHS_F[+M.slice(5, 7) - 1]} {M.slice(0, 4)}</b>
         <Button type="button" variant="secondary" size="icon-sm" aria-label="Следующий месяц" disabled={M >= months[months.length - 1]} onClick={() => shift(1)}><ChevronRight /></Button>
         <Button type="button" variant="secondary" size="sm" className="ml-2" onClick={() => go(today.slice(0, 7), today)}>Сегодня</Button></div>
-      <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4 @7xl/main:grid-cols-5">
+      <div className="grid grid-cols-2 gap-2 xl:grid-cols-4">
         <Sum l="Выручка за месяц" v={fmt(total)} /><Sum l="Дней с продажами" v={String(wd)} /><Sum l="В среднем за день" v={fmt(wd ? total / wd : 0)} />
         {best && <Sum l="Лучший день" v={`${+best[0].slice(8)} ${monthGen(M)} · ${calShort(best[1].rev)}`} />}
-        {F.point !== "all" && <Sum l="Точка" v={F.point} />}
       </div>
       {P && (() => {
         const pct = P.fact / P.tot, ok = P.fact >= P.tot, S = P.S, K = P.K, cls = ok ? "text-plus" : pct >= (K.done.length / K.work.length) * 0.95 ? "text-warn" : "text-minus";
         return (
-          <div className="glass-inner mb-3 grid gap-2 rounded-2xl p-3">
+          <div className="glass-inner grid gap-2 rounded-2xl p-3">
             <div className="flex flex-wrap items-center justify-between gap-2 text-[13px]"><span>План {F.point === "all" ? "месяца" : F.point}: <b className="num">{fmt(P.tot)}</b></span><b className={cn("num", cls)}>{Math.round(pct * 100)}% выполнено</b></div>
             <div className="relative h-2 overflow-hidden rounded-full bg-muted"><i className={cn("block h-full rounded-full", ok ? "bg-plus" : "bg-primary")} style={{ width: Math.min(100, pct * 100).toFixed(1) + "%" }} />
               {!K.past && !K.future && <s title="Где нужно быть сегодня по графику" className="absolute inset-y-0 w-0.5 bg-foreground/60 no-underline" style={{ left: Math.min(100, K.done.length / K.work.length * 100).toFixed(1) + "%" }} />}</div>
@@ -61,8 +68,8 @@ export function Calendar({ c, F, jDay, onOpenDay }: { c: Ctx; F: Filter; jDay: s
             </div>
           </div>);
       })()}
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
-        <div key={M} className={cn("min-w-0 animate-in fade-in duration-300", dir < 0 ? "slide-in-from-left-4" : dir > 0 ? "slide-in-from-right-4" : "")}>
+      <div className="grid gap-3.5 lg:grid-cols-[minmax(0,1fr)_300px]">
+        <motion.div key={M} initial={{ opacity: 0, x: dir * 16 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: DUR.base, ease: EASE.out }} className="min-w-0">
           <div className="grid grid-cols-7 gap-1 pb-1 text-center text-[11px] font-semibold text-muted-foreground sm:grid-cols-[repeat(7,minmax(0,1fr))_92px] sm:gap-1.5">
             {[...WD, "Неделя"].map((x, i) => <span key={x} className={i === 7 ? "max-sm:hidden" : ""}>{x}</span>)}</div>
           <div className="grid gap-1 sm:gap-1.5">
@@ -81,7 +88,7 @@ export function Calendar({ c, F, jDay, onOpenDay }: { c: Ctx; F: Filter; jDay: s
                       <span className="flex items-center justify-between"><span className="num text-[12px] font-semibold">{+d.slice(8)}</span>
                         {(tgt && v >= tgt ? <i title="План дня выполнен" className="size-1.5 rounded-full bg-plus" /> : null)}{top && <span className="text-[9px] font-bold text-primary max-sm:hidden">топ</span>}</span>
                       <span className="grid gap-px">
-                        <b className="num truncate text-[11px] leading-none sm:text-[12.5px]"><span className="max-sm:hidden">{x ? calShort(v) : sun ? "выходной" : fut ? "" : "—"}</span><span className="sm:hidden">{x ? (v >= 1e6 ? mln(v) : Math.round(v / 1e3) + "к") : sun || fut ? "" : "—"}</span></b>
+                        <b className="num truncate text-[11px] leading-none sm:text-[12.5px]"><span className="max-sm:hidden">{x ? calShort(v) : sun ? "выходной" : fut ? "" : "—"}</span><span className="sm:hidden">{x ? mlnCell(v) : sun || fut ? "" : "—"}</span></b>
                         {showPlan && <span className="num hidden truncate text-[10px] leading-none sm:block">{fut || (d === today && !x) ? <span className="text-muted-foreground">нужно {mln(P.S.needDay || tgt)}</span> : <span className={bp >= tgt ? "text-plus" : "text-minus"}>{mS(bp - tgt)}</span>}</span>}
                         {x && <span className="mt-0.5 flex h-1 overflow-hidden rounded-full">{Object.entries(x.pts).sort((a, b) => b[1] - a[1]).map(([p, y]) => <i key={p} style={{ width: (y / v * 100).toFixed(1) + "%", background: pointColor(p, c.settings.points) }} />)}</span>}
                       </span>
@@ -91,15 +98,8 @@ export function Calendar({ c, F, jDay, onOpenDay }: { c: Ctx; F: Filter; jDay: s
                   {weekInfo[wi].plan && <><small className="text-[10px] text-muted-foreground">{weekInfo[wi].plan!.sub}</small><em className={cn("num text-[10.5px] not-italic", weekInfo[wi].plan!.cls)}>{weekInfo[wi].plan!.text}</em></>}</div>
               </div>))}
           </div>
-          {weekInfo.length > 0 && <div className="mt-3 sm:hidden"><h4 className="mb-1 text-[12px] font-semibold text-muted-foreground uppercase">По неделям</h4>
-            <div className="grid gap-1">{weekInfo.map((w, i) => <div key={i} className="flex items-baseline justify-between gap-2 text-[13px]"><span className="num text-muted-foreground">{+w.days[0].slice(8)}–{+w.days[w.days.length - 1].slice(8)}</span><b className="num">{w.wsum ? calShort(w.wsum) : "—"}</b>
-              {w.plan && <span className={cn("num text-[12px]", w.plan.cls)}>{w.plan.text}</span>}</div>)}</div></div>}
-          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5">меньше<span className="h-2 w-16 rounded-full" style={{ background: "linear-gradient(90deg,var(--muted),var(--primary))" }} />больше</span>
-            {legend.map((p) => <span key={p} className="inline-flex items-center gap-1.5"><i className="size-2 rounded-full" style={{ background: pointColor(p, c.settings.points) }} />{p}</span>)}
-            {tgt ? <span className="inline-flex items-center gap-1.5"><i className="size-2 rounded-full bg-plus" />план дня выполнен</span> : null}</div>
-        </div>
-        <aside aria-live="polite" className="glass-inner grid content-start gap-3 rounded-2xl p-4">
+        </motion.div>
+        <aside aria-live="polite" className="glass-inner grid content-start gap-3 self-start rounded-2xl p-4 lg:col-start-2 lg:row-span-2 lg:row-start-1">
           {!calSel || !day ? <><div className="text-[15px] font-semibold">Выберите день</div><div className="text-[13px] text-muted-foreground">В этом месяце продаж пока нет.</div></> : (() => {
             const dt = pd(calSel), tops = Object.entries(day.prod).sort((a, b) => b[1] - a[1]).slice(0, 3);
             return <>
@@ -116,8 +116,18 @@ export function Calendar({ c, F, jDay, onOpenDay }: { c: Ctx; F: Filter; jDay: s
             </>;
           })()}
         </aside>
+        <div className="min-w-0 lg:col-start-1 lg:row-start-2">
+          {weekInfo.length > 0 && <div className="sm:hidden"><h4 className="mb-1 text-[12px] font-semibold text-muted-foreground uppercase">По неделям</h4>
+            <div className="grid gap-1">{weekInfo.map((w, i) => <div key={i} className="flex items-baseline justify-between gap-2 text-[13px]"><span className="num text-muted-foreground">{+w.days[0].slice(8)}–{+w.days[w.days.length - 1].slice(8)}</span><b className="num">{w.wsum ? calShort(w.wsum) : "—"}</b>
+              {w.plan && <span className={cn("num text-[12px]", w.plan.cls)}>{w.plan.text}</span>}</div>)}</div></div>}
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-muted-foreground">
+            <span className="sm:hidden">в ячейках млн сум</span>
+            <span className="inline-flex items-center gap-1.5">меньше<span className="h-2 w-16 rounded-full" style={{ background: "linear-gradient(90deg,var(--muted),var(--primary))" }} />больше</span>
+            {legend.map((p) => <span key={p} className="inline-flex items-center gap-1.5"><i className="size-2 rounded-full" style={{ background: pointColor(p, c.settings.points) }} />{p}</span>)}
+            {tgt ? <span className="inline-flex items-center gap-1.5"><i className="size-2 rounded-full bg-plus" />план дня выполнен</span> : null}</div>
+        </div>
       </div>
-    </Panel>
+    </Card>
   );
 }
 

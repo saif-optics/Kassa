@@ -64,3 +64,6 @@ export function Pager({ pg, className }: { pg: Pg; className?: string }) {
 
 export const digits = (s: string) => { const v = String(s || "").replace(/[^\d]/g, ""); return v ? parseInt(v, 10) : NaN; };
 export const fmtIn = (s: string, f: (n: number) => string) => { const v = digits(s); return isNaN(v) ? "" : f(v); };
+
+/** пояснение под заголовком Card (в самой Card подпись обрезается в одну строку, а здесь текст переносится) */
+export const Note = ({ children, className }: { children: React.ReactNode; className?: string }) => <p className={cn("text-[12.5px] leading-snug text-muted-foreground", className)}>{children}</p>;

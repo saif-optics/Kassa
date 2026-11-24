@@ -3,6 +3,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DUR, EASE } from "@/lib/motion";
 import type { Entry } from "@/lib/types";
 import { dShort, fmt, val, type Kassa } from "./logic";
 import { pl } from "../pay/logic";
@@ -39,7 +40,7 @@ export function Steps({ c, rsvBal }: { c: Kassa; rsvBal: number }) {
               <span className="block text-[12.5px] text-muted-foreground">{s.sub}{s.n > 0 && <> · <span className="text-primary">{on ? "свернуть" : `показать ${s.n} ${pl(s.n, "запись", "записи", "записей")}`}</span></>}</span></span>
             <span className="flex flex-col items-end"><b className="num">{s.amt}</b><small className="num text-xs text-muted-foreground">{s.k === "rsvx" ? s.run : "остаток " + s.run}</small></span>
           </button>
-          <AnimatePresence initial={false}>{on && <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden pl-[46px]">{s.body}</motion.div>}</AnimatePresence>
+          <AnimatePresence initial={false}>{on && <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: DUR.base, ease: EASE.out }} className="overflow-hidden pl-[46px]">{s.body}</motion.div>}</AnimatePresence>
         </div>); })}
       <div className="grid grid-cols-[34px_minmax(0,1fr)_auto] items-center gap-3 pt-3"><span className="grid size-[30px] place-items-center rounded-full bg-primary text-[15px] font-bold text-white">=</span><b>Должно быть наличными</b><b className="num text-lg">{fmt(c.expected)}</b></div>
     </div>
