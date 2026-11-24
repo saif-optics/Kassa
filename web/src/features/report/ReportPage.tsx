@@ -2,14 +2,16 @@
 import { useEffect, useRef, useState } from "react";
 import { FileSpreadsheet, Plus, Upload } from "lucide-react";
 import { toast } from "sonner";
-import { Panel } from "@/components/kit";
+import { Card } from "@/components/Card";
+import { PageHead } from "@/components/PageHead";
+import { Segments } from "@/components/Segments";
 import { Button } from "@/components/ui/button";
 import type { Data } from "@/lib/types";
 import { useMutations } from "@/lib/useData";
 import { DayReport } from "./DayReport";
 import { FiscalView, type FmState } from "./FiscalView";
 import { RsView } from "./RsView";
-import { Seg, saveBook } from "./ui";
+import { saveBook } from "./ui";
 import { CAT_NAMES, RP_MF, catOf, fmCfg, fmDays, fmIsOn, parseRahmat, pl, rsByMonth, rsDays, todayTash, type FmDay } from "./logic";
 
 const HEAD = {
@@ -65,28 +67,19 @@ export function ReportPage({ d }: { d: Data }) {
   };
 
   return (
-    <div className="flex flex-col gap-5">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div className="min-w-0">
-          <div className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{e1}</div>
-          <h1 className="text-[34px] leading-tight font-bold tracking-tight max-sm:text-[28px]">{t}</h1>
-          <p className="text-[15px] text-muted-foreground">{p}</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {view === "rs" ? <>
-            <Button variant="secondary" size="lg" onClick={xlsx}><FileSpreadsheet />Выгрузить Excel</Button></> : <>
-            <Button variant="secondary" size="lg" onClick={() => file.current?.click()}><Upload />Загрузить отчёт Rahmat</Button>
-            <Button size="lg" onClick={addFm}><Plus />Внести гросс за день</Button>
-            <input ref={file} type="file" accept=".zip,.xlsx,.xls" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) importRahmat(f); }} /></>}
-        </div>
-      </header>
-      <Seg value={view} onChange={pickView} label="Вид" options={[["rs", "Расчётный счёт"], ["fm", "Фискальные модули"]]} />
+    <div className="flex flex-col gap-3.5">
+      <PageHead eyebrow={e1} title={t} sub={p}
+        actions={view === "rs" ? <Button variant="secondary" size="lg" onClick={xlsx}><FileSpreadsheet />Выгрузить Excel</Button> : <>
+          <Button variant="secondary" size="lg" onClick={() => file.current?.click()}><Upload />Загрузить отчёт Rahmat</Button>
+          <Button size="lg" onClick={addFm}><Plus />Внести гросс за день</Button>
+          <input ref={file} type="file" accept=".zip,.xlsx,.xls" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) importRahmat(f); }} /></>} />
+      <Segments aria-label="Вид отчёта" items={[{ key: "rs", label: "Расчётный счёт" }, { key: "fm", label: "Фискальные модули" }]} value={view} onChange={(v) => pickView(v as "rs" | "fm")} />
 
       {view === "fm" ? <FiscalView d={d} F={fm} setF={patchFm} /> : <>
         <RsView d={d} />
-        <Panel title="Отчёт оптика" note="Excel: отдельный лист на каждый день">
+        <Card i={7}title="Отчёт оптика" note="Excel по дням">
           <DayReport d={d} />
-        </Panel>
+        </Card>
       </>}
     </div>
   );

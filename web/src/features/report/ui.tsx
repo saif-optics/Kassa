@@ -1,11 +1,12 @@
-// Общие мелочи трёх разделов (Отчёт р/с, Сверка, Склад Billz): переключатель, значок статуса, постраничный показ таблиц, скачивание.
+// Общие мелочи раздела «Отчёт р/с» и (пока на старых элементах) Сверки и Склада Billz: переключатель, значок статуса, таблицы-карточки, постраничный показ, скачивание.
 import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Segments } from "@/components/Segments";
 import { cn } from "@/lib/utils";
 
-/** переключатель из нескольких кнопок; длинные списки переносятся на вторую строку */
+/** старый переключатель — оставлен для Сверки и Склада Billz; в «Отчёте р/с» вместо него Segments */
 export function Seg<T extends string>({ value, onChange, options, label, className }: { value: T; onChange: (v: T) => void; options: [T, React.ReactNode][]; label?: string; className?: string }) {
   return (
     <Tabs value={value} onValueChange={(v) => onChange(v as T)} className={className}>
@@ -25,7 +26,7 @@ export function Pill({ tone, children, title }: { tone: Tone; children: React.Re
 }
 export const Dot = ({ color }: { color: string }) => <span aria-hidden className="mr-1.5 inline-block size-2 rounded-full align-[1px]" style={{ background: color }} />;
 
-/** цвет точки — одинаковый во всех разделах новой версии */
+/** старые цвета точек — только для Сверки; в «Отчёте р/с» берётся pointColor(d.points, p) */
 const PT: Record<string, string> = { "Премиум": "#0a84ff", "Яшнабад": "#af52de", "Сергели": "#34c759", "C1": "#ff9f0a", "Склад": "#8e8e93" };
 export const ptColor = (p: string) => PT[p] || "#8e8e93";
 
@@ -78,8 +79,8 @@ export function usePaging(total: number, key: string, focus = -1, reset: unknown
   const from = pg * size, to = Math.min(total, from + size);
   const bar = total <= SIZES[0] ? null : (
     <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-[13px]">
-      <div className="flex items-center gap-2"><span className="text-muted-foreground">Показывать</span>
-        <Tabs value={String(size)} onValueChange={(v) => setSize(+v)}><TabsList aria-label="Строк на странице" className="h-8">{SIZES.map((s) => <TabsTrigger key={s} value={String(s)} className="px-2.5">{s}</TabsTrigger>)}</TabsList></Tabs></div>
+      <div className="flex min-w-0 max-w-full items-center gap-2"><span className="text-muted-foreground">Показывать</span>
+        <Segments size="sm" aria-label="Строк на странице" items={SIZES.map((s) => ({ key: String(s), label: String(s) }))} value={String(size)} onChange={(v) => setSize(+v)} /></div>
       <div className="flex items-center gap-1.5">
         <Button variant="secondary" size="icon" aria-label="Назад" disabled={pg === 0} onClick={() => setPage(pg - 1)}><ChevronLeft /></Button>
         <span className="num min-w-24 text-center text-muted-foreground">{sp(from + 1)}–{sp(to)} из {sp(total)}</span>

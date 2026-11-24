@@ -68,7 +68,7 @@ export function Editor({ d, M, open, newKind, onClose, onSave, onDelete }: Props
 
   return (
     <Sheet open={!!open} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent side="right" className="glass w-full gap-0 border-l-0 p-0 sm:max-w-[460px]">
+      <SheetContent side="right" className="glass w-full gap-0 border-l-0 p-0 max-sm:w-full! max-sm:max-w-none! sm:max-w-[460px]">
         <SheetHeader className="flex-row items-center gap-3 border-b border-border p-5">
           <CatIcon cat={v.cat} /><div className="min-w-0"><SheetTitle className="truncate text-[17px]">{cur ? cur.name : "Новый платёж"}</SheetTitle>
             <SheetDescription>{v.kind === "debt" ? "Долг: общая сумма и, если есть, платёж в месяц" : v.kind === "plan" ? "Разовый платёж в определённый день" : "Повторяется каждый месяц или раз в год"}</SheetDescription></div>
@@ -89,16 +89,16 @@ export function Editor({ d, M, open, newKind, onClose, onSave, onDelete }: Props
             {v.cat === "tax" && <label className="flex items-center gap-2.5 text-sm"><Switch checked={v.tax} onCheckedChange={(x) => { set("tax", x); if (x && !v.pct) set("pct", "4"); }} />Считать сам: процент с безнала прошлого месяца</label>}
             {tax ? <Field label="Процент с безнала" hint={`за ${MN[+pm.slice(5, 7) - 1].toLowerCase()}: ${fmt(cashless(d, pm))} сум безнала`}><Input {...reg("pct")} inputMode="decimal" /></Field> : <>
               <Field label="Валюта"><Seg value={v.cur} opts={[["sum", "Сумы"], ["usd", "Доллары"]]} onChange={(x) => set("cur", x as F["cur"])} /></Field>
-              {usd ? <div className="grid grid-cols-2 gap-3"><Field label={v.kind === "debt" ? "Платёж в месяц, $" : "Сумма, $"}><Input {...reg("usd", true)} /></Field><Field label="Курс" hint={am ? `≈ ${fmt(am)} сум` : ""}><Input {...reg("rate", true)} /></Field></div>
+              {usd ? <div className="grid grid-cols-1 gap-3 sm:grid-cols-2"><Field label={v.kind === "debt" ? "Платёж в месяц, $" : "Сумма, $"}><Input {...reg("usd", true)} /></Field><Field label="Курс" hint={am ? `≈ ${fmt(am)} сум` : ""}><Input {...reg("rate", true)} /></Field></div>
                 : <Field label={v.kind === "debt" ? "Платёж в месяц, сум" : "Сумма, сум"} hint={v.kind === "debt" ? "пусто — без графика платежей" : ""}><Input {...reg("amount", true)} /></Field>}
             </>}
             {v.kind === "plan" ? <Field label="Дата платежа" error={form.formState.errors.date?.message}><Input type="date" {...reg("date")} /></Field> : <>
               <Field label="Как часто"><Seg value={v.freq} opts={[["month", "Каждый месяц"], ["year", "Раз в год"]]} onChange={(x) => set("freq", x as F["freq"])} /></Field>
-              <div className="grid grid-cols-2 gap-3"><Field label="День месяца" hint="нет такого дня — последний"><Input {...reg("day")} inputMode="numeric" /></Field>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2"><Field label="День месяца" hint="нет такого дня — последний"><Input {...reg("day")} inputMode="numeric" /></Field>
                 {v.freq === "year" ? <Field label="Месяц"><Select value={v.mon} onValueChange={(x) => set("mon", x)}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent>{MN.map((m, i) => <SelectItem key={m} value={String(i + 1)}>{m}</SelectItem>)}</SelectContent></Select></Field> : <span />}</div>
-              <div className="grid grid-cols-2 gap-3"><Field label="Действует с"><Input type="month" {...reg("from")} /></Field><Field label="Действует по" hint="пусто — без конца"><Input type="month" {...reg("to")} /></Field></div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2"><Field label="Действует с"><Input type="month" {...reg("from")} /></Field><Field label="Действует по" hint="пусто — без конца"><Input type="month" {...reg("to")} /></Field></div>
             </>}
-            {v.kind === "debt" && <div className="grid grid-cols-2 gap-3">{usd ? <Field label="Сумма долга, $"><Input {...reg("totalUsd", true)} /></Field> : <Field label="Сумма долга, сум"><Input {...reg("total", true)} /></Field>}<Field label="Погашено до учёта"><Input {...reg("paid0", true)} /></Field></div>}
+            {v.kind === "debt" && <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{usd ? <Field label="Сумма долга, $"><Input {...reg("totalUsd", true)} /></Field> : <Field label="Сумма долга, сум"><Input {...reg("total", true)} /></Field>}<Field label="Погашено до учёта"><Input {...reg("paid0", true)} /></Field></div>}
             <Field label="Слова для поиска в выписке и Кассе" hint="через запятую; «-ндфл» — исключить"><Input {...reg("match")} placeholder="например: кредит" /></Field>
             <Field label="Примечание"><Input {...reg("note")} /></Field>
             <label className="flex items-center gap-2.5 text-sm"><Switch checked={v.on} onCheckedChange={(x) => set("on", x)} />Платёж действует</label>
@@ -108,13 +108,13 @@ export function Editor({ d, M, open, newKind, onClose, onSave, onDelete }: Props
                 {pays.map((p, i) => <div key={i} className="flex items-center justify-between gap-2 border-b border-border py-1.5 text-[13px] last:border-0"><span>{p.date ? dLong(p.date) + " " + p.date.slice(0, 4) : "—"}{p.note ? ` · ${p.note}` : ""}</span>
                   <span className="flex items-center gap-1"><b className="num">{fmt(p.amount)}</b><Button type="button" variant="ghost" size="icon-xs" aria-label="Удалить погашение" onClick={() => savePays(pays.filter((_, j) => j !== i))}><X /></Button></span></div>)}
                 {!pays.length && <p className="text-[13px] text-muted-foreground">Пока нет. Погашения из выписки и Кассы считаются сами.</p>}
-                <div className="mt-3 grid grid-cols-[1fr_1fr_auto] gap-2"><Input type="date" value={pd} onChange={(e) => setPd(e.target.value)} aria-label="Дата погашения" />
+                <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"><Input type="date" value={pd} onChange={(e) => setPd(e.target.value)} aria-label="Дата погашения" />
                   <Input value={pa} onChange={(e) => setPa(e.target.value)} onBlur={() => { const x = num(pa); setPa(x == null ? "" : fmt(x)); }} inputMode="decimal" placeholder="Сумма" aria-label="Сумма погашения" />
                   <Button type="button" variant="secondary" size="icon" aria-label="Добавить погашение" onClick={() => { const a = num(pa); if (a) { savePays([...pays, { date: pd || todayTash(), amount: a }]); setPa(""); } }}><Plus /></Button></div>
               </div>
             )}
           </div>
-          <div className="flex flex-wrap items-center gap-2 border-t border-border p-5">
+          <div className="flex flex-wrap items-center gap-2 border-t border-border p-5 max-sm:flex-col max-sm:items-stretch max-sm:[&>button]:w-full max-sm:[&>button]:ml-0">
             <Button type="submit" disabled={busy}>Сохранить</Button><Button type="button" variant="secondary" onClick={onClose}>Отмена</Button>
             {cur && <Button type="button" variant="destructive" className="ml-auto" onClick={async () => { if (!confirmDel) { setConfirmDel(true); return; } await onDelete(cur.id); onClose(); }}><Trash2 />{confirmDel ? "Точно удалить?" : "Удалить"}</Button>}
           </div>

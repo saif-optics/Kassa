@@ -3,7 +3,8 @@ import { motion } from "motion/react";
 import { AppWindow, CircleDollarSign, Ellipsis, House, Landmark, ReceiptText, Users, Zap, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { dDiff, pl, type MonthRow, type Status } from "./logic";
-import { land } from "@/lib/motion";
+import { DUR, EASE, land } from "@/lib/motion";
+import { Chip, type ChipTone } from "@/components/Tile";
 
 const ICONS: Record<string, LucideIcon> = { credit: Landmark, rent: House, tax: ReceiptText, salary: Users, service: AppWindow, utility: Zap, debt: CircleDollarSign, other: Ellipsis };
 
@@ -12,23 +13,20 @@ export function CatIcon({ cat, size = "md" }: { cat?: string; size?: "sm" | "md"
   return <span className={cn("glass-inner grid shrink-0 place-items-center rounded-xl text-foreground/75", size === "sm" ? "size-8" : "size-10")}><I className={size === "sm" ? "size-4" : "size-5"} strokeWidth={1.8} /></span>;
 }
 
-const ST: Record<Status, [string, string]> = {
-  ok: ["bg-plus-soft text-plus", "Оплачено"], part: ["bg-warn-soft text-warn", "Частично"], late: ["bg-minus-soft text-minus", "Просрочено"],
-  today: ["bg-warn-soft text-warn", "Сегодня"], soon: ["bg-muted text-muted-foreground", "Впереди"],
+const ST: Record<Status, [ChipTone, string]> = {
+  ok: ["plus", "Оплачено"], part: ["info", "Частично"], late: ["minus", "Просрочено"], today: ["warn", "Сегодня"], soon: ["warn", "Впереди"],
 };
 export function statusText(r: MonthRow, T: string) {
   if (r.st === "late") { const n = dDiff(r.due, T); return `Просрочено · ${n} ${pl(n, "день", "дня", "дней")}`; }
   if (r.st === "soon") { const n = dDiff(T, r.due); return n === 1 ? "Завтра" : `Через ${n} ${pl(n, "день", "дня", "дней")}`; }
   return ST[r.st][1];
 }
+/** статус платежа пилюлей; с onClick — кнопка «отметить оплату» */
 export function StatusChip({ r, T, onClick }: { r: MonthRow; T: string; onClick?: () => void }) {
   const title = r.st === "ok" ? (r.man && !r.auto ? "Снять отметку" : "Оплачено по выписке") : "Отметить оплату";
-  return (
-    <motion.button type="button" whileHover={{ y: -1 }} whileTap={{ scale: 0.97 }} onClick={onClick} title={title}
-      className={cn("inline-flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-1.5 text-[12.5px] font-semibold outline-none focus-visible:ring-3 focus-visible:ring-primary/30", ST[r.st][0])}>
-      <i className={cn("size-1.5 rounded-full", r.st === "soon" ? "ring-[1.5px] ring-current" : "bg-current")} />{statusText(r, T)}
-    </motion.button>
-  );
+  const chip = <Chip tone={ST[r.st][0]} className="px-3 py-1.5 text-[12.5px] whitespace-nowrap">{statusText(r, T)}</Chip>;
+  if (!onClick) return chip;
+  return <button type="button" onClick={onClick} title={title} className="rounded-full outline-none transition-transform active:scale-[0.97] focus-visible:ring-3 focus-visible:ring-primary/30">{chip}</button>;
 }
 
 export function Ring({ p, className }: { p: number; className?: string }) {
@@ -37,7 +35,7 @@ export function Ring({ p, className }: { p: number; className?: string }) {
     <svg viewBox="0 0 40 40" className={cn("size-11 shrink-0", className)} aria-hidden>
       <circle cx="20" cy="20" r={r} fill="none" strokeWidth="4.5" className="stroke-muted" />
       <motion.circle cx="20" cy="20" r={r} fill="none" strokeWidth="4.5" strokeLinecap="round" className="stroke-plus" transform="rotate(-90 20 20)"
-        initial={{ strokeDasharray: `0 ${c}` }} animate={{ strokeDasharray: `${c * v} ${c}` }} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }} />
+        initial={{ strokeDasharray: `0 ${c}` }} animate={{ strokeDasharray: `${c * v} ${c}` }} transition={{ duration: DUR.slow, ease: EASE.out }} />
     </svg>
   );
 }

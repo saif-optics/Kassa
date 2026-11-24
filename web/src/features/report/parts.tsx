@@ -1,4 +1,4 @@
-// Элементы раздела «Отчёт р/с»: поле суммы, строка дней, плитки.
+// Элементы раздела «Отчёт р/с»: поле суммы, строка дней, значок.
 import { useEffect, useRef, useState } from "react";
 import { Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -36,16 +36,6 @@ export function DayChips({ days, value, onPick, stat, title, label }: { days: st
   );
 }
 
-/** плитка с цифрой внутри панели (не «стекло», чтобы не вкладывать стекло в стекло) */
-export function Tile({ label, big, sub, tone, hero }: { label: string; big: React.ReactNode; sub?: React.ReactNode; tone?: "plus" | "minus" | "muted"; hero?: boolean }) {
-  return (
-    <div className={cn("flex min-w-0 flex-col gap-1 rounded-2xl border border-border px-4 py-3", hero ? "bg-accent" : "glass-inner")}>
-      <span className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{label}</span>
-      <b className={cn("num truncate text-[20px] font-semibold tracking-tight", tone === "plus" && "text-plus", tone === "minus" && "text-minus", tone === "muted" && "text-muted-foreground")}>{big}</b>
-      <small className="text-[12px] leading-snug text-muted-foreground">{sub || " "}</small>
-    </div>
-  );
-}
 
 /** значок «авто» / «вручную» у заголовка панели */
 export function Badge({ auto, children }: { auto?: boolean; children?: React.ReactNode }) {

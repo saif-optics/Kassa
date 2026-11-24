@@ -4,7 +4,6 @@ import { CalendarCheck, Download, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Data } from "@/lib/types";
-import { Panel } from "@/components/kit";
 import { saveBlob } from "./ui";
 import { RP_MF, dFull, dShort, monthLabel, pl, rpAllDays, todayTash, wdOf } from "./logic";
 
@@ -30,9 +29,9 @@ export function DayReport({ d }: { d: Data }) {
   return (
     <div className="flex flex-col gap-4" id="rs-day-report">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <p className="min-w-[15rem] flex-1 text-[13.5px] text-muted-foreground">Файл «Отчёт оптика»: отдельный лист на каждый день, новые дни сверху, формулы «с начала месяца» и «за месяц» как в вашем файле.</p>
-        <div className="flex flex-col items-end gap-1">
-          <div className="flex flex-wrap justify-end gap-2">
+        <p className="min-w-0 flex-1 text-[13.5px] text-muted-foreground sm:min-w-[15rem]">Файл «Отчёт оптика»: отдельный лист на каждый день, новые дни сверху, формулы «с начала месяца» и «за месяц» как в вашем файле.</p>
+        <div className="flex w-full flex-col gap-1 sm:w-auto sm:items-end">
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
             <Button variant="secondary" onClick={() => setPickOpen((v) => !v)} aria-expanded={pickOpen}><CalendarCheck />Выбрать дни</Button>
             <Button disabled={!all.length || busy} onClick={() => exportList(all, true)}><Download />Скачать все дни</Button>
           </div>
@@ -42,8 +41,10 @@ export function DayReport({ d }: { d: Data }) {
       </div>
 
       {pickOpen && (
-        <Panel title="Какие дни выгрузить" note="Нажимайте на дни, чтобы включить или убрать их из файла. «С начала месяца» и «за месяц» в файле всё равно считаются по всем дням месяца."
-          action={<Button variant="ghost" size="icon" aria-label="Закрыть" onClick={() => setPickOpen(false)}><X /></Button>}>
+        <div className="glass-inner flex flex-col gap-3 rounded-2xl p-3.5">
+          <div className="flex items-center justify-between gap-3"><h3 className="text-[14.5px] font-semibold">Какие дни выгрузить</h3>
+            <Button variant="ghost" size="icon" aria-label="Закрыть" onClick={() => setPickOpen(false)}><X /></Button></div>
+          <p className="text-[12.5px] text-muted-foreground">Нажимайте на дни, чтобы включить или убрать их из файла. «С начала месяца» и «за месяц» в файле всё равно считаются по всем дням месяца.</p>
           <div className="flex flex-col gap-3">
             {[...new Set(all.map((x) => x.slice(0, 7)))].reverse().map((m) => { const ds = all.filter((x) => x.startsWith(m)), on = ds.filter((x) => picked.has(x)).length;
               const setMany = (v: boolean) => { const n = new Set(picked); ds.forEach((x) => (v ? n.add(x) : n.delete(x))); setSel(n); };
@@ -58,12 +59,12 @@ export function DayReport({ d }: { d: Data }) {
                 </div>); })}
             {!all.length && <p className="text-[13px] text-muted-foreground">Дней с продажами пока нет</p>}
           </div>
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-[13px]">{picked.size ? <>Выбрано: <b>{picked.size} {pl(picked.size, "день", "дня", "дней")}</b> · в файле будет {picked.size} {pl(picked.size, "лист", "листа", "листов")}</> : "Ничего не выбрано"}</span>
-            <div className="flex flex-wrap gap-2"><Button variant="secondary" onClick={() => setSel(new Set())}>Снять все</Button><Button variant="secondary" onClick={() => setSel(new Set(all))}>Выбрать все</Button>
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap"><Button variant="secondary" onClick={() => setSel(new Set())}>Снять все</Button><Button variant="secondary" onClick={() => setSel(new Set(all))}>Выбрать все</Button>
               <Button disabled={!picked.size || busy} onClick={() => exportList([...picked], false)}><Download />Скачать выбранные</Button></div>
           </div>
-        </Panel>
+        </div>
       )}
     </div>
   );
