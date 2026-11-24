@@ -9,19 +9,37 @@ const KEY = "sb_publishable_-ceoJkpmAZ7Y8osbPHaOlg_3nqUsdB7"; // публичн�
 export type Row = { col: string; id: string; data: Record<string, unknown> };
 export const isDemo = typeof location !== "undefined" && new URLSearchParams(location.search).has("demo");
 
+// демо с ограниченной ролью: ?demo&role=seller&point=C1 (без role — владелец)
+const qs = typeof location !== "undefined" ? new URLSearchParams(location.search) : null;
+export const demoRole = isDemo ? qs?.get("role") || null : null;
+export const demoPoint = isDemo ? qs?.get("point") || null : null;
+// ограниченная роль (не владелец и не админ): документы читаем одним вызовом role_docs_all, realtime не подписываем
+let limited = false;
+export const setLimited = (v: boolean) => { limited = v; };
+
 let sb: SupabaseClient | null = null;
 export const client = () => (sb ??= createClient(URL, KEY, { auth: { persistSession: true, storageKey: "kassa-web-auth" } }));
 
 
 async function loadRows(): Promise<Row[]> {
-  if (isDemo) return (await import("./demoAll")).demoAll(); // только в браузере (Vite)
+  if (isDemo) { const all = (await import("./demoAll")).demoAll(); return limited ? limitRows(all, demoPoint) : all; } // только в браузере (Vite)
   const c = client(), out: Row[] = [], N = 1000;
+  if (limited) { const { data, error } = await c.rpc("role_docs_all"); if (error) throw error; return Array.isArray(data) ? (data as Row[]) : []; }
   for (let from = 0; ; from += N) {
     // все документы, как на рабочем сайте: каждый раздел берёт свои коллекции из Data.rows
     const { data, error } = await c.from("docs").select("col,id,data").order("col").order("id").range(from, from + N - 1);
     if (error) throw error; out.push(...(data as Row[])); if (data.length < N) break;
   }
   return out;
+}
+
+// что видит ограниченная роль в демо: продажи и расходы дня своей точки, настройки продаж (как role_docs_all)
+function limitRows(rows: Row[], point: string | null): Row[] {
+  return rows.filter((r) => {
+    if (r.col === "sales") return !point || r.data.point === point;
+    if (r.col === "entries") return r.data.source === "day" && (!point || r.data.branch === point);
+    return r.col === "settings" && r.id === "sales";
+  });
 }
 
 export function toData(rows: Row[]): Data {
@@ -65,6 +83,7 @@ export async function delDoc(col: string, id: string) {
 /** живые обновления: изменения с рабочего сайта и других устройств */
 export function subscribe(onChange: () => void): () => void {
   if (isDemo) { listeners.add(onChange); return () => listeners.delete(onChange); }
+  if (limited) return () => {};
   const c = client();
   const ch = c.channel("kassa-web-live").on("postgres_changes", { event: "*", schema: "public", table: "docs" }, (p) => {
     const col = ((p.new as Row)?.col || (p.old as Row)?.col) as string | undefined;

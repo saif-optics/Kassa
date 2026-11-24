@@ -1,13 +1,15 @@
 // Раздел «Главная»: плитки дня, что требует внимания, точки и 14 дней, разделы по важности, последние продажи.
 import { useMemo } from "react";
 import { motion } from "motion/react";
-import { CalendarCheck, Calculator, ChevronRight, FileText, Plus, ShoppingBag, Wallet, type LucideIcon } from "lucide-react";
+import { CalendarCheck, Calculator, ChevronRight, FileText, ListChecks, Plus, ShoppingBag, Wallet, type LucideIcon } from "lucide-react";
 import type { Data } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/Card";
 import { PageHead } from "@/components/PageHead";
 import { Chip, Tile, TileLabel, TileSub, TileValue } from "@/components/Tile";
 import { NAV } from "@/lib/nav";
+import { canPerm, canTab, useAccess } from "@/lib/access";
+import { useTasks } from "../tasks/logic";
 import { DUR, EASE } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { todayTash } from "../kassa/logic";
@@ -24,14 +26,16 @@ const GO = (id: string, field?: string) => () => {
 };
 const F_SALE = 'input[aria-label="Товар"]', F_EXP = 'input[placeholder="Например: Премиум за такси"]', F_CASH = 'input[aria-label="Сколько наличных в кассе"]';
 
-const AL_ICON: Record<AlertIcon, LucideIcon> = { pay: CalendarCheck, report: FileText, sales: ShoppingBag, cash: Wallet };
+const AL_ICON: Record<AlertIcon, LucideIcon> = { pay: CalendarCheck, report: FileText, sales: ShoppingBag, cash: Wallet, tasks: ListChecks };
 const AL_TONE = { minus: "bg-minus-soft text-minus", warn: "bg-warn-soft text-warn", info: "bg-primary/12 text-primary" } as const;
 const tint = (c: string) => ({ background: `color-mix(in srgb, ${c} 16%, transparent)`, color: c });
 const sgn = (n: number) => (n >= 0 ? "+" : "−") + fmt(Math.abs(n));
 
 export function HomePage({ d }: { d: Data }) {
   const today = todayTash();
-  const h = useMemo(() => homeData(d, today), [d, today]);
+  const a = useAccess(), adm = a.isAdmin, seeSales = canPerm(a, "sales_view"); // без права на продажи выручку не показываем
+  const tq = useTasks(a); // нет данных заданий (нет права или ошибка) — Главная просто без них
+  const h = useMemo(() => homeData(d, today, { tasks: tq.data?.tasks, comments: tq.data?.comments, access: a }), [d, today, tq.data, a]);
   const mx = Math.max(1, ...h.pts.map((o) => o.r));
   const t = h.tiles, nav = Object.fromEntries(NAV.map((n) => [n.id, n]));
   // сквозной номер посадки по порядку чтения
@@ -40,12 +44,12 @@ export function HomePage({ d }: { d: Data }) {
   return (
     <div className="flex flex-col gap-3.5">
       <PageHead eyebrow="Касса оптики" title="Главная" sub={dateTitle(today)} actions={<>
-        <Button size="lg" onClick={GO("sales", F_SALE)}><Plus />Продажа</Button>
-        <Button size="lg" variant="secondary" onClick={GO("kassa", F_EXP)}><Plus />Расход</Button>
-        <Button size="lg" variant="secondary" onClick={GO("kassa", F_CASH)}><Calculator />Пересчитать кассу</Button>
+        {canTab(a, "sales") && <Button size="lg" onClick={GO("sales", F_SALE)}><Plus />Продажа</Button>}
+        {canTab(a, "kassa") && <Button size="lg" variant="secondary" onClick={GO("kassa", F_EXP)}><Plus />Расход</Button>}
+        {canTab(a, "kassa") && <Button size="lg" variant="secondary" onClick={GO("kassa", F_CASH)}><Calculator />Пересчитать кассу</Button>}
       </>} />
 
-      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+      {seeSales && <div className={cn("grid grid-cols-1 gap-3.5 sm:grid-cols-2", adm && "xl:grid-cols-4")}>
         <Tile i={nx()} hero>
           <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1"><TileLabel>Выручка {h.lbl}</TileLabel><Spark data={t.today.spark} color="#fff" w={64} h={24} /></div>
           <TileValue count={t.today.value} suffix=" сум" />
@@ -53,12 +57,12 @@ export function HomePage({ d }: { d: Data }) {
             {t.today.deltaPct != null && <Chip tone={t.today.deltaPct >= 0 ? "plus" : "minus"}>{(t.today.deltaPct >= 0 ? "+" : "−") + Math.abs(t.today.deltaPct)}% к среднему дню</Chip>}
             {h.lastDay !== today && <span>сегодня продаж ещё нет</span>}</TileSub>
         </Tile>
-        <Tile i={nx()} warn={t.cash.diff != null && t.cash.diff <= -1000}>
+        {adm && <Tile i={nx()} warn={t.cash.diff != null && t.cash.diff <= -1000}>
           <TileLabel>{t.cash.fact ? "Наличные в кассе" : "Должно быть на руках"}</TileLabel>
           <TileValue count={t.cash.value} suffix=" сум" />
           <TileSub>{t.cash.fact && <Chip tone={t.cash.ok ? "plus" : t.cash.diff! < 0 ? "minus" : "warn"}>{t.cash.diffLabel}</Chip>}
             <span>{t.cash.at ? "пересчёт " + t.cash.at : "касса ещё не пересчитана"}</span></TileSub>
-        </Tile>
+        </Tile>}
         <Tile i={nx()}>
           <TileLabel>Выручка за месяц</TileLabel>
           <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1"><TileValue count={t.plan.value} format="mln" />{t.plan.pct != null && <MiniRing p={t.plan.pct} color={planCol} />}</div>
@@ -66,14 +70,14 @@ export function HomePage({ d }: { d: Data }) {
             {(t.plan.needPerDay ?? 0) > 0 && <Chip tone="warn">нужно {fmtM(t.plan.needPerDay ?? 0)} в день</Chip>}
             {(t.plan.needPerDay ?? 0) > 0 && <span>осталось {t.plan.daysLeft} раб. дн.</span>}</TileSub>
         </Tile>
-        <Tile i={nx()}>
+        {adm && <Tile i={nx()}>
           <TileLabel>Расчётный счёт</TileLabel>
           {t.rs.value != null ? <TileValue count={t.rs.value} suffix=" сум" /> : <TileValue>—</TileValue>}
           <TileSub>{t.rs.delta != null && <span>{sgn(t.rs.delta)} за день</span>}
             {t.rs.nextPay ? <Chip tone="warn" className="max-w-full"><span className="truncate">{t.rs.nextPay.name} · {t.rs.nextPay.days <= 0 ? "сегодня" : `через ${t.rs.nextPay.days} дн.`}</span></Chip>
               : t.rs.value == null ? <span>выписки пока нет</span> : <span>платежей впереди нет</span>}</TileSub>
-        </Tile>
-      </div>
+        </Tile>}
+      </div>}
 
       {h.alerts.length > 0 && (
         <Card title="Требует внимания" note={`${h.alerts.length} ${h.alerts.length === 1 ? "пункт" : h.alerts.length < 5 ? "пункта" : "пунктов"}`} i={nx()}>
@@ -88,7 +92,7 @@ export function HomePage({ d }: { d: Data }) {
         </Card>
       )}
 
-      <div className="grid gap-3.5 lg:grid-cols-2">
+      {seeSales && <div className="grid gap-3.5 lg:grid-cols-2">
         <Card title="Точки сегодня" note={h.ptNote} i={nx()}>
           {h.pts.length ? (
             <div className="flex flex-col gap-3.5">
@@ -104,7 +108,7 @@ export function HomePage({ d }: { d: Data }) {
                   <span className="text-xs text-muted-foreground">за месяц {fmt(o.month)}{o.planPct ? ` · ${o.planPct} плана точки` : ""}</span>
                 </div>
               ))}
-              <div className="flex items-center justify-between border-t border-border pt-3"><b>{h.ptTotalLabel}</b><b className="num">{fmt(h.dayRev)}</b></div>
+              <div className="flex items-center justify-between border-t border-border pt-3"><b>{h.ptTotalLabel}</b><b className="num">{fmt(adm ? h.dayRev : h.ptDayRev)}</b></div>
             </div>
           ) : <p className="py-6 text-center text-muted-foreground">Продаж пока нет</p>}
         </Card>
@@ -113,11 +117,11 @@ export function HomePage({ d }: { d: Data }) {
           <WeekChart bars={h.week.bars} />
           <p className="text-xs text-muted-foreground">подписи в млн сум · лучший день выделен</p>
         </Card>
-      </div>
+      </div>}
 
       <Card title="Разделы" note="по важности" i={nx()}>
         <div className={cn("grid grid-cols-2 gap-2.5 lg:grid-cols-3", h.sections.length <= 9 ? "xl:grid-cols-3" : "xl:grid-cols-4")}>
-          {h.sections.map((s) => { const n = nav[s.id], I = n.icon; return (
+          {h.sections.filter((s) => canTab(a, s.id)).map((s) => { const n = nav[s.id], I = n.icon; return (
             <button key={s.id} type="button" onClick={GO(s.id)}
               className="glass-inner relative flex min-w-0 flex-col gap-2 rounded-2xl p-3 text-left transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-md active:scale-[.98] sm:flex-row sm:items-center sm:gap-3">
               <span className="grid size-10 shrink-0 place-items-center rounded-xl" style={tint(n.color)}><I className="size-5" strokeWidth={1.9} /></span>
@@ -127,7 +131,7 @@ export function HomePage({ d }: { d: Data }) {
         </div>
       </Card>
 
-      <Card title="Последние продажи" action={{ label: "Все продажи", onClick: GO("sales") }} i={nx()}>
+      {canTab(a, "sales") && <Card title="Последние продажи" action={{ label: "Все продажи", onClick: GO("sales") }} i={nx()}>
         {h.last.length ? (
           <div className="flex flex-col">
             {h.last.map((s) => (
@@ -140,7 +144,7 @@ export function HomePage({ d }: { d: Data }) {
             ))}
           </div>
         ) : <p className="py-6 text-center text-muted-foreground">Продаж пока нет</p>}
-      </Card>
+      </Card>}
     </div>
   );
 }

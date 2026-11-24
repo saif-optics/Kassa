@@ -10,6 +10,11 @@ import {
 } from "../plan/logic";
 import { batchStats, batchesOf, curBatch } from "./cost";
 import { makeCtx, type S } from "../analytics/cost";
+import type { Access } from "../../lib/access";
+import type { Task, TaskComment } from "../tasks/logic";
+
+/** данные для «Требует внимания» и «Разделов»: задания, комментарии и права (необязательно — без них Главная как раньше) */
+export interface HomeExtra { tasks?: Task[]; comments?: TaskComment[]; access?: Access }
 
 export type Part = string | { tag: string; good: boolean };
 export const partsText = (p: Part[]) => p.map((x) => (typeof x === "string" ? x : x.tag)).join(" · ");
@@ -20,7 +25,7 @@ export interface BriefItem { icon: "trophy" | "receipt" | "flame" | "bag"; title
 export interface DayBar { d: string; n: number; wd: string; v: number; label: string; best: boolean; sun: boolean; title: string }
 export interface PointToday { p: string; r: number; n: number; checks: string; seller: string; month: number; planPct: string | null }
 export interface LastSale { id: string; point: string; product: string; when: string; sum: number; pay: string }
-export type AlertIcon = "pay" | "report" | "sales" | "cash";
+export type AlertIcon = "pay" | "report" | "sales" | "cash" | "tasks";
 export interface AlertItem { tone: "minus" | "warn" | "info"; icon: AlertIcon; title: string; sub: string; go: { tab: string; field?: string } }
 export interface SectionLine { id: string; line: string; badge: number }
 
@@ -37,8 +42,10 @@ export function dateTitle(today: string) {
 /** подпись столбика: млн с десятой / тысячи */
 const barLabel = (v: number) => (v >= 1e6 ? (v / 1e6).toFixed(v >= 1e7 ? 0 : 1).replace(".", ",") : v ? (v / 1e3).toFixed(0) + "к" : "");
 
-export function homeData(d: Data, today: string) {
+export function homeData(d: Data, today: string, extra?: HomeExtra) {
   const env = planEnv(d, today), sales = env.sales, m = today.slice(0, 7);
+  // ограниченная роль с точкой: «Точки сегодня» и «Последние продажи» только по своей точке
+  const only = extra?.access && !extra.access.isAdmin ? extra.access.point : null;
   const sum = sumOf;
   const todayL = sales.filter((s) => s.date === today), month = sales.filter((s) => (s.date || "").startsWith(m));
   const lastDay = todayL.length ? today : [...new Set(sales.map((s) => s.date).filter(Boolean))].sort().pop() || today;
@@ -121,13 +128,13 @@ export function homeData(d: Data, today: string) {
   const week = { bars, sum: wkSum, prev: wkPrev, delta: wkD, note: `последние 7 дней ${fmtM(wkSum)}` };
 
   // точки за последний день
-  const pts: PointToday[] = env.points.map((p) => { const l = dayList.filter((s) => s.point === p); return { p, r: sum(l), n: new Set(l.map(checkKey)).size }; })
+  const pts: PointToday[] = env.points.filter((p) => !only || p === only).map((p) => { const l = dayList.filter((s) => s.point === p); return { p, r: sum(l), n: new Set(l.map(checkKey)).size }; })
     .filter((o) => o.r || K.shares[o.p]).map((o) => {
       const mp = sum(month.filter((s) => s.point === o.p));
       return { ...o, checks: chk(o.n), seller: env.cfg.sellers[o.p] || "", month: mp, planPct: pt && K.shares[o.p] ? pctF(mp / ((pt * K.shares[o.p]) / 100)) : null };
     });
   const ptNote = lastDay === today ? "Выручка за сегодня" : `Последний день с продажами — ${dLong(lastDay)}`;
-  const last: LastSale[] = [...sales].sort((a, b) => (b.date || "").localeCompare(a.date || "") || (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 6)
+  const last: LastSale[] = sales.filter((s) => !only || s.point === only).sort((a, b) => (b.date || "").localeCompare(a.date || "") || (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 6)
     .map((s) => ({ id: s.id, point: s.point, product: s.product || "—", when: dShort(s.date), sum: +s.sum || 0, pay: s.pay || "" }));
 
   // ---- плитки по эскизу ----
@@ -147,8 +154,17 @@ export function homeData(d: Data, today: string) {
   };
 
   // ---- «Требует внимания» ----
-  // TODO: задания точек и опоздания сотрудников — данных в docs нет (таблицы tasks/att_*), добавить, когда подключим их к новой версии.
-  const alerts: AlertItem[] = [];
+  // Задания приходят отдельно (таблицы tasks, не docs): extra.tasks. Опоздания сотрудников (att_*) — пока не подключены.
+  const alerts: AlertItem[] = [], taskAlerts: AlertItem[] = [];
+  const full = !extra?.access || extra.access.isAdmin; // остальное — только деньги владельца, ограниченной роли не показываем
+  const tk = extra?.tasks || [], tkOpen = tk.filter((t) => t.status !== "done");
+  const tkOver = tkOpen.filter((t) => t.due && String(t.due).slice(0, 10) < today);
+  const answered = new Set((extra?.comments || []).filter((c) => c.author_label === "Владелец").map((c) => c.task_id));
+  const tkNew = tk.filter((t) => t.source === "seller" && t.status === "new"), tkNoAns = tkNew.filter((t) => !answered.has(t.id));
+  if (tkNoAns.length && full) taskAlerts.push({ tone: "warn", icon: "tasks", title: `Проблемы от продавцов без ответа: ${tkNoAns.length}`,
+    sub: tkNoAns.slice(0, 2).map((t) => t.title).join(", ") + (tkNoAns.length > 2 ? ` и ещё ${tkNoAns.length - 2}` : ""), go: { tab: "tasks" } });
+  if (tkOver.length) taskAlerts.push({ tone: "minus", icon: "tasks", title: `Просроченные задания: ${tkOver.length}`,
+    sub: tkOver.slice(0, 2).map((t) => t.title).join(", ") + (tkOver.length > 2 ? ` и ещё ${tkOver.length - 2}` : ""), go: { tab: "tasks" } });
   // просрочка: три последних месяца; «late» (не оплачен) и «part» (оплачен частично) с истёкшим сроком и остатком
   const late = [addM(m, -2), addM(m, -1), m].flatMap((M) => monthRows(d, M, today)).filter((r) => (r.st === "late" || r.st === "part") && r.due < today && r.left > 0);
   if (late.length) alerts.push({ tone: "minus", icon: "pay", title: late.length === 1 ? "Просрочен платёж" : `Просрочено платежей: ${late.length}`,
@@ -163,6 +179,8 @@ export function homeData(d: Data, today: string) {
     const have = new Set(own.map((s) => s.date)), miss = first ? days7.filter((x) => x > first && !have.has(x)) : [];
     if (miss.length) alerts.push({ tone: "warn", icon: "sales", title: `${p}: нет продаж`, sub: "за " + miss.map(dShort).join(", "), go: { tab: "sales" } });
   });
+  if (!full) alerts.length = 0; // у ограниченной роли платежей, кассы и выписок нет — остаются только задания
+  alerts.push(...taskAlerts);
 
   // ---- разделы по важности: строка-цифра и бейдж ----
   const unpaid = pays.filter((r) => r.st !== "ok" && r.due.startsWith(m));
@@ -173,6 +191,7 @@ export function homeData(d: Data, today: string) {
     { id: "sales", line: dayChecks ? `${chk(dayChecks)} ${lbl}` : "продаж " + lbl + " нет", badge: 0 },
     { id: "report", line: missRep ? `лист за ${dShort(missRep)} не внесён` : lastRep ? "последний день — " + dShort(lastRep) : "открыть", badge: missRep ? 1 : 0 },
     { id: "pay", line: unpaid.length ? `неоплачено ${unpaid.length} · ${fmtM(unpaid.reduce((a, r) => a + (r.left || r.am.a), 0))}` : "всё оплачено", badge: late.length },
+    ...(extra?.tasks ? [{ id: "tasks", line: `открыто ${tkOpen.length} · новых ${tkOpen.filter((t) => t.status === "new").length}`, badge: full ? tkNew.length : 0 }] : []),
     { id: "analytics", line: fmtM(mRev) + " за месяц", badge: 0 },
     { id: "plan", line: pt ? pctF(mRev / pt) + " плана" : "план не задан", badge: 0 },
     { id: "lens", line: lensM.length ? fmtM(sum(lensM)) + " за месяц" : "открыть", badge: 0 },
@@ -180,6 +199,6 @@ export function homeData(d: Data, today: string) {
     { id: "batch", line: bb ? `осталось ${fmt(bL)} шт` : "открыть", badge: 0 },
   ];
 
-  return { tiles, alerts, sections, today, m, lastDay, lbl, dayRev, dayList: dayList.length, dayChecks, mRev, mChecks, avgDay, hero, cards, brief, briefNote, week, pts, ptNote, ptTotalLabel: `Итого за ${lastDay === today ? "сегодня" : dShort(lastDay)}`, last, monthLabel: monthTitle(m), kassa: k, plan: { K, S, total: pt }, margin: mg };
+  return { tiles, alerts, sections, today, m, lastDay, lbl, dayRev, dayList: dayList.length, dayChecks, mRev, mChecks, avgDay, hero, cards, brief, briefNote, week, pts, ptDayRev: pts.reduce((a, o) => a + o.r, 0), ptNote, ptTotalLabel: `Итого за ${lastDay === today ? "сегодня" : dShort(lastDay)}`, last, monthLabel: monthTitle(m), kassa: k, plan: { K, S, total: pt }, margin: mg };
 }
 export type HomeData = ReturnType<typeof homeData>;

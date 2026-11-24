@@ -2,7 +2,7 @@
 // Остальные разделы пока открываются на рабочем сайте — переносим по одному.
 import { useEffect, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import { ChevronsLeft, ChevronsRight, LogOut, MoreHorizontal, Moon, Sun, type LucideIcon } from "lucide-react";
 import { Toaster } from "sonner";
@@ -16,6 +16,9 @@ import { DUR, land } from "@/lib/motion";
 import { NAV } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 import { getSession, isDemo, onAuth, signOut } from "@/lib/source";
+import { AccessProvider, canTab, loadAccess, ROLE_LABEL, useAccess } from "@/lib/access";
+import { TasksPage } from "@/features/tasks/TasksPage";
+import { UsersPage } from "@/features/users/UsersPage";
 import { useData } from "@/lib/useData";
 import { Login } from "@/components/Login";
 import { PayPage } from "@/features/pay/PayPage";
@@ -33,14 +36,13 @@ import type { Data } from "@/lib/types";
 
 // витрина общих компонентов — только в демо-режиме: ?demo#kit
 const KIT = () => isDemo && location.hash === "#kit";
-const PAGES: Record<string, (p: { d: Data }) => React.ReactNode> = { home: HomePage, kassa: KassaPage, report: ReportPage, pay: PayPage, sales: SalesPage, recon: ReconPage, analytics: AnalyticsPage, plan: PlanPage, lens: LensPage, batch: StockPage };
+const PAGES: Record<string, (p: { d: Data }) => React.ReactNode> = { home: HomePage, kassa: KassaPage, report: ReportPage, pay: PayPage, sales: SalesPage, recon: ReconPage, analytics: AnalyticsPage, plan: PlanPage, lens: LensPage, batch: StockPage, tasks: TasksPage, users: UsersPage };
 // ширина страницы: true — «данные», на всю ширину; false — «сводка», не шире 1600px по центру
-const WIDE: Record<string, boolean> = { home: false, pay: false, plan: false, kassa: false, sales: true, report: true, recon: true, analytics: true, lens: true, batch: true };
+const WIDE: Record<string, boolean> = { home: false, pay: false, plan: false, kassa: false, tasks: false, users: false, sales: true, report: true, recon: true, analytics: true, lens: true, batch: true };
 
 const qc = new QueryClient({ defaultOptions: { queries: { refetchOnWindowFocus: false, retry: 1 } } });
 
-// нижнее меню телефона: первые четыре раздела, остальные — в «Ещё»
-const MAIN = NAV.slice(0, 4), REST = NAV.slice(4);
+// нижнее меню телефона: первые четыре раздела, остальные — в «Ещё» (если разделов не больше пяти — все в панели)
 
 function useTheme() {
   const sys = () => matchMedia("(prefers-color-scheme: dark)").matches;
@@ -64,11 +66,11 @@ function Clock() {
 }
 
 // раздел — из адреса (#kassa, #pay); неготовые разделы открываются на рабочем сайте
-const READY = NAV.filter((n) => n.ready).map((n) => n.id);
-function useTab() {
-  const get = () => { const h = location.hash.replace("#", ""); return READY.includes(h) ? h : "home"; };
+// недоступный по правам раздел — первый доступный («Главная» открыта всем)
+function useTab(allowed: string[]) {
+  const get = () => { const h = location.hash.replace("#", ""); return allowed.includes(h) ? h : allowed[0] || "home"; };
   const [t, setT] = useState(get);
-  useEffect(() => { const f = () => setT(get()); window.addEventListener("hashchange", f); return () => window.removeEventListener("hashchange", f); }, []);
+  useEffect(() => { const f = () => setT(get()); f(); window.addEventListener("hashchange", f); return () => window.removeEventListener("hashchange", f); }, [allowed.join()]); // eslint-disable-line react-hooks/exhaustive-deps
   return [t, (x: string) => { location.hash = x; window.scrollTo({ top: 0, behavior: "smooth" }); }] as const;
 }
 
@@ -87,15 +89,19 @@ function SideBtn({ min, label, icon: Icon, on, current, expanded, k, onClick }: 
 function Shell({ email }: { email: string }) {
   const { dark, toggle } = useTheme();
   const q = useData();
-  const [tab, go] = useTab();
+  const access = useAccess();
+  const nav = NAV.filter((n) => n.ready && canTab(access, n.id));
+  const [tab, go] = useTab(nav.map((n) => n.id));
   const sb = useSidebar();
   const [more, setMore] = useState(false);
   const sideRef = useRef<HTMLElement>(null), botRef = useRef<HTMLElement>(null);
+  const MAIN = nav.length <= 5 ? nav : nav.slice(0, 4), REST = nav.slice(MAIN.length);
   const inMain = MAIN.some((n) => n.id === tab), botKey = inMain ? tab : "more";
+  const role = access.role === "owner" || access.role === "admin" ? "" : ROLE_LABEL[access.role] + (access.point ? " · " + access.point : "");
   return (
     <div className="min-h-dvh">
-      {/* панель разделов: на телефоне — снизу, пять равных колонок */}
-      <nav ref={botRef} aria-label="Разделы" className="glass fixed inset-x-3 bottom-3 z-30 grid grid-cols-5 rounded-[30px] p-1.5 sm:hidden">
+      {/* панель разделов: на телефоне — снизу, равные колонки */}
+      <nav ref={botRef} aria-label="Разделы" style={{ gridTemplateColumns: `repeat(${MAIN.length + (REST.length ? 1 : 0)}, minmax(0, 1fr))` }} className="glass fixed inset-x-3 bottom-3 z-30 grid rounded-[30px] p-1.5 sm:hidden">
         <FlowPill containerRef={botRef} activeKey={botKey} axis="x" className="inset-y-1.5" />
         {MAIN.map((n) => (
           <button key={n.id} type="button" data-key={n.id} aria-current={n.id === tab ? "page" : undefined} onClick={() => go(n.id)}
@@ -103,10 +109,10 @@ function Shell({ email }: { email: string }) {
             <n.icon className="size-5" strokeWidth={1.8} />{n.label}
           </button>
         ))}
-        <button type="button" data-key="more" aria-expanded={more} onClick={() => setMore(true)}
+        {REST.length > 0 && <button type="button" data-key="more" aria-expanded={more} onClick={() => setMore(true)}
           className={cn("relative z-10 flex h-[52px] flex-col items-center justify-center gap-0.5 rounded-full bg-transparent text-[10.5px] font-medium transition", !inMain ? "text-primary" : "text-muted-foreground")}>
           <MoreHorizontal className="size-5" strokeWidth={1.8} />Ещё
-        </button>
+        </button>}
       </nav>
       <Sheet open={more} onOpenChange={setMore}>
         <SheetContent side="bottom" showCloseButton={false} className="rounded-t-[28px] p-4 pb-6 sm:hidden">
@@ -132,7 +138,7 @@ function Shell({ email }: { email: string }) {
         </div>
         <nav ref={sideRef} className="relative mx-3 flex flex-1 flex-col gap-1">
           <FlowPill containerRef={sideRef} activeKey={tab} axis="y" />
-          {NAV.map((n) => <SideBtn key={n.id} k={n.id} min={sb.min} label={n.label} icon={n.icon} on={n.id === tab} current={n.id === tab} onClick={() => go(n.id)} />)}
+          {nav.map((n) => <SideBtn key={n.id} k={n.id} min={sb.min} label={n.label} icon={n.icon} on={n.id === tab} current={n.id === tab} onClick={() => go(n.id)} />)}
         </nav>
         <div className="mt-3 flex flex-col gap-1 px-3">
           <SideBtn key="theme" min={sb.min} label={dark ? "Светлая тема" : "Тёмная тема"} icon={dark ? Sun : Moon} onClick={toggle} />
@@ -144,6 +150,7 @@ function Shell({ email }: { email: string }) {
         <div className="mb-6 flex min-h-11 items-center gap-2.5">
           <span className="glass flex items-center rounded-full px-4 py-2 sm:hidden"><Brand sub={false} /></span>
           <span className="glass hidden items-center gap-2 rounded-full px-4 py-2.5 text-[13.5px] sm:flex"><b>Saif-Optics</b><span className="text-muted-foreground">›</span><span className="text-muted-foreground">{NAV.find((n) => n.id === tab)?.label}</span></span>
+          {role && <span className="glass hidden items-center rounded-full px-3 py-2.5 text-[12.5px] text-muted-foreground md:flex">{role}</span>}
           <div className="ml-auto flex items-center gap-2">
             <Clock />
             <Button variant="secondary" size="icon-lg" className="glass rounded-full" onClick={toggle} aria-label="Сменить тему">{dark ? <Sun /> : <Moon />}</Button>
@@ -167,13 +174,36 @@ function Shell({ email }: { email: string }) {
   );
 }
 
+const Loading = () => (
+  <div className="mx-auto grid max-w-[1600px] gap-4 px-4 pt-5 sm:px-6 xl:px-9"><Skeleton className="h-24 rounded-3xl" /><div className="grid gap-4 sm:grid-cols-4">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-24 rounded-3xl" />)}</div><Skeleton className="h-96 rounded-3xl" /></div>
+);
+
+// после входа: узнаём права; нет доступа — экран с кнопкой «Выйти»
+function Gate({ email }: { email: string }) {
+  const q = useQuery({ queryKey: ["kassa-access", email], queryFn: () => loadAccess(email), staleTime: Infinity, retry: false });
+  if (q.isLoading) return <Loading />;
+  if (!q.data) return (
+    <div className="grid min-h-dvh place-items-center p-4">
+      <div className="glass flex max-w-md flex-col items-center gap-4 rounded-[28px] p-8 text-center">
+        <Brand />
+        <p className="text-[15px]">У {email} нет доступа к кассе. Попросите владельца добавить эту почту.</p>
+        <Button className="rounded-full" onClick={() => { signOut(); qc.clear(); }}><LogOut />Выйти</Button>
+      </div>
+    </div>
+  );
+  return <AccessProvider value={q.data}><Shell email={isDemo ? "демо-данные" : email} /></AccessProvider>;
+}
+
 export default function App() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
-  useEffect(() => { getSession().then(setSession); return onAuth(setSession); }, []);
+  // при смене пользователя (выход, вход под другим) кэш данных и прав очищается, чтобы не показать чужое
+  const lastEmail = useRef<string>("");
+  const apply = (s: Session | null) => { const e = s?.user?.email || ""; if (e !== lastEmail.current) { lastEmail.current = e; qc.clear(); } setSession(s); };
+  useEffect(() => { getSession().then(apply); return onAuth(apply); }, []);
   return (
     <QueryClientProvider client={qc}>
       <TooltipProvider delayDuration={150}>
-        {session === undefined ? null : session ? <Shell email={isDemo ? "демо-данные" : session.user.email || ""} /> : <Login />}
+        {session === undefined ? null : session ? <Gate email={session.user.email || ""} /> : <Login />}
       </TooltipProvider>
     </QueryClientProvider>
   );
