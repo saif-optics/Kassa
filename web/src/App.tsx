@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
-import { BarChart3, CalendarCheck, FileText, Glasses, ChevronsLeft, ChevronsRight, Home, LogOut, MoreHorizontal, Moon, Package, Scale, ShoppingBag, Sun, Target, Wallet, type LucideIcon } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, LogOut, MoreHorizontal, Moon, Sun, type LucideIcon } from "lucide-react";
 import { Toaster } from "sonner";
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Brand } from "@/components/Logo";
 import { FlowPill } from "@/components/FlowPill";
 import { DUR, land } from "@/lib/motion";
+import { NAV } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 import { getSession, isDemo, onAuth, signOut } from "@/lib/source";
 import { useData } from "@/lib/useData";
@@ -34,11 +35,7 @@ const PAGES: Record<string, (p: { d: Data }) => React.ReactNode> = { home: HomeP
 const WIDE: Record<string, boolean> = { home: false, pay: false, plan: false, kassa: false, sales: true, report: true, recon: true, analytics: true, lens: true, batch: true };
 
 const qc = new QueryClient({ defaultOptions: { queries: { refetchOnWindowFocus: false, retry: 1 } } });
-const NAV: { id: string; label: string; icon: LucideIcon; ready?: boolean }[] = [
-  { id: "home", label: "Главная", icon: Home, ready: true }, { id: "kassa", label: "Касса", icon: Wallet, ready: true }, { id: "sales", label: "Продажи", icon: ShoppingBag, ready: true },
-  { id: "report", label: "Отчёт р/с", icon: FileText, ready: true }, { id: "pay", label: "Платежи", icon: CalendarCheck, ready: true }, { id: "analytics", label: "Аналитика", icon: BarChart3, ready: true },
-  { id: "plan", label: "План", icon: Target, ready: true }, { id: "lens", label: "Линзы", icon: Glasses, ready: true }, { id: "recon", label: "Сверка", icon: Scale, ready: true }, { id: "batch", label: "Склад", icon: Package, ready: true },
-];
+
 // нижнее меню телефона: первые четыре раздела, остальные — в «Ещё»
 const MAIN = NAV.slice(0, 4), REST = NAV.slice(4);
 

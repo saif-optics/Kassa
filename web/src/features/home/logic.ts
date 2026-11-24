@@ -1,7 +1,9 @@
 // Расчёты раздела «Главная» — перенос один в один из renderHome в dev/base.html.
 // Возвращает готовые значения: плитки сверху, «коротко о месяце», 14 дней, карточки разделов, точки и последние продажи.
 import type { Data } from "../../lib/types";
-import { cashState, compute, lastM, recFor } from "../kassa/logic";
+import { cashState, compute, KASSA_POINTS, lastM, recFor } from "../kassa/logic";
+import { addM, dDiff, monthRows } from "../pay/logic";
+import { repDocs, rsDays } from "../report/logic";
 import {
   addD, checkKey, dLong, dShort, fmt, fmtM, isLens, monthTitle, pctF, plStats, plural, planEnv, plCalc, sumOf, MONTHS_FULL,
   type PlanCalc, type PlanStats, type SaleRow,
@@ -17,7 +19,10 @@ export interface SectionCard { id: string; icon: "cash" | "receipt" | "chart" | 
 export interface BriefItem { icon: "trophy" | "receipt" | "flame" | "bag"; title: string; value: string; sub: string }
 export interface DayBar { d: string; n: number; wd: string; v: number; label: string; best: boolean; sun: boolean; title: string }
 export interface PointToday { p: string; r: number; n: number; checks: string; seller: string; month: number; planPct: string | null }
-export interface LastSale { id: string; point: string; product: string; when: string; sum: number }
+export interface LastSale { id: string; point: string; product: string; when: string; sum: number; pay: string }
+export type AlertIcon = "pay" | "report" | "sales" | "cash";
+export interface AlertItem { tone: "minus" | "warn" | "info"; icon: AlertIcon; title: string; sub: string; go: { tab: string; field?: string } }
+export interface SectionLine { id: string; line: string; badge: number }
 
 const WDL = ["воскресенье", "понедельник", "вторник", "среда", "четверг", "пятница", "суббота"];
 const MG = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
@@ -123,8 +128,58 @@ export function homeData(d: Data, today: string) {
     });
   const ptNote = lastDay === today ? "Выручка за сегодня" : `Последний день с продажами — ${dLong(lastDay)}`;
   const last: LastSale[] = [...sales].sort((a, b) => (b.date || "").localeCompare(a.date || "") || (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 6)
-    .map((s) => ({ id: s.id, point: s.point, product: s.product || "—", when: dShort(s.date), sum: +s.sum || 0 }));
+    .map((s) => ({ id: s.id, point: s.point, product: s.product || "—", when: dShort(s.date), sum: +s.sum || 0, pay: s.pay || "" }));
 
-  return { today, m, lastDay, lbl, dayRev, dayList: dayList.length, dayChecks, mRev, mChecks, avgDay, hero, cards, brief, briefNote, week, pts, ptNote, ptTotalLabel: `Итого за ${lastDay === today ? "сегодня" : dShort(lastDay)}`, last, monthLabel: monthTitle(m), kassa: k, plan: { K, S, total: pt }, margin: mg };
+  // ---- плитки по эскизу ----
+  const wdayOf = (x: string) => new Date(x + "T12:00:00Z").getUTCDay();
+  const timeAt = (at: number) => { const iso = new Date(at + 5 * 3600e3).toISOString(), day = iso.slice(0, 10), hm = iso.slice(11, 16); return (day === today ? "сегодня" : dShort(day)) + " " + hm; };
+  const cashDiff = k.actual != null ? k.actual - k.expected : null;
+  const diffLabel = cashDiff == null ? "не пересчитано" : Math.abs(cashDiff) < 1000 ? "сходится" : cashDiff < 0 ? "недостача " + fmt(-cashDiff) : "излишек " + fmt(cashDiff);
+  const rsList = rsDays(d).filter((x) => x.d <= today && x.e != null), rsLast = rsList[rsList.length - 1] || null;
+  const pays = [...monthRows(d, m, today), ...monthRows(d, addM(m, 1), today)];
+  const nextP = pays.filter((r) => r.st !== "ok" && r.due >= today).sort((a, b) => a.due.localeCompare(b.due))[0] || null;
+  const tiles = {
+    today: { value: dayRev, checks: dayChecks, points: pts.filter((o) => o.r > 0).length, deltaPct: dDelta, spark: v14 },
+    cash: { value: k.actual != null ? k.actual : k.expected, fact: k.actual != null, expected: k.expected, diff: cashDiff, diffLabel, ok: cashDiff != null && Math.abs(cashDiff) < 1000, at: cs ? timeAt(cs.at || 0) : null },
+    plan: { value: mRev, pct: pt ? mRev / pt : null, planTotal: pt, daysLeft: K.left.length, needPerDay: S && !K.past ? S.needDay : null, fpct: S ? S.fpct : null },
+    rs: { value: rsLast ? rsLast.e : null, day: rsLast ? rsLast.d : null, delta: rsLast && rsLast.s != null && rsLast.e != null ? rsLast.e - rsLast.s : null,
+      nextPay: nextP ? { name: nextP.it.name, days: dDiff(today, nextP.due), due: nextP.due, sum: nextP.left || nextP.am.a } : null },
+  };
+
+  // ---- «Требует внимания» ----
+  // TODO: задания точек и опоздания сотрудников — данных в docs нет (таблицы tasks/att_*), добавить, когда подключим их к новой версии.
+  const alerts: AlertItem[] = [];
+  // просрочка: три последних месяца; «late» (не оплачен) и «part» (оплачен частично) с истёкшим сроком и остатком
+  const late = [addM(m, -2), addM(m, -1), m].flatMap((M) => monthRows(d, M, today)).filter((r) => (r.st === "late" || r.st === "part") && r.due < today && r.left > 0);
+  if (late.length) alerts.push({ tone: "minus", icon: "pay", title: late.length === 1 ? "Просрочен платёж" : `Просрочено платежей: ${late.length}`,
+    sub: late.slice(0, 2).map((r) => r.it.name).join(", ") + (late.length > 2 ? ` и ещё ${late.length - 2}` : "") + " · " + fmtM(late.reduce((a, r) => a + (r.left || r.am.a), 0)), go: { tab: "pay" } });
+  if (cashDiff != null && Math.abs(cashDiff) >= 1000) alerts.push({ tone: "minus", icon: "cash", title: cashDiff < 0 ? "Недостача в кассе" : "Излишек в кассе", sub: diffLabel + (cs ? " · пересчёт " + timeAt(cs.at || 0) : ""), go: { tab: "kassa" } });
+  const rep = repDocs(d), hasRs = (x: string) => !!rep[x] && rep[x].rsEnd != null, repKeys = Object.keys(rep).filter((x) => /^\d{4}-\d\d-\d\d$/.test(x) && hasRs(x)).sort();
+  const days7: string[] = []; for (let i = 7; i >= 1; i--) { const x = addD(today, -i); if (wdayOf(x) !== 0) days7.push(x); }
+  const noRep = repKeys.length ? days7.filter((x) => x > repKeys[0] && !hasRs(x)) : [];
+  if (noRep.length) alerts.push({ tone: "warn", icon: "report", title: "Нет выписки р/с", sub: "за " + noRep.map(dShort).join(", "), go: { tab: "report" } });
+  KASSA_POINTS.forEach((p) => {
+    const own = sales.filter((s) => s.point === p), first = own.reduce((a, s) => (s.date && (!a || s.date < a) ? s.date : a), "");
+    const have = new Set(own.map((s) => s.date)), miss = first ? days7.filter((x) => x > first && !have.has(x)) : [];
+    if (miss.length) alerts.push({ tone: "warn", icon: "sales", title: `${p}: нет продаж`, sub: "за " + miss.map(dShort).join(", "), go: { tab: "sales" } });
+  });
+
+  // ---- разделы по важности: строка-цифра и бейдж ----
+  const unpaid = pays.filter((r) => r.st !== "ok" && r.due.startsWith(m));
+  const missRep = noRep.length ? noRep[noRep.length - 1] : null;
+  const lastRep = repKeys.filter((x) => x <= today).pop();
+  const sections: SectionLine[] = [
+    { id: "kassa", line: (k.actual != null ? "на руках " : "должно быть ") + fmtM(tiles.cash.value), badge: cashDiff != null && Math.abs(cashDiff) >= 1000 ? 1 : 0 },
+    { id: "sales", line: dayChecks ? `${chk(dayChecks)} ${lbl}` : "продаж " + lbl + " нет", badge: 0 },
+    { id: "report", line: missRep ? `лист за ${dShort(missRep)} не внесён` : lastRep ? "последний день — " + dShort(lastRep) : "открыть", badge: missRep ? 1 : 0 },
+    { id: "pay", line: unpaid.length ? `неоплачено ${unpaid.length} · ${fmtM(unpaid.reduce((a, r) => a + (r.left || r.am.a), 0))}` : "всё оплачено", badge: late.length },
+    { id: "analytics", line: fmtM(mRev) + " за месяц", badge: 0 },
+    { id: "plan", line: pt ? pctF(mRev / pt) + " плана" : "план не задан", badge: 0 },
+    { id: "lens", line: lensM.length ? fmtM(sum(lensM)) + " за месяц" : "открыть", badge: 0 },
+    { id: "recon", line: "открыть", badge: 0 },
+    { id: "batch", line: bb ? `осталось ${fmt(bL)} шт` : "открыть", badge: 0 },
+  ];
+
+  return { tiles, alerts, sections, today, m, lastDay, lbl, dayRev, dayList: dayList.length, dayChecks, mRev, mChecks, avgDay, hero, cards, brief, briefNote, week, pts, ptNote, ptTotalLabel: `Итого за ${lastDay === today ? "сегодня" : dShort(lastDay)}`, last, monthLabel: monthTitle(m), kassa: k, plan: { K, S, total: pt }, margin: mg };
 }
 export type HomeData = ReturnType<typeof homeData>;

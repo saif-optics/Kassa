@@ -3,8 +3,10 @@ import { Bar, BarChart, Cell, LabelList, ResponsiveContainer, Tooltip, XAxis } f
 import type { DayBar } from "./logic";
 import { dLong, fmt } from "../plan/logic";
 
+// на узком экране подписи дней — через одну
+const narrow = () => typeof matchMedia !== "undefined" && matchMedia("(max-width: 639px)").matches;
 function Tick({ x, y, payload, bars }: { x?: number; y?: number; payload?: { value: string }; bars: DayBar[] }) {
-  const b = bars.find((z) => z.d === payload?.value); if (!b) return null;
+  const i = bars.findIndex((z) => z.d === payload?.value), b = bars[i]; if (!b || (narrow() && (bars.length - 1 - i) % 2)) return null;
   return <g transform={`translate(${x},${y})`}><text textAnchor="middle" dy={12} fontSize={11} fontWeight={700} className="fill-foreground">{b.n}</text><text textAnchor="middle" dy={25} fontSize={10} className={b.sun ? "fill-minus" : "fill-muted-foreground"}>{b.wd}</text></g>;
 }
 function Tip({ active, payload }: { active?: boolean; payload?: { payload: DayBar }[] }) {
@@ -14,7 +16,7 @@ function Tip({ active, payload }: { active?: boolean; payload?: { payload: DayBa
 
 export function WeekChart({ bars }: { bars: DayBar[] }) {
   return (
-    <div className="h-[210px] w-full" role="img" aria-label="Выручка по дням за 14 дней">
+    <div className="h-[210px] w-full min-w-0" role="img" aria-label="Выручка по дням за 14 дней">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={bars} margin={{ top: 18, right: 2, left: 2, bottom: 0 }} barCategoryGap="14%">
           <XAxis dataKey="d" tickLine={false} axisLine={false} interval={0} tick={<Tick bars={bars} />} height={34} />

@@ -13,7 +13,7 @@ const digits = (s: string) => { const v = String(s || "").replace(/[^\d]/g, "");
 const when = (at: number) => new Date(at + 5 * 3600e3).toISOString().replace(/^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d).*/, "$3.$2, $4:$5");
 const Tile = ({ i, hero, children, className }: { i: number; hero?: boolean; children: React.ReactNode; className?: string }) => (
   <motion.div {...land(i)} whileHover={{ y: -4 }}
-    className={cn("flex min-w-0 flex-col gap-1.5 rounded-[26px] p-5", hero ? "bg-gradient-to-br from-[#0a84ff] to-[#5e5ce6] text-white shadow-[0_14px_36px_rgb(10_132_255/0.38)]" : "glass", className)}>{children}</motion.div>
+    className={cn("flex min-w-0 flex-col gap-1.5 rounded-[26px] p-5", hero ? "border border-white/25 bg-[linear-gradient(135deg,var(--brand),#0a4f7a_60%,var(--brand-navy))] text-white shadow-[0_14px_36px_rgb(2_110_166/0.32)]" : "glass", className)}>{children}</motion.div>
 );
 const Eyebrow = ({ children, light }: { children: React.ReactNode; light?: boolean }) => <span className={cn("text-[11px] font-semibold tracking-wide uppercase", light ? "text-white/85" : "text-muted-foreground")}>{children}</span>;
 

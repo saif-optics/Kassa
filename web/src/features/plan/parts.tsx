@@ -8,7 +8,7 @@ import { land, EASE } from "@/lib/motion";
 export function Tile({ i = 0, className, children, hero }: { i?: number; className?: string; children: React.ReactNode; hero?: boolean }) {
   return (
     <motion.div {...land(i)} whileHover={{ y: -3 }}
-      className={cn("flex min-w-0 flex-col gap-1.5 rounded-[24px] p-5", hero ? "bg-gradient-to-br from-[#0a84ff] to-[#5e5ce6] text-white shadow-[0_14px_36px_rgb(10_132_255/0.38)]" : "glass", className)}>{children}</motion.div>
+      className={cn("flex min-w-0 flex-col gap-1.5 rounded-[24px] p-5", hero ? "border border-white/25 bg-[linear-gradient(135deg,var(--brand),#0a4f7a_60%,var(--brand-navy))] text-white shadow-[0_14px_36px_rgb(2_110_166/0.32)]" : "glass", className)}>{children}</motion.div>
   );
 }
 export const Eyebrow = ({ children, light, className }: { children: React.ReactNode; light?: boolean; className?: string }) =>
