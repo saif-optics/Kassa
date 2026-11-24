@@ -12,7 +12,11 @@ import { KASSA_POINTS, dShort, expTitle, expVal, fmt, pointColor, todayTash, typ
 
 const LIST = ["Такси", "Доставка", "Доставка линз", "Мастер", "Линзы", "Вода", "Моющие средства", "Хоз. нужды"];
 
-export function ExpenseBox({ exp, settings, onAdd, onDelete, i = 0 }: { i?: number; exp: DayExp[]; settings: Settings; onAdd: (v: { date: string; point: string; name: string; amount: number }) => Promise<void>; onDelete: (id: string) => Promise<void> }) {
+/** full — обычная форма и удаление; simple — продавец (название, сумма, дата; своя точка); view — только список */
+export type ExpMode = "full" | "simple" | "view";
+
+export function ExpenseBox({ exp, settings, onAdd, onDelete, mode = "full", onAddSimple, canDelete = () => true, dates, i = 0 }: { i?: number; exp: DayExp[]; settings: Settings; onAdd: (v: { date: string; point: string; name: string; amount: number }) => Promise<void>; onDelete: (id: string) => Promise<void>;
+  mode?: ExpMode; onAddSimple?: (v: { date: string; name: string; amount: number }) => Promise<void>; canDelete?: (e: DayExp) => boolean; dates?: { min: string; max: string } }) {
   const phone = useIsPhone();
   const [date, setDate] = useState(todayTash()), [point, setPoint] = useState(settings.points[0]), [name, setName] = useState(""), [amount, setAmount] = useState("");
   const [msg, setMsg] = useState<{ t: string; bad?: boolean } | null>(null), [busy, setBusy] = useState(false), [openList, setOpenList] = useState(false), [confirm, setConfirm] = useState<string | null>(null);
@@ -29,15 +33,16 @@ export function ExpenseBox({ exp, settings, onAdd, onDelete, i = 0 }: { i?: numb
     if (!n) return say("Впишите статью расхода.", true);
     if (!a) return say("Укажите сумму.", true);
     setBusy(true);
-    try { await onAdd({ date: date || todayTash(), point: pt, name: n, amount: a }); setName(""); setAmount(""); say(`Расход добавлен${KASSA_POINTS.includes(pt) ? " и учтён в кассе" : ""}`); }
-    catch { say("Не удалось сохранить расход.", true); } finally { setBusy(false); }
+    try { if (mode === "simple" && onAddSimple) await onAddSimple({ date: date || todayTash(), name: n, amount: a }); else await onAdd({ date: date || todayTash(), point: pt, name: n, amount: a }); setName(""); setAmount(""); say(`Расход добавлен${KASSA_POINTS.includes(pt) ? " и учтён в кассе" : ""}`); }
+    catch (er) { say(er instanceof Error && er.message ? er.message : "Не удалось сохранить расход.", true); } finally { setBusy(false); }
   };
   const del = (id: string) => {
     if (confirm !== id) { setConfirm(id); setTimeout(() => setConfirm((c) => (c === id ? null : c)), 3000); return; }
     setConfirm(null); onDelete(id).catch(() => say("Не удалось удалить.", true));
   };
 
-  const delBtn = (e: DayExp, wide?: boolean) => (
+  const canDel = mode === "full";
+  const delBtn = (e: DayExp, wide?: boolean) => !canDel || !canDelete(e) ? null : (
     <Button type="button" variant={wide ? "secondary" : "ghost"} size={wide ? "default" : "icon-sm"} aria-label={"Удалить расход " + expTitle(e)} onClick={() => del(e.id)} className={cn(wide && "w-full", confirm === e.id && "bg-minus-soft text-minus")}>
       {confirm === e.id ? <span className="px-1 text-[12px] font-semibold">Точно?</span> : wide ? <><Trash2 />Удалить</> : <Trash2 />}</Button>);
   // телефон: название и сумма в карточке, дата · точка под ними, удаление — в раскрытой части
@@ -46,19 +51,19 @@ export function ExpenseBox({ exp, settings, onAdd, onDelete, i = 0 }: { i?: numb
     { key: "branch", title: "Точка", sub: true, cell: (e) => e.branch as string },
     { key: "name", title: "Статья", main: true, cell: (e) => <span className="block max-w-48 truncate max-sm:max-w-none" title={expTitle(e)}>{expTitle(e)}</span> },
     { key: "sum", title: "Сумма", align: "right", cell: (e) => fmt(expVal(e)) },
-    { key: "del", title: "", hideMobile: true, width: "3rem", cell: (e) => <span className="flex justify-end">{delBtn(e)}</span> },
+    ...(canDel ? [{ key: "del", title: "", hideMobile: true, width: "3rem", cell: (e) => <span className="flex justify-end">{delBtn(e)}</span> } as RowColumn<DayExp>] : []),
   ];
   return (
     <Card title="Расход дня" i={i}>
-      <Note>Такси, доставка, мастер, вода и т.п. Расходы Премиума и Яшнабада сразу попадают в кассу.</Note>
+      {mode !== "view" && <><Note>Такси, доставка, мастер, вода и т.п. Расходы Премиума и Яшнабада сразу попадают в кассу.</Note>
       <form onSubmit={submit} autoComplete="off" className="grid gap-3 sm:grid-cols-2">
-        <Field label="Дата"><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} aria-label="Дата расхода" className="num" /></Field>
-        <Field label="Точка"><Sel label="Точка расхода" value={pt} onChange={setPoint} options={settings.points} /></Field>
+        <Field label="Дата"><Input type="date" value={date} min={dates?.min} max={dates?.max} onChange={(e) => setDate(e.target.value)} aria-label="Дата расхода" className="num" /></Field>
+        {mode === "full" && settings.points.length > 1 && <Field label="Точка"><Sel label="Точка расхода" value={pt} onChange={setPoint} options={settings.points} /></Field>}
         <Field label="Статья" className="sm:col-span-2"><Input list="sales-dx" value={name} onChange={(e) => setName(e.target.value)} placeholder="Такси" aria-label="Статья расхода" /></Field>
         <datalist id="sales-dx">{LIST.map((n) => <option key={n} value={n} />)}</datalist>
         <Field label="Сумма, сум" className="sm:col-span-2"><Input inputMode="numeric" value={amount} onChange={(e) => setAmount(fmtIn(e.target.value, fmt))} placeholder="50 000" aria-label="Сумма расхода" className="num" /></Field>
         <div className="flex flex-wrap items-center gap-2 sm:col-span-2"><Button type="submit" disabled={busy} className="max-sm:h-11 max-sm:w-full">Добавить расход</Button><span role="status" className={cn("text-[13px]", msg?.bad ? "text-minus" : "text-plus")}>{msg?.t}</span></div>
-      </form>
+      </form></>}
       {all.length > 0 && !openList && <div className="grid gap-3">
         <h3 className="text-[13px] font-semibold text-muted-foreground">Расходы за период по точкам</h3>
         <div className="grid gap-2">{Object.entries(bp).sort((a, b) => b[1] - a[1]).map(([k, x]) => (
@@ -70,7 +75,7 @@ export function ExpenseBox({ exp, settings, onAdd, onDelete, i = 0 }: { i?: numb
       <Button type="button" variant="secondary" className="h-auto min-h-8 w-full max-sm:min-h-11 whitespace-normal py-1.5" disabled={!all.length} onClick={() => setOpenList((o) => !o)}>
         {all.length ? <><ChevronRight className={cn("transition-transform", openList && "rotate-90")} />{openList ? "Свернуть список расходов" : `Показать расходы за период (${all.length}) · −${fmt(sum)} сум`}</> : "Расходов дня за период нет"}</Button>
       {openList && all.length > 0 && <div>
-        <RowCards rows={pg.slice(all)} rowKey={(e) => e.id} columns={cols} expand={phone ? (e) => delBtn(e, true) : undefined} />        <Pager pg={pg} /></div>}
+        <RowCards rows={pg.slice(all)} rowKey={(e) => e.id} columns={cols} expand={phone && canDel ? (e) => delBtn(e, true) : undefined} />        <Pager pg={pg} /></div>}
     </Card>
   );
 }

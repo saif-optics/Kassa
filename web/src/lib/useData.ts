@@ -1,7 +1,8 @@
 // Данные Кассы через TanStack Query: загрузка, живые обновления и запись с мгновенным откликом на экране.
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { delDoc, loadData, setDoc, subscribe } from "./source";
+import { toast } from "sonner";
+import { addExpenseLimited, delDoc, isLimited, loadData, setDoc, subscribe } from "./source";
 import type { Data, Entry, PayItem, PayMark, Template } from "./types";
 
 const KEY = ["kassa-data"];
@@ -22,7 +23,12 @@ export function useData() {
 export function useMutations() {
   const qc = useQueryClient();
   const patch = (f: (d: Data) => Data) => qc.setQueryData<Data>(KEY, (d) => (d ? f(d) : d));
-  const safe = async (p: Promise<void>) => { try { await p; } catch (e) { await qc.invalidateQueries({ queryKey: KEY }); throw e; } };
+  // при ошибке перечитываем и показываем текст ошибки (серверные функции отвечают по-русски);
+  // у ограниченной роли realtime нет — после успешной записи тоже перечитываем
+  const safe = async (p: Promise<void>) => {
+    try { await p; } catch (e) { toast.error(e instanceof Error && e.message ? e.message : "Не удалось сохранить"); await qc.invalidateQueries({ queryKey: KEY }); throw e; }
+    if (isLimited()) await qc.invalidateQueries({ queryKey: KEY });
+  };
   const upsert = <T extends { id: string }>(arr: T[], x: T) => { const i = arr.findIndex((y) => y.id === x.id); const a = arr.slice(); if (i >= 0) a[i] = x; else a.push(x); return a; };
   const reload = () => qc.invalidateQueries({ queryKey: KEY });
   return {
@@ -41,6 +47,11 @@ export function useMutations() {
       const x: Record<string, unknown> = { ...e }; delete x.id; Object.keys(x).forEach((k) => x[k] === undefined && delete x[k]);
       patch((d) => ({ ...d, entries: upsert(d.entries, { ...(x as Omit<Entry, "id">), id } as Entry) }));
       await safe(setDoc("entries", id, x));
+    },
+    /** продавец без exp_edit: расход через seller_add_expense (id даёт сервер), потом перечитываем */
+    async addExpenseLimited(name: string, amount: number, date: string) {
+      await safe(addExpenseLimited(name, amount, date).then(() => undefined));
+      await reload();
     },
     async delEntry(id: string) { patch((d) => ({ ...d, entries: d.entries.filter((e) => e.id !== id) })); await safe(delDoc("entries", id)); },
     async putTemplate(id: string, t: Omit<Template, "id">) { patch((d) => ({ ...d, templates: upsert(d.templates, { ...t, id }) })); await safe(setDoc("templates", id, t)); },

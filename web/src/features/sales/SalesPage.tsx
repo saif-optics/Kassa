@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { Data } from "@/lib/types";
 import { useMutations } from "@/lib/useData";
+import { canPerm, useAccess } from "@/lib/access";
 import { PageHead } from "@/components/PageHead";
 import { Chip, Tile, TileLabel, TileSub, TileValue } from "@/components/Tile";
 import { SalesFilter, useSalesFilter } from "./filter";
@@ -10,12 +11,12 @@ import { Calendar } from "./Calendar";
 import { DayCash } from "./DayCash";
 import { Debts } from "./DebtsPanel";
 import { SaleForm, type SaleRec } from "./SaleForm";
-import { ExpenseBox } from "./ExpenseBox";
+import { ExpenseBox, type ExpMode } from "./ExpenseBox";
 import { Stats } from "./Stats";
 import { Journal } from "./Journal";
 import { Photos, SettingsBox } from "./Extras";
 import { downloadCsv, downloadXlsx } from "./files";
-import { agg, cmpText, csvOf, ctxOf, dayCashRows, expFiltered, expVal, filtered, fmt, fname, lowerFirst, newId, prevList, sheetsOf, type SaleX, type Settings } from "./logic";
+import { agg, cmpText, csvOf, ctxOf, addD, dayCashRows, expFiltered, expVal, filtered, fmt, fname, lowerFirst, newId, prevList, sheetsOf, type SaleX, type Settings } from "./logic";
 
 /** дельта к прошлому периоду: рост и падение — пилюлями, остальное — обычным текстом */
 function Cmp({ cur, prev }: { cur: number; prev: number | null | undefined }) {
@@ -26,8 +27,15 @@ function Cmp({ cur, prev }: { cur: number; prev: number | null | undefined }) {
 }
 
 export function SalesPage({ d }: { d: Data }) {
-  const mu = useMutations(), { F } = useSalesFilter();
+  const mu = useMutations(), { F } = useSalesFilter(), access = useAccess();
   const c = useMemo(() => ctxOf(d), [d]);
+  // ограниченная роль (кассир, продавец, гость): права по переключателям, только своя точка, даты сегодня/вчера — как проверяет сервер
+  const lim = !access.isAdmin, today = c.today, yest = addD(today, -1);
+  const canWrite = canPerm(access, "sales_write"), canEditAny = canPerm(access, "sales_edit");
+  const canEditSale = (s: SaleX) => !lim || (canEditAny && !s.id.startsWith("bz") && s.date >= yest && s.date <= today);
+  const expMode: ExpMode | null = !lim || canPerm(access, "exp_edit") ? "full" : canPerm(access, "exp_add") ? "simple" : canPerm(access, "exp_view") ? "view" : null;
+  const formSettings = useMemo(() => (lim && access.point ? { ...c.settings, points: [access.point] } : c.settings), [lim, access.point, c.settings]);
+  const canDeleteExp = (e: { date?: string }) => !lim || ((e.date || "") >= yest && (e.date || "") <= today);
   const list = useMemo(() => filtered(c, F), [c, F]);
   const ex = useMemo(() => expFiltered(c, F), [c, F]);
   const a = agg(list), pv = prevList(c, F), pa = pv ? agg(pv.list) : null;
@@ -41,22 +49,26 @@ export function SalesPage({ d }: { d: Data }) {
   const say = (t: string, bad?: boolean, ms = 5000) => { setXmsg({ t, bad }); if (t) setTimeout(() => setXmsg((m) => (m && m.t === t ? null : m)), ms); };
 
   const save = async (id: string | null, rec: SaleRec) => {
+    if (lim && (id ? !canEditAny : !canWrite)) throw new Error("Нет права менять продажи");
     const old = id ? c.sales.find((s) => s.id === id) : null, data: Record<string, unknown> = { ...(old || {}), ...rec }; delete data.id;
     setJDay(String(rec.date));
     await mu.putDoc("sales", id || newId(), data);
     if (id) setEditing(null);
   };
-  const remove = (id: string) => { if (editing?.id === id) setEditing(null); mu.delDoc("sales", id).catch(() => say("Не удалось удалить.", true)); };
+  const remove = (id: string) => { if (lim && !canEditAny) return; if (editing?.id === id) setEditing(null); mu.delDoc("sales", id).catch(() => say("Не удалось удалить.", true)); };
   const addExp = async (v: { date: string; point: string; name: string; amount: number }) => {
     await mu.putEntry(newId(), { type: "exp", name: `${v.point} за ${lowerFirst(v.name)}`, amount: v.amount, cat: "op", branch: v.point, date: v.date, source: "day", createdAt: Date.now() });
   };
+  const addExpSimple = (v: { date: string; name: string; amount: number }) => mu.addExpenseLimited(v.name, v.amount, v.date);
   const csv = () => { const r = csvOf(c, F); if (!r.n) return say("Нет данных за выбранный период.", true); downloadCsv(r.text, fname(c, F, "prodazhi", "csv")); say("Файл сохранён"); };
   const xlsx = async () => {
     if (!list.length) return say("Нет данных за выбранный период.", true);
     say("Готовлю файл…", false, 60000);
     try { const name = fname(c, F, "prodazhi", "xlsx"); await downloadXlsx(sheetsOf(c, F), name); say("Файл сохранён: " + name); } catch { say("Не удалось выгрузить файл.", true); }
   };
-  const saveSettings = async (v: Settings) => { await mu.putDoc("settings", "sales", v); toast.success("Настройки сохранены"); };
+  const saveSettings = async (v: Settings) => {
+    if (lim) throw new Error("Настройки меняет владелец");
+    await mu.putDoc("settings", "sales", v); toast.success("Настройки сохранены"); };
   const openDay = (day: string) => { setJDay(day); requestAnimationFrame(() => jRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })); };
 
   // сквозной номер посадки сверху вниз
@@ -76,13 +88,13 @@ export function SalesPage({ d }: { d: Data }) {
       <DayCash rows={rows} points={c.settings.points} F={F} i={nx()} />
       <Debts sales={c.sales} F={F} i={nx()} />
       <div className="grid gap-3.5 xl:grid-cols-2">
-        <SaleForm sales={c.sales} settings={c.settings} editing={editing} onSave={save} onCancel={() => setEditing(null)} i={nx()} />
-        <ExpenseBox exp={ex} settings={c.settings} onAdd={addExp} onDelete={(id) => mu.delEntry(id)} i={nx()} />
+        {(!lim || canWrite || (editing && canEditAny)) && <SaleForm sales={c.sales} settings={formSettings} editing={editing} onSave={save} onCancel={() => setEditing(null)} dates={lim ? { min: yest, max: today } : undefined} i={nx()} />}
+        {expMode && <ExpenseBox exp={ex} settings={formSettings} mode={expMode} onAdd={addExp} onAddSimple={addExpSimple} onDelete={(id) => mu.delEntry(id)} canDelete={canDeleteExp} dates={lim ? { min: expMode === "simple" ? addD(today, -2) : yest, max: today } : undefined} i={nx()} />}
       </div>
       <Stats c={c} F={F} list={list} resetKey={resetKey} i={nx()} />
-      <div ref={jRef} className="scroll-mt-4"><Journal c={c} F={F} list={list} jDay={jDay} setJDay={setJDay} editingId={editing?.id || null} onEdit={setEditing} onDelete={remove} onCsv={csv} onXlsx={xlsx} msg={xmsg} i={nx()} /></div>
-      <Photos rows={d.rows.photos || {}} sales={c.sales} i={nx()} />
-      <SettingsBox key={c.settings.points.join() + c.settings.cats.join() + c.settings.plan} settings={c.settings} onSave={saveSettings} i={nx()} />
+      <div ref={jRef} className="scroll-mt-4"><Journal c={c} F={F} list={list} jDay={jDay} setJDay={setJDay} editingId={editing?.id || null} onEdit={setEditing} onDelete={remove} onCsv={csv} onXlsx={xlsx} msg={xmsg} canEdit={canEditSale} i={nx()} /></div>
+      {!lim && <Photos rows={d.rows.photos || {}} sales={c.sales} i={nx()} />}
+      {!lim && <SettingsBox key={c.settings.points.join() + c.settings.cats.join() + c.settings.plan} settings={c.settings} onSave={saveSettings} i={nx()} />}
     </div>
   );
 }

@@ -10,7 +10,7 @@ import { Note, Pager, usePager } from "./parts";
 
 type J = ReturnType<typeof journalOf>;
 
-function Row({ s, editingId, onEdit, onDelete }: { s: SaleX; editingId: string | null; onEdit: (s: SaleX) => void; onDelete: (id: string) => void }) {
+function Row({ s, editingId, onEdit, onDelete, canEdit }: { canEdit: boolean; s: SaleX; editingId: string | null; onEdit: (s: SaleX) => void; onDelete: (id: string) => void }) {
   const [ask, setAsk] = useState(false), d = discOf(s), p = payOf(s);
   const del = () => { if (!ask) { setAsk(true); setTimeout(() => setAsk(false), 3000); return; } onDelete(s.id); };
   return (
@@ -21,13 +21,13 @@ function Row({ s, editingId, onEdit, onDelete }: { s: SaleX; editingId: string |
         {s.debt ? <small className="ml-1 font-semibold text-minus">долг {fmt(s.debt)}</small> : null}</span>
       <span className="flex gap-1">{Object.keys(p).filter((k) => p[k]).map((k) => <span key={k} title={`${k}: ${fmt(p[k])}`} className="rounded px-1.5 py-px text-[10.5px] font-semibold" style={{ color: PAYCOL[k] || "var(--muted-foreground)", background: `color-mix(in oklab, ${PAYCOL[k] || "var(--muted-foreground)"} 16%, transparent)` }}>{PAYSHORT[k] || k}</span>)}</span>
       <span className="flex items-center justify-end gap-0.5"><b className="num mr-1 text-[13.5px]">{fmt(s.sum)}</b>
-        <Button type="button" variant="ghost" size="icon-xs" data-se={s.id} aria-label="Изменить" title="Изменить" onClick={() => onEdit(s)}><Pencil /></Button>
-        <Button type="button" variant="ghost" size="icon-xs" data-sd={s.id} aria-label="Удалить" title="Удалить" onClick={del} className={cn(ask && "bg-minus-soft px-1 text-minus")}>{ask ? <span className="text-[11px] font-semibold">удалить?</span> : <Trash2 />}</Button></span>
+        {canEdit && <><Button type="button" variant="ghost" size="icon-xs" data-se={s.id} aria-label="Изменить" title="Изменить" onClick={() => onEdit(s)}><Pencil /></Button>
+        <Button type="button" variant="ghost" size="icon-xs" data-sd={s.id} aria-label="Удалить" title="Удалить" onClick={del} className={cn(ask && "bg-minus-soft px-1 text-minus")}>{ask ? <span className="text-[11px] font-semibold">удалить?</span> : <Trash2 />}</Button></>}</span>
     </div>
   );
 }
 
-function Col({ col, points, editingId, onEdit, onDelete }: { col: J["cols"][number]; points: string[]; editingId: string | null; onEdit: (s: SaleX) => void; onDelete: (id: string) => void }) {
+function Col({ col, points, editingId, onEdit, onDelete, canEdit }: { canEdit: (s: SaleX) => boolean; col: J["cols"][number]; points: string[]; editingId: string | null; onEdit: (s: SaleX) => void; onDelete: (id: string) => void }) {
   const pg = usePager(col.groups.length), color = pointColor(col.pt, points), cash = (col.pay["Наличные"] || 0) - col.ex;
   const sumOf = (g: { items: SaleX[] }) => g.items.reduce((x, s) => x + (+s.sum || 0), 0);
   // строка точки: слева итоги точки, справа чеки карточками в ряд
@@ -49,7 +49,7 @@ function Col({ col, points, editingId, onEdit, onDelete }: { col: J["cols"][numb
             {pg.slice(col.groups).map((g, i) => (
               <div key={(g.c || g.items[0].id) + i} className="flex min-w-0 flex-col rounded-xl border border-border bg-muted/40 py-1">
                 <div className="flex justify-between gap-2 px-2.5 pt-0.5 text-[11.5px] font-semibold text-muted-foreground"><span className="truncate">{g.c ? "Чек №" + g.c : "Без чека"}</span>{g.items.length > 1 && <span className="num">{fmt(sumOf(g))}</span>}</div>
-                {g.items.map((s) => <Row key={s.id} s={s} editingId={editingId} onEdit={onEdit} onDelete={onDelete} />)}
+                {g.items.map((s) => <Row key={s.id} s={s} canEdit={canEdit(s)} editingId={editingId} onEdit={onEdit} onDelete={onDelete} />)}
               </div>))}
           </div>
           <Pager pg={pg} className="px-1" /></>
@@ -59,7 +59,7 @@ function Col({ col, points, editingId, onEdit, onDelete }: { col: J["cols"][numb
   );
 }
 
-export function Journal({ c, F, list, jDay, setJDay, editingId, onEdit, onDelete, onCsv, onXlsx, msg, i = 0 }: { i?: number;
+export function Journal({ c, F, list, jDay, setJDay, editingId, onEdit, onDelete, onCsv, onXlsx, msg, canEdit = () => true, i = 0 }: { i?: number; canEdit?: (s: SaleX) => boolean;
   c: Ctx; F: Filter; list: SaleX[]; jDay: string; setJDay: (d: string) => void; editingId: string | null; onEdit: (s: SaleX) => void; onDelete: (id: string) => void;
   onCsv: () => void; onXlsx: () => void; msg: { t: string; bad?: boolean } | null;
 }) {
@@ -76,7 +76,7 @@ export function Journal({ c, F, list, jDay, setJDay, editingId, onEdit, onDelete
         <span className="text-[13px] text-muted-foreground">{WD[wdIdx(J.day)]} · {n} {plural(n, "позиция", "позиции", "позиций")} · {fmt(J.tot)} сум</span>
       </div>
       {n ? <div className="flex flex-col gap-3">
-        {J.cols.map((col) => <Col key={col.pt} col={col} points={c.settings.points} editingId={editingId} onEdit={onEdit} onDelete={onDelete} />)}</div>
+        {J.cols.map((col) => <Col key={col.pt} col={col} canEdit={canEdit} points={c.settings.points} editingId={editingId} onEdit={onEdit} onDelete={onDelete} />)}</div>
         : <p className="py-6 text-center text-[13px] text-muted-foreground">В этот день продаж нет. Выберите другой день.</p>}
     </Card>
   );

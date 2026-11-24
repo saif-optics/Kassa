@@ -91,12 +91,12 @@ export function useTaskActions(a: Access) {
       if (r.error) throw r.error; await done();
     },
     async setStatus(id: string, status: Status) {
-      if (!a.isAdmin) return;
+      if (!a.isAdmin) throw new Error("Только владелец или админ");
       if (isDemo) { const t = (await demo()).tasks.find((x) => x.id === id); if (t) { t.status = status; t.done_at = status === "done" ? now() : null; } return done(); }
       const r = await client().from("tasks").update({ status }).eq("id", id); if (r.error) throw r.error; await done();
     },
     async remove(id: string) {
-      if (!a.isAdmin) return;
+      if (!a.isAdmin) throw new Error("Только владелец или админ");
       if (isDemo) { const s = await demo(); s.tasks = s.tasks.filter((x) => x.id !== id); s.comments = s.comments.filter((x) => x.task_id !== id); return done(); }
       const r = await client().from("tasks").delete().eq("id", id); if (r.error) throw r.error; await done();
     },

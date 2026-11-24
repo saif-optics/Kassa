@@ -14,7 +14,7 @@ type St = { date: string; point: string; check: string; cat: string; product: st
 const empty = (s: Settings, date = todayTash(), point = s.points[0]): St => ({ date, point, check: "", cat: s.cats[0], product: "", qty: "1", price: "", sum: "", pay: PAYS[0], mx: ["", "", "", ""], debt: "" });
 const MIXED = "Смешанная";
 
-export function SaleForm({ sales, settings, editing, onSave, onCancel, i = 0 }: { i?: number; sales: SaleX[]; settings: Settings; editing: SaleX | null; onSave: (id: string | null, rec: SaleRec) => Promise<void>; onCancel: () => void }) {
+export function SaleForm({ sales, settings, editing, onSave, onCancel, dates, i = 0 }: { i?: number; dates?: { min: string; max: string }; sales: SaleX[]; settings: Settings; editing: SaleX | null; onSave: (id: string | null, rec: SaleRec) => Promise<void>; onCancel: () => void }) {
   const phone = useIsPhone();
   const [f, setF] = useState<St>(() => empty(settings)), [touched, setTouched] = useState(false);
   const [msg, setMsg] = useState<{ t: string; bad?: boolean } | null>(null), [busy, setBusy] = useState(false);
@@ -77,14 +77,15 @@ export function SaleForm({ sales, settings, editing, onSave, onCancel, i = 0 }: 
       <Note>Одна строка — одна позиция. Сумма = кол-во × цена; если заплатили меньше, впишите фактическую сумму, разница считается скидкой.</Note>
       <form onSubmit={submit} autoComplete="off" className="grid gap-3">
         <div className="grid gap-1.5"><span className="text-[12px] text-muted-foreground">Точка</span>
-          {phone
+          {settings.points.length < 2 ? <span className="inline-flex w-fit items-center gap-2 text-[13.5px] font-medium"><i className="size-2.5 rounded-full" style={{ background: pointColor(settings.points[0], settings.points) }} />{settings.points[0]}</span>
+          : phone
             ? <Segments size="sm" aria-label="Точка" value={f.point} onChange={(v) => set("point", v)} items={settings.points.map((p) => ({ key: p, label: <><i className="size-2.5 rounded-full" style={{ background: pointColor(p, settings.points) }} />{p}</> }))} />
             : <div role="radiogroup" aria-label="Точка" className="flex flex-wrap gap-1.5">{settings.points.map((p) => (
             <button key={p} type="button" role="radio" aria-checked={f.point === p} onClick={() => set("point", p)}
               className={cn("inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[13.5px] font-medium transition outline-none focus-visible:ring-3 focus-visible:ring-primary/30", f.point === p ? "border-primary bg-accent text-accent-foreground" : "border-border hover:bg-muted")}>
               <i className="size-2.5 rounded-full" style={{ background: pointColor(p, settings.points) }} />{p}</button>))}</div>}</div>
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Дата"><Input type="date" value={f.date} onChange={(e) => set("date", e.target.value)} aria-label="Дата" className="num" /></Field>
+          <Field label="Дата"><Input type="date" value={f.date} min={dates?.min} max={dates?.max} onChange={(e) => set("date", e.target.value)} aria-label="Дата" className="num" /></Field>
           <Field label="Чек №"><Input value={f.check} onChange={(e) => set("check", e.target.value)} placeholder="необязательно" aria-label="Чек №" /></Field>
           <Field label="Категория" className="sm:col-span-2"><Sel label="Категория" value={f.cat} onChange={(v) => set("cat", v)} options={settings.cats.includes(f.cat) ? settings.cats : [f.cat, ...settings.cats]} /></Field>
           <Field label="Товар" className="sm:col-span-2"><Input ref={productRef} list="sales-products" value={f.product} onChange={(e) => set("product", e.target.value)} onBlur={pickProduct} onInput={(e) => { if (!(e.nativeEvent as InputEvent).inputType) pickProduct(); }} placeholder="Например: Оправа 5802 или Линзы 1.61 блю-блок" aria-label="Товар" /></Field>

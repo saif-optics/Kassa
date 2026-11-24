@@ -11,6 +11,7 @@ import { RowCards, type RowColumn } from "@/components/RowCards";
 import { cn } from "@/lib/utils";
 import type { Data } from "@/lib/types";
 import { useMutations } from "@/lib/useData";
+import { useAccess } from "@/lib/access";
 import { pointColor, type Card as MCard } from "./base";
 import { makeCtx } from "./cost";
 import { buildAnalytics, type Widget } from "./logic";
@@ -25,6 +26,9 @@ import { MetricTile, MiniTile, Panel } from "./AnParts";
 import { dShort, fmt, fmtM, pctF, pl } from "./util";
 
 const OFFKEY = "an.hints";
+const SELKEY = "an.off";
+// выбор показателей не-админа хранится только в браузере (настройки в базе пишет админ)
+const readSel = (): number[] | null => { try { const v = JSON.parse(localStorage.getItem(SELKEY) || "null"); return Array.isArray(v) ? v.filter((x) => typeof x === "number") : null; } catch { return null; } };
 const readHints = () => { try { return localStorage.getItem(OFFKEY) !== "0"; } catch { return true; } };
 const WDN = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
@@ -35,13 +39,16 @@ export function AnalyticsPage({ d }: { d: Data }) {
   const [pgCat, setPgCat] = useState("Оправы");
   const [hintsOn, setHints] = useState(readHints);
   const [pickOpen, setPickOpen] = useState(false);
-  const [loc, setLoc] = useState<number[] | null>(null);
-  const off = loc ?? c.analyticsOff ?? [];
+  const adm = useAccess().isAdmin;
+  const [loc, setLoc] = useState<number[] | null>(null), [own, setOwn] = useState<number[] | null>(readSel);
+  const off = loc ?? (adm ? c.analyticsOff : own) ?? [];
   const sel = useMemo(() => new Set(ALL_IDS.filter((i) => !off.includes(i))), [off]);
   const m = useMemo(() => buildAnalytics(c, F, (id) => sel.has(id), pgCat), [c, F, sel, pgCat]);
 
   const saveSel = async (next: Set<number>) => {
-    const o = ALL_IDS.filter((i) => !next.has(i)); setLoc(o);
+    const o = ALL_IDS.filter((i) => !next.has(i));
+    if (!adm) { setOwn(o); try { localStorage.setItem(SELKEY, JSON.stringify(o)); } catch { /* нет хранилища */ } return; }
+    setLoc(o);
     try { await mu.putDoc("settings", "analytics3", { off: o }); } catch { toast.error("Не удалось сохранить выбор показателей"); } finally { setLoc(null); }
   };
   const toggleHints = (v: boolean) => { setHints(v); try { localStorage.setItem(OFFKEY, v ? "1" : "0"); } catch { /* нет хранилища */ } };

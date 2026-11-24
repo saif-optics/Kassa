@@ -26,7 +26,9 @@ const make = (role: Role, point: string | null, perms: Record<string, boolean>, 
 export async function loadAccess(email: string): Promise<Access | null> {
   if (isDemo) {
     const r = ROLES.includes(demoRole as Role) ? (demoRole as Role) : "owner", lim = r !== "owner" && r !== "admin";
-    const a = make(r, lim ? demoPoint || "Премиум" : null, toPerms(DEF[r] || []), email);
+    // в демо права можно добавить адресом: &perms=sales_write,sales_edit
+    const extra = (new URLSearchParams(location.search).get("perms") || "").split(",").filter((k) => PERMS.includes(k));
+    const a = make(r, lim ? demoPoint || "Премиум" : null, toPerms([...(DEF[r] || []), ...extra]), email);
     setLimited(!a.isAdmin);
     return a;
   }

@@ -70,15 +70,45 @@ const memRows = async () => (mem ??= await loadRows());
 
 export async function loadData(): Promise<Data> { return toData(isDemo ? await memRows() : await loadRows()); }
 
+// ошибка серверной функции: текст сообщения (на русском) как есть, без кода и подсказок
+async function rpc(fn: string, args: Record<string, unknown>) {
+  const { data, error } = await client().rpc(fn, args);
+  if (error) throw new Error(error.message || "Не удалось сохранить");
+  return data;
+}
+const NO_WRITE = "Только просмотр: эту запись может менять владелец";
+
 export async function setDoc(col: string, id: string, data: object) {
   const clean = JSON.parse(JSON.stringify(data));
   if (isDemo) { const m = await memRows(); const i = m.findIndex((r) => r.col === col && r.id === id); const row = { col, id, data: clean }; if (i >= 0) m[i] = row; else m.push(row); listeners.forEach((f) => f()); return; }
+  // ограниченная роль: прямую запись в docs RLS запрещает — только серверные функции (как на рабочем сайте)
+  if (limited) {
+    if (col === "sales") { await rpc("cashier_put_sale", { p_id: id, p_data: clean }); return; }
+    if (col === "entries") { await rpc("cashier_put_entry", { p_id: id, p_data: clean }); return; }
+    throw new Error(NO_WRITE);
+  }
   const { error } = await client().from("docs").upsert({ col, id, data: clean }); if (error) throw error;
 }
 export async function delDoc(col: string, id: string) {
   if (isDemo) { const m = await memRows(); const i = m.findIndex((r) => r.col === col && r.id === id); if (i >= 0) m.splice(i, 1); listeners.forEach((f) => f()); return; }
+  if (limited) {
+    if (col === "sales") { await rpc("cashier_del_sale", { p_id: id }); return; }
+    if (col === "entries") { await rpc("cashier_del_entry", { p_id: id }); return; }
+    throw new Error(NO_WRITE);
+  }
   const { error } = await client().from("docs").delete().eq("col", col).eq("id", id); if (error) throw error;
 }
+/** продавец с правом exp_add без exp_edit: расход своей точки через seller_add_expense; возвращает id записи */
+export async function addExpenseLimited(name: string, amount: number, date: string): Promise<string> {
+  if (isDemo) {
+    const pt = demoPoint || "Премиум", id = "e" + date.slice(5).replace("-", "") + "s" + Math.random().toString(36).slice(2, 10);
+    await setDoc("entries", id, { type: "exp", cat: "op", branch: pt, name: `${pt} за ${name.charAt(0).toLowerCase()}${name.slice(1)}`, amount, date, source: "day", createdAt: Date.now() });
+    return id;
+  }
+  return String(await rpc("seller_add_expense", { p_name: name, p_amount: amount, p_date: date }));
+}
+/** ограниченная ли роль (после входа) */
+export const isLimited = () => limited;
 
 /** живые обновления: изменения с рабочего сайта и других устройств */
 export function subscribe(onChange: () => void): () => void {
