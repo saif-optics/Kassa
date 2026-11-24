@@ -14,7 +14,7 @@ function mk(){
      if(op==="update"){tab.filter(m).forEach(r=>{Object.assign(r,JSON.parse(JSON.stringify(payload)));chans.forEach(c=>c({eventType:"UPDATE",new:r,old:{}}))});return {data:null,error:null}}
      if(op==="delete"){for(let i=tab.length-1;i>=0;i--)if(m(tab[i])){const o=tab[i];tab.splice(i,1);chans.forEach(c=>c({eventType:"DELETE",new:{},old:o}))}return {data:null,error:null}}
    }).then(res,rej)}};return api}
- return {from:q,
+ return {from:q,rpc:()=>Promise.resolve({data:null,error:{message:"PGRST202 could not find the function"}}), // с 17.11 старый сайт зовёт my_access: нет функции = владелец
   channel(){let cb=null;const ch={on(_e,_f,f){cb=f;return ch},subscribe(s){chans.push(p=>cb&&cb(p));setTimeout(()=>s&&s("SUBSCRIBED"),10);return ch}};return ch},removeChannel(){},
   auth:{getSession:async()=>({data:{session}}),onAuthStateChange(f){authCbs.push(f);return {data:{subscription:{unsubscribe(){}}}}},
    signInWithPassword:async({email,password})=>{if(password!=="pass12345")return {error:{message:"Invalid login credentials"}};session={user:{email}};localStorage.setItem("fsess","1");authCbs.forEach(f=>f("SIGNED_IN",session));return {data:{session},error:null}},
