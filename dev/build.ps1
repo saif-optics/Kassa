@@ -15,6 +15,8 @@ try {
   foreach ($p in 'patch_billz.py', 'patch_bz.py', 'patch_rs.py', 'patch_fm.py', 'patch_pay.py', 'patch_att.py', 'patch_role.py', 'patch_tasks.py', 'patch_ui.py', 'patch_tidy.py') { & $py -I $p $w | Out-Null; if ($LASTEXITCODE) { throw "$p failed" } }
   & $py -I build.py $w '..\index.html' | Out-Null
   & $py -I graph_src.py | Out-Null
+  # Карта кода: обновить граф и дать группам русские имена (если graphify установлен)
+  if (Get-Command graphify -ErrorAction SilentlyContinue) { Push-Location ..; try { graphify update . | Out-Null; & $py -I dev\graph_labels.py | Out-Null; 'граф кода обновлён' } catch { 'граф кода не обновился' } finally { Pop-Location } }
   'сборка: ok'
 } finally { Pop-Location }
 if ($Test -or $Stress) {
