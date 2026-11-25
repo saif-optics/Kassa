@@ -137,7 +137,7 @@
   из ответов графа, а не из повторного чтения проекта (решение владельца 25.11.2026). Имя есть в обеих версиях
   (например `cashState`) — граф попросит уточнить: `graphify explain "web/src/features/kassa/logic.ts::cashState()"`.
 - Карта для человека: `docs/КАРТА_ПРОЕКТА.md` (разделы → файлы старого и нового сайта → база), картинка
-  `graphify-out/graph.html` (85 групп с русскими названиями в `graphify-out/.graphify_labels.json`),
+  `graphify-out/graph.html` (группы с русскими названиями, сейчас 82, в `graphify-out/.graphify_labels.json`),
   дерево по папкам `graphify-out/GRAPH_TREE.html`; обе страницы доступны и на сайте Pages в `graphify-out/`.
 - Граф обновлять после каждой правки кода: `graphify update . && python dev/graph_labels.py` (делают build.sh,
   build.ps1 и kassa-build; после удаления кода `--force`), и коммитить `graphify-out/` вместе с кодом.
