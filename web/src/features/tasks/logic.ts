@@ -36,12 +36,6 @@ export function taskStats(tasks: Task[], today: string, now = Date.now()) {
   };
 }
 
-/** задания от продавцов без ответа владельца: статус «Новая» и нет комментария владельца */
-export const unanswered = (tasks: Task[], comments: TaskComment[]) => {
-  const answered = new Set(comments.filter((c) => c.author_label === "Владелец").map((c) => c.task_id));
-  return tasks.filter((t) => t.source === "seller" && t.status === "new" && !answered.has(t.id));
-};
-
 // частые ошибки базы — по-русски, остальное как есть
 export function errMsg(e: unknown) {
   const x = e as { message?: string; code?: string } | null, m = x?.message || "", c = x?.code;

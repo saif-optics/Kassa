@@ -17,4 +17,3 @@ export const NAV: NavItem[] = [
   { id: "batch", label: "Склад", icon: Package, color: "var(--chart-3)", ready: true },
   { id: "users", label: "Пользователи", icon: Users, color: "var(--chart-2)", ready: true },
 ];
-export const navOf = (id: string) => NAV.find((n) => n.id === id);

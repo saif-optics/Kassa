@@ -121,24 +121,11 @@ export function rpCalc(d: Data, m: string, withToday: boolean, T = todayTash()) 
   });
   return { days, pts, rows };
 }
-export type RpMonth = ReturnType<typeof rpCalc>;
-/** последний предыдущий день, где поле заполнено (подсказка «Конец 12.10») */
-export function rpPrevDoc(d: Data, day: string, k: "rsEnd" | "grossCash" | "grossNon") {
-  const R = repDocs(d), ds = Object.keys(R).filter((x) => x < day && R[x] && R[x][k] != null).sort(), x = ds[ds.length - 1];
-  return x ? { d: x, v: R[x][k] as number } : null;
-}
 export function rpMonths(d: Data, T = todayTash()) {
   const t = T.slice(0, 7);
   return [...new Set(kSales(d).map((s) => (s.date || "").slice(0, 7)).filter(Boolean).concat(Object.keys(repDocs(d)).map((x) => x.slice(0, 7))).concat([t]))].filter((m) => m <= t).sort();
 }
 export const rpAllDays = (d: Data, T = todayTash()) => rpMonths(d, T).flatMap((m) => rpMonthDays(d, m, false, T));
-/** подсказки для расходов с р/с: самые частые названия */
-export function bankChips(d: Data, used: string[]) {
-  const freq: Record<string, { n: string; c: number }> = {};
-  Object.values(repDocs(d)).forEach((x) => (Array.isArray(x.bank) ? x.bank : []).forEach((b) => { const n = String(b.n || "").trim(); if (!n) return; const k = normS(n); (freq[k] ||= { n: n.charAt(0).toUpperCase() + n.slice(1), c: 0 }).c++; }));
-  const u = new Set(used.map(normS));
-  return Object.entries(freq).filter(([k]) => !u.has(k)).sort((a, b) => b[1].c - a[1].c).slice(0, 5).map(([, v]) => v.n);
-}
 
 // ---------- отчёт по расчётному счёту (rs.js) ----------
 export const RS_CATS: [string, RegExp][] = [["Налоги", /налог|ндфл|инпс|пен[яи]|соц\.? ?сбор/i], ["Пополнение корп. карты", /корп/i], ["Кредит", /кредит/i], ["Аренда и ЖЭК", /аренд|жэк|коммунал/i], ["Линзы (товар)", /линз/i], ["Обналичка", /обнал/i], ["С1: мебель, дизайн", /ц1|с1|мебел|дизайн|ремонт/i], ["Billz, кассы, терминалы", /billz|билз|касс|терминал|фискал/i], ["Зарплата", /зарпл|зараб|заплат|аванс/i], ["Межбанк", /межбанк/i], ["Комиссия банка", /комисс/i]];

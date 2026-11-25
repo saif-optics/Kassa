@@ -1,23 +1,8 @@
 // Элементы раздела «Отчёт р/с»: поле суммы, строка дней, значок.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { FIELD } from "./ui";
-import { fmNum, fmt, fmt2, rpNum, wdOf } from "./logic";
-
-/** поле суммы: показывает число с пробелами, сохраняет, когда фокус уходит. decimals — с копейками (р/с), иначе целые */
-export function NumField({ value, onCommit, decimals = true, placeholder = "0", label, className, readOnly }: { value: number | null | undefined; onCommit: (v: number | null) => void; decimals?: boolean; placeholder?: string; label: string; className?: string; readOnly?: boolean }) {
-  const show = value == null ? "" : decimals ? fmt2(value) : fmt(value);
-  const [txt, setTxt] = useState(show), [foc, setFoc] = useState(false), ref = useRef<HTMLInputElement>(null);
-  useEffect(() => { if (!foc) setTxt(show); }, [show, foc]);
-  return (
-    <input ref={ref} aria-label={label} inputMode="decimal" autoComplete="off" placeholder={placeholder} value={txt} readOnly={readOnly}
-      onFocus={() => { setFoc(true); requestAnimationFrame(() => ref.current?.select()); }} onChange={(e) => setTxt(e.target.value)}
-      onBlur={() => { setFoc(false); const v = decimals ? rpNum(txt) : fmNum(txt); setTxt(v == null ? "" : decimals ? fmt2(v) : fmt(v)); if (v !== (value ?? null)) onCommit(v); }}
-      onKeyDown={(e) => { if (e.key === "Enter") ref.current?.blur(); if (e.key === "Escape") { setTxt(show); requestAnimationFrame(() => ref.current?.blur()); } }}
-      className={cn(FIELD, "num text-right font-medium", className)} />
-  );
-}
+import { wdOf } from "./logic";
 
 const STAT: Record<string, string> = { ok: "bg-plus", part: "bg-warn", none: "bg-border" };
 /** строка дней месяца: число, день недели и точка статуса (внесено / частично / нет) */

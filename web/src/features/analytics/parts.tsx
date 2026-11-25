@@ -39,18 +39,6 @@ export function Tile({ c, i = 0, hintsOn = true }: { c: Card; i?: number; hintsO
   );
 }
 
-export function Wd({ title, note, hintsOn = true, wide, children, className }: { title: string; note?: string; hintsOn?: boolean | null; wide?: boolean; children: React.ReactNode; className?: string }) {
-  const { show, h, toggle } = useHint(title, hintsOn);
-  return (
-    <section className={cn("glass min-w-0 rounded-[26px] p-5", wide && "md:col-span-2 xl:col-span-3 min-[1920px]:col-span-4", className)}>
-      <h2 className={cn("text-[17px] font-semibold tracking-tight", toggle && "cursor-pointer")} onClick={toggle}>{title}</h2>
-      {show && <p className="mt-0.5 max-w-[72ch] text-[13px] leading-snug text-muted-foreground">{h}</p>}
-      {note && !(h && hintsOn === true && !/\d/.test(note)) && <p className="mt-0.5 text-[13px] leading-snug text-muted-foreground">{note}</p>}
-      <div className="mt-3 min-w-0">{children}</div>
-    </section>
-  );
-}
-
 // ---- таблицы ----
 export const Tbl = ({ children, className }: { children: React.ReactNode; className?: string }) => <div className={cn("-mx-1 overflow-x-auto px-1", className)}><table className="w-full border-collapse text-[13px]">{children}</table></div>;
 export const Th = ({ children, r, className }: { children?: React.ReactNode; r?: boolean; className?: string }) => <th className={cn("border-b border-border px-2 py-2 text-[11px] font-semibold tracking-wide whitespace-nowrap text-muted-foreground uppercase", r ? "text-right" : "text-left", className)}>{children}</th>;
@@ -65,24 +53,10 @@ export function MBar({ v, w = 70, color = "var(--plus)" }: { v: number | null; w
   if (v == null) return <Dim />;
   return <div className="flex items-center justify-end gap-2"><div className="h-2 overflow-hidden rounded-full bg-muted" style={{ width: w }}><span className="block h-full rounded-full" style={{ width: Math.max(0, Math.min(100, v * 100)) + "%", background: color }} /></div><b className="num w-9 text-right">{pctF(v)}</b></div>;
 }
-export function Bar2({ v, color = "var(--primary)" }: { v: number; color?: string }) {
-  return <div className="h-2 min-w-[70px] overflow-hidden rounded-full bg-muted"><span className="block h-full rounded-full" style={{ width: Math.round(v * 100) + "%", background: color }} /></div>;
-}
 export function Seg<T extends string>({ value, onChange, items, label }: { value: T; onChange: (v: T) => void; items: [T, string][]; label: string }) {
   return (
     <div role="group" aria-label={label} className="glass inline-flex max-w-full flex-wrap gap-1 rounded-full p-1">
       {items.map(([v, l]) => <button key={v} type="button" aria-pressed={value === v} onClick={() => onChange(v)} className={cn("rounded-full px-3.5 py-1.5 text-[13px] font-medium whitespace-nowrap transition", value === v ? "bg-popover text-primary shadow-sm" : "text-muted-foreground hover:text-foreground")}>{l}</button>)}
     </div>
-  );
-}
-
-export function Box({ title, note, action, children }: { title: string; note?: React.ReactNode; action?: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <section className="glass min-w-0 rounded-[26px] p-5">
-      <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0"><h3 className="text-[17px] font-semibold tracking-tight">{title}</h3>{note && <p className="mt-0.5 text-[13px] leading-snug text-muted-foreground">{note}</p>}</div>{action}
-      </div>
-      {children}
-    </section>
   );
 }

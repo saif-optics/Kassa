@@ -4,7 +4,7 @@ import { checkKey, discOf, entAmt, PAYS, payOf, type Ctx, type S } from "./cost"
 import { dLong, WD, wdIdx } from "./util";
 import { xlToday, type XSheet } from "./xl";
 import { lensData, type LRow } from "../lens/logic";
-import { marginData, stockSold } from "../stock-margin/logic";
+import { stockSold } from "../stock-margin/logic";
 
 export const fname = (c: Ctx, F: Flt, pre: string, ext: string) => { const r = rangeOf(F, filtered(c, F)); return `${pre}_${r.from}_${r.to}${F.point !== "all" ? "_" + F.point : ""}.${ext}`; };
 
@@ -48,19 +48,6 @@ export function lensSheets(c: Ctx, F: Flt): XSheet[] | null {
   return [
     { name: "Виды линз", title: "Проданные линзы по видам", subtitle: sub, columns: [{ header: "Вид", key: "t", type: "text", width: 16 }, { header: "Индекс", key: "i", type: "text", width: 10 }, { header: "Покрытие", key: "c", type: "text", width: 20 }, { header: "Штук", key: "u", type: "int", width: 8 }, { header: "Выручка, сум", key: "r", type: "money", width: 16 }, { header: "Ср. цена, сум", key: "avg", type: "money", width: 14 }], rows: sum, total: { t: "Итого", u: T(sum, "u"), r: T(sum, "r") } },
     { name: "Все продажи линз", title: "Все продажи линз", subtitle: sub, columns: [{ header: "Дата", key: "d", type: "text", width: 12 }, { header: "Точка", key: "p", type: "text", width: 11 }, { header: "Товар", key: "pr", type: "text", width: 30 }, { header: "Вид", key: "t", type: "text", width: 15 }, { header: "Индекс", key: "i", type: "text", width: 9 }, { header: "Покрытие", key: "c", type: "text", width: 18 }, { header: "Бренд", key: "b", type: "text", width: 11 }, { header: "Штук", key: "q", type: "int", width: 7 }, { header: "Цена, сум", key: "pc", type: "money", width: 13 }, { header: "Оплачено, сум", key: "sm", type: "money", width: 14 }], rows: det, total: { d: "Итого", q: T(det, "q"), sm: T(det, "sm") } },
-  ];
-}
-
-export function marginSheets(c: Ctx, F: Flt): XSheet[] | null {
-  const d = marginData(c, F); if (!d.tot.rev) return null;
-  const sub = periodTxt(F, filtered(c, F), ` · выгружено ${xlToday()}`);
-  const cols = (f: string) => [{ header: f, key: "k", type: "text" as const, width: 26 }, { header: "Выручка, сум", key: "rev", type: "money" as const, width: 15 }, { header: "Посчитано, сум", key: "revC", type: "money" as const, width: 15 }, { header: "Себестоимость, сум", key: "cogs", type: "money" as const, width: 15 }, { header: "Прибыль, сум", key: "gp", type: "money" as const, width: 15 }, { header: "Маржа", key: "mg", type: "pct" as const, width: 9 }, { header: "Покрытие", key: "cov", type: "pct" as const, width: 10 }];
-  const tot = Object.assign({ k: "Итого" }, d.tot) as unknown as Record<string, unknown>;
-  return [
-    { name: "Маржа по точкам", title: "Маржинальность точек", subtitle: sub, columns: cols("Точка"), rows: d.pts as never, total: tot, note: "Считаются продажи с найденной ценой покупки. Покрытие — доля выручки, для которой цена покупки нашлась. Строки «без детализации» не входят." },
-    { name: "Маржа по категориям", title: "Маржа по категориям", subtitle: sub, columns: cols("Категория"), rows: d.cats as never, total: tot },
-    { name: "Товары", title: "Прибыль и маржа по товарам", subtitle: sub, columns: [{ header: "Товар", key: "k", type: "text", width: 36 }, { header: "Шт", key: "u", type: "int", width: 8 }, { header: "Выручка, сум", key: "rev", type: "money", width: 15 }, { header: "Цена покупки, сум", key: "cp", type: "money", width: 15 }, { header: "Себестоимость, сум", key: "cogs", type: "money", width: 15 }, { header: "Прибыль, сум", key: "gp", type: "money", width: 15 }, { header: "Маржа", key: "mg", type: "pct", width: 9 }], rows: [...d.prods].sort((a, b) => b.gp - a.gp) as never },
-    { name: "Без цены покупки", title: "Продажи без цены покупки", subtitle: sub, columns: [{ header: "Товар в продаже", key: "k", type: "text", width: 40 }, { header: "Продаж", key: "n", type: "int", width: 9 }, { header: "Шт", key: "u", type: "int", width: 8 }, { header: "Выручка, сум", key: "rev", type: "money", width: 15 }], rows: d.miss as never },
   ];
 }
 

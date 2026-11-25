@@ -261,7 +261,6 @@ export function plStats(c: Ctx, total: number, fact: number, factBefore: number,
   return { pace, need, needDay, forecast, pct: total ? fact / total : 0, fpct: total ? forecast / total : 0 };
 }
 
-export interface CalDay { rev: number; pts: Record<string, number>; ck: number }
 export function calOf(c: Ctx, F: Filter, calM: string, jDay: string) {
   const base = c.sales.filter(matchOf(F)), today = c.today;
   const months = [...new Set(base.map((s) => (s.date || "").slice(0, 7)).filter(Boolean).concat([today.slice(0, 7)]))].sort();

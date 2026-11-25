@@ -1,11 +1,7 @@
 // Мелкие элементы «Плана» и «Главной»: подпись, полоса выполнения, кольца, мини-график.
 import { motion } from "motion/react";
 import { Line, LineChart } from "recharts";
-import { cn } from "@/lib/utils";
 import { DUR, EASE } from "@/lib/motion";
-
-export const Eyebrow = ({ children, light, className }: { children: React.ReactNode; light?: boolean; className?: string }) =>
-  <span className={cn("text-[11px] font-semibold tracking-wide uppercase", light ? "text-white/85" : "text-muted-foreground", className)}>{children}</span>;
 
 /** полоса выполнения; mk — черта «где нужно быть сегодня» (0..1) */
 export function Bar({ v, mk, color, h = 10 }: { v: number; mk?: number | null; color: string; h?: number }) {

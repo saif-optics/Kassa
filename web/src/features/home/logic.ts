@@ -201,4 +201,3 @@ export function homeData(d: Data, today: string, extra?: HomeExtra) {
 
   return { tiles, alerts, sections, today, m, lastDay, lbl, dayRev, dayList: dayList.length, dayChecks, mRev, mChecks, avgDay, hero, cards, brief, briefNote, week, pts, ptDayRev: pts.reduce((a, o) => a + o.r, 0), ptNote, ptTotalLabel: `Итого за ${lastDay === today ? "сегодня" : dShort(lastDay)}`, last, monthLabel: monthTitle(m), kassa: k, plan: { K, S, total: pt }, margin: mg };
 }
-export type HomeData = ReturnType<typeof homeData>;

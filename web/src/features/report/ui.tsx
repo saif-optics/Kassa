@@ -47,12 +47,6 @@ export function Tbl({ head, children, className }: { head: Head[]; children: Rea
     </table>
   );
 }
-export function Tr({ children, tap, tone, selected, onClick, className, foot }: { children: React.ReactNode; tap?: boolean; tone?: "bad" | "warn" | "dim"; selected?: boolean; onClick?: () => void; className?: string; foot?: boolean }) {
-  return (
-    <tr onClick={onClick} className={cn("border-b border-border/60 last:border-0 max-md:mb-2 max-md:block max-md:rounded-2xl max-md:border max-md:border-border/70 max-md:px-3 max-md:py-2",
-      tap && "cursor-pointer transition hover:bg-muted/60", tone === "bad" && "bg-minus-soft/60", tone === "warn" && "bg-warn-soft/60", tone === "dim" && "opacity-55", selected && "bg-accent/70", foot && "font-semibold", className)}>{children}</tr>
-  );
-}
 /** ячейка: l — подпись на телефоне; r — цифра справа; h — главная ячейка строки (на телефоне — заголовок карточки) */
 export function Td({ children, l, r, h, className, colSpan }: { children?: React.ReactNode; l?: string; r?: boolean; h?: boolean; className?: string; colSpan?: number }) {
   return (

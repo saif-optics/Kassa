@@ -25,7 +25,6 @@ export function marginData(c: Ctx, F: Flt) {
   const nodet = sum(all.filter((s) => s.cat === NODET || s.cat === "Погашения долгов"), (s) => +s.sum || 0);
   return { tot, pts: ptsOrd, cats, prods, miss, nodet };
 }
-export const hasCosts = (c: Ctx) => c.stockItems.some((i) => +(i.cp || 0) > 0) || c.batches.some((b) => (b.items || []).some((i) => +(i.cp || 0) > 0));
 
 // ---------- склад из файла ----------
 export const PLACE_ORDER = ["Склад", "Премиум", "Яшнабад", "Сергели", "C1"];
