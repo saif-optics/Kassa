@@ -1,14 +1,18 @@
 {
-  "1": "FiscalView.tsx",
+  "1": "sales/filter.tsx",
+  "18": "exports.ts",
+  "19": "pay/logic.ts",
   "21": "sales/logic.ts",
-  "61": "AddForm.tsx",
-  "71": "RowCards.tsx",
-  "74": "StockFile.tsx",
-  "75": "WeekChart.tsx",
+  "37": "Card",
+  "43": "package.json",
+  "46": "HomePage.tsx",
+  "60": "Side.tsx",
+  "64": "utils.ts",
+  "72": "tasks/demo.ts",
+  "74": "plan-harness/main.tsx",
+  "75": "Card.tsx",
   "76": "Calendar.tsx",
-  "80": "plan/Settings.tsx",
-  "85": "package.json",
-  "89": "react",
-  "90": "AnParts.tsx",
-  "91": "tabs.tsx"
+  "80": "PlanSettings",
+  "85": "analytics-harness/main.tsx",
+  "89": "Button"
 }

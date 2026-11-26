@@ -1,34 +1,24 @@
-// Выручка за 14 дней (Recharts): столбики с подписью в млн / тысячах, лучший день выделен, воскресенье приглушено.
-import { Bar, BarChart, Cell, LabelList, ResponsiveContainer, Tooltip, XAxis } from "recharts";
-import { useIsPhone } from "@/lib/useMedia";
+// Выручка за 14 дней: столбики, подписи дней 12 px, воскресенья красным, лучший день светлее.
+import { motion } from "motion/react";
+import { DUR, EASE } from "@/lib/motion";
+import { cn } from "@/lib/utils";
 import type { DayBar } from "./logic";
 import { dLong, fmt } from "../plan/logic";
 
-// на узком экране подписи дней — через одну
-const narrow = () => typeof matchMedia !== "undefined" && matchMedia("(max-width: 639px)").matches;
-function Tick({ x, y, payload, bars }: { x?: number; y?: number; payload?: { value: string }; bars: DayBar[] }) {
-  const i = bars.findIndex((z) => z.d === payload?.value), b = bars[i]; if (!b || (narrow() && (bars.length - 1 - i) % 2)) return null;
-  return <g transform={`translate(${x},${y})`}><text textAnchor="middle" dy={12} fontSize={11} fontWeight={700} className="fill-foreground">{b.n}</text><text textAnchor="middle" dy={25} fontSize={11} className={b.sun ? "fill-minus" : "fill-muted-foreground"}>{b.wd}</text></g>;
-}
-function Tip({ active, payload }: { active?: boolean; payload?: { payload: DayBar }[] }) {
-  const b = active && payload?.[0]?.payload; if (!b) return null;
-  return <div className="glass rounded-xl px-3 py-2 text-xs"><b>{dLong(b.d)}</b><div className="num mt-0.5">{fmt(b.v)} сум</div></div>;
-}
-
 export function WeekChart({ bars }: { bars: DayBar[] }) {
-  const phone = useIsPhone();
+  const mx = Math.max(1, ...bars.map((b) => b.v));
   return (
-    <div className="h-[210px] w-full min-w-0" role="img" aria-label="Выручка по дням за 14 дней">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={bars} margin={{ top: phone ? 6 : 18, right: 2, left: 2, bottom: 0 }} barCategoryGap="14%">
-          <XAxis dataKey="d" tickLine={false} axisLine={false} interval={0} tick={<Tick bars={bars} />} height={34} />
-          <Tooltip content={<Tip />} cursor={{ fill: "var(--muted)", opacity: 0.5 }} />
-          <Bar dataKey="v" radius={[5, 5, 0, 0]} minPointSize={3} animationDuration={700}>
-            {bars.map((b) => <Cell key={b.d} fill={b.best ? "var(--primary)" : "var(--chart-1)"} fillOpacity={b.best ? 1 : b.sun || !b.v ? 0.25 : 0.55} />)}
-            {!phone && <LabelList dataKey="label" position="top" fontSize={9.5} className="fill-muted-foreground" />}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+    <div role="img" aria-label="Выручка по дням за 14 дней" className="flex flex-col gap-2.5">
+      <div className="grid h-[120px] grid-cols-14 items-end gap-1.5 pt-1.5 @min-[640px]/main:gap-2">
+        {bars.map((b) => (
+          <motion.i key={b.d} title={`${dLong(b.d)} · ${fmt(b.v)} сум`} className="block rounded-t-md rounded-b-[2px]"
+            style={{ background: b.best ? "var(--primary)" : "var(--chart-1)", opacity: b.best ? 1 : b.sun || !b.v ? 0.3 : 0.6 }}
+            initial={{ height: 0 }} animate={{ height: Math.max(3, (b.v / mx) * 100) + "%" }} transition={{ duration: DUR.slow, ease: EASE.out }} />
+        ))}
+      </div>
+      <div className="grid grid-cols-14 gap-1.5 text-center text-xs text-muted-foreground @min-[640px]/main:gap-2">
+        {bars.map((b) => <span key={b.d} className={cn(b.sun && "text-minus", b.best && "font-semibold text-foreground")}>{b.n}</span>)}
+      </div>
     </div>
   );
 }

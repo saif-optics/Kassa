@@ -16,15 +16,15 @@ export function CatIcon({ cat, size = "md" }: { cat?: string; size?: "sm" | "md"
 const ST: Record<Status, [ChipTone, string]> = {
   ok: ["plus", "Оплачено"], part: ["info", "Частично"], late: ["minus", "Просрочено"], today: ["warn", "Сегодня"], soon: ["warn", "Впереди"],
 };
-export function statusText(r: MonthRow, T: string) {
-  if (r.st === "late") { const n = dDiff(r.due, T); return `Просрочено · ${n} ${pl(n, "день", "дня", "дней")}`; }
-  if (r.st === "soon") { const n = dDiff(T, r.due); return n === 1 ? "Завтра" : `Через ${n} ${pl(n, "день", "дня", "дней")}`; }
+export function statusText(r: MonthRow, T: string, short?: boolean) {
+  if (r.st === "late") { const n = dDiff(r.due, T); return `Просрочено · ${n} ${short ? "дн." : pl(n, "день", "дня", "дней")}`; }
+  if (r.st === "soon") { const n = dDiff(T, r.due); return n === 1 ? "Завтра" : `Через ${n} ${short ? "дн." : pl(n, "день", "дня", "дней")}`; }
   return ST[r.st][1];
 }
 /** статус платежа пилюлей; с onClick — кнопка «отметить оплату» */
-export function StatusChip({ r, T, onClick }: { r: MonthRow; T: string; onClick?: () => void }) {
+export function StatusChip({ r, T, onClick, dense }: { r: MonthRow; T: string; onClick?: () => void; dense?: boolean }) {
   const title = r.st === "ok" ? (r.man && !r.auto ? "Снять отметку" : "Оплачено по выписке") : "Отметить оплату";
-  const chip = <Chip tone={ST[r.st][0]} className="px-3 py-1.5 text-[12.5px] whitespace-nowrap">{statusText(r, T)}</Chip>;
+  const chip = <Chip tone={ST[r.st][0]} className={cn("whitespace-nowrap", dense ? "px-2 text-[11.5px]" : "px-3 py-1.5 text-[12.5px]")}>{statusText(r, T, dense)}</Chip>;
   if (!onClick) return chip;
   return <button type="button" onClick={onClick} title={title} className="rounded-full outline-none max-sm:inline-flex max-sm:min-h-9 max-sm:items-center transition-transform active:scale-[0.97] focus-visible:ring-3 focus-visible:ring-primary/30">{chip}</button>;
 }

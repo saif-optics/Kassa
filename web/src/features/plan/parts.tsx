@@ -34,7 +34,7 @@ export function BigRing({ p, color, label = "плана" }: { p: number; color: 
 export function MiniRing({ p, color }: { p: number; color: string }) {
   const r = 15, c = 2 * Math.PI * r, v = Math.max(0, Math.min(1, p));
   return (
-    <svg viewBox="0 0 40 40" className="size-11 shrink-0" aria-hidden>
+    <svg viewBox="0 0 40 40" className="size-10 shrink-0" aria-hidden>
       <circle cx="20" cy="20" r={r} fill="none" strokeWidth="4.5" className="stroke-muted" />
       <motion.circle cx="20" cy="20" r={r} fill="none" strokeWidth="4.5" strokeLinecap="round" stroke={color} transform="rotate(-90 20 20)"
         initial={{ strokeDasharray: `0 ${c}` }} animate={{ strokeDasharray: `${c * v} ${c}` }} transition={{ duration: DUR.slow, ease: EASE.out }} />
