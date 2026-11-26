@@ -11,12 +11,12 @@ import type { Entry, Template } from "@/lib/types";
 import { TAGS, fmt, tagAuto, todayTash } from "./logic";
 
 export type FormVal = { type: "exp" | "inc"; name: string; amount: number; cat: string; branch: string; date: string; fund: string; tag: string; saveTpl: boolean };
-type Props = { templates: Template[]; editing: Entry | null; reserveBal: number; onSubmit: (v: FormVal) => Promise<void>; onCancel: () => void; onDelTpl: (id: string) => void; focusKey: number };
+type Props = { templates: Template[]; editing: Entry | null; reserveBal: number; onSubmit: (v: FormVal) => Promise<void>; onCancel: () => void; onDelTpl: (id: string) => void; focusKey: number; bento?: boolean };
 const digits = (s: string) => { const v = String(s || "").replace(/[^\d]/g, ""); return v ? parseInt(v, 10) : NaN; };
 type FState = { type: "exp" | "inc"; name: string; amount: string; cat: string; branch: string; date: string; fund: string; tag: string; saveTpl: boolean };
 const empty = (date = todayTash()): FState => ({ type: "exp", name: "", amount: "", cat: "op", branch: "Премиум", date, fund: "", tag: "", saveTpl: false });
 
-export function AddForm({ templates, editing, reserveBal, onSubmit, onCancel, onDelTpl, focusKey }: Props) {
+export function AddForm({ templates, editing, reserveBal, onSubmit, onCancel, onDelTpl, focusKey, bento }: Props) {
   const [f, setF] = useState<FState>(empty());
   const [msg, setMsg] = useState<{ t: string; bad?: boolean } | null>(null), [busy, setBusy] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null), amtRef = useRef<HTMLInputElement>(null);
@@ -36,6 +36,41 @@ export function AddForm({ templates, editing, reserveBal, onSubmit, onCancel, on
     try { await onSubmit({ ...f, name, amount }); setMsg({ t: editing ? "Запись обновлена" : `${inc ? "Приход" : "Расход"} добавлен: ${fmt(amount)} сум` }); setF(empty(f.date)); }
     catch { setMsg({ t: "Не удалось сохранить. Попробуйте ещё раз.", bad: true }); } finally { setBusy(false); setTimeout(() => setMsg(null), 4500); }
   };
+  if (bento) {
+    const H = "h-10 @max-[1599px]/main:h-9", sel = "min-w-0 h-10 data-[size=default]:h-10 @max-[1599px]/main:h-9 @max-[1599px]/main:data-[size=default]:h-9", fl = "text-[12.5px] font-semibold text-muted-foreground";
+    const rank = (t: Template) => (t.type === "inc" ? 2 : t.cat === "op" ? 0 : 1);
+    const flat = [...templates].sort((a, b) => rank(a) - rank(b) || (a.order || 99) - (b.order || 99) || a.name.localeCompare(b.name));
+    return (
+      <div className="flex min-h-0 flex-1 flex-col gap-2.5 @max-[1599px]/main:gap-2">
+        {flat.length ? <div className="flex max-h-[76px] shrink-0 flex-wrap gap-2 overflow-y-auto">{flat.map((t) => (
+          <span key={t.id} className="glass-inner inline-flex max-w-full items-center gap-1.5 rounded-full py-0.5 pr-1 pl-3 text-[13.5px]">
+            <button type="button" onClick={() => tpl(t)} className="inline-flex min-w-0 items-center gap-2 font-medium"><i className={cn("size-2 shrink-0 rounded-full", t.type === "inc" ? "bg-plus" : t.cat === "op" ? "bg-primary" : "bg-warn")} /><span className="truncate">{t.name}</span>{t.amount ? <span className="num text-muted-foreground">{fmt(t.amount)}</span> : null}</button>
+            <Button type="button" variant="ghost" size="icon-xs" aria-label={"Удалить шаблон " + t.name} onClick={() => onDelTpl(t.id)}><X /></Button></span>))}</div>
+          : <p className="text-sm text-muted-foreground">Шаблонов пока нет. Отметьте «сохранить как шаблон» при добавлении расхода.</p>}
+        <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col gap-2.5">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+            <div className="grid gap-1"><Label className={fl}>Название</Label><Input ref={nameRef} value={f.name} onChange={(e) => set("name", e.target.value)} placeholder="Например: Премиум за такси" className={cn(H, "text-sm")} /></div>
+            <div className="grid gap-1"><Label className={fl}>Сумма</Label><Input ref={amtRef} value={f.amount} onChange={(e) => { const v = digits(e.target.value); set("amount", isNaN(v) ? "" : fmt(v)); }} inputMode="numeric" placeholder="0" className={cn(H, "num text-sm")} /></div>
+            <div className="grid gap-1"><Label className={fl}>{inc ? "Тип" : "Тип и вид"}</Label><div className="flex gap-2">
+              <Select value={f.type} onValueChange={(v) => set("type", v as "exp" | "inc")}><SelectTrigger className={cn(sel, "w-[104px] shrink-0")} aria-label="Тип"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="exp">Расход</SelectItem><SelectItem value="inc">Приход</SelectItem></SelectContent></Select>
+              {!inc && <Select value={f.cat} onValueChange={(v) => set("cat", v)}><SelectTrigger className={cn(sel, "w-full flex-1")} aria-label="Вид расхода"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="op">Операционный</SelectItem><SelectItem value="oth">Прочий</SelectItem></SelectContent></Select>}</div></div>
+            <div className="grid gap-1"><Label className={fl}>Точка</Label><Select value={f.branch} onValueChange={(v) => set("branch", v)}><SelectTrigger className={cn(sel, "w-full")}><SelectValue /></SelectTrigger><SelectContent>{["Премиум", "Яшнабад", "Общее"].map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select></div>
+            <div className="grid gap-1"><Label className={fl}>Дата</Label><Input type="date" value={f.date} onChange={(e) => set("date", e.target.value)} className={cn(H, "text-sm")} /></div>
+            {!inc && <div className="grid gap-1"><Label className={fl}>Откуда деньги · тег</Label><div className="flex gap-2">
+              <Select value={f.fund || "kassa"} onValueChange={(v) => set("fund", v === "kassa" ? "" : v)}><SelectTrigger className={cn(sel, "w-auto min-w-24 shrink-0")} aria-label="Откуда деньги"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="kassa">Касса</SelectItem><SelectItem value="reserve">Резерв · {fmt(reserveBal)}</SelectItem></SelectContent></Select>
+              <Select value={f.tag || "auto"} onValueChange={(v) => set("tag", v === "auto" ? "" : v)}><SelectTrigger className={cn(sel, "w-full flex-1")} aria-label="Тег"><SelectValue /></SelectTrigger>
+                <SelectContent><SelectItem value="auto">Авто · {tagAuto(f.name)}</SelectItem>{[...TAGS.map((t) => t[0]), "Прочее"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div></div>}
+          </div>
+          <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-2">
+            <Button type="submit" disabled={busy} className={cn(H, "rounded-full px-6 text-sm font-bold")}>{editing ? "Сохранить изменения" : "Добавить"}</Button>
+            {editing && <Button type="button" variant="secondary" onClick={onCancel} className="h-10 rounded-full px-5 text-sm">Отмена</Button>}
+            {!editing && <label className="flex items-center gap-2 text-sm text-muted-foreground"><Checkbox checked={f.saveTpl} onCheckedChange={(v) => set("saveTpl", !!v)} />сохранить как шаблон</label>}
+            {msg && <span className={cn("text-[13px]", msg.bad ? "text-minus" : "text-plus")}>{msg.t}</span>}
+          </div>
+        </form>
+      </div>
+    );
+  }
   return (
     <div>
       {templates.length ? <div className="mb-4 flex flex-col gap-2">{groups.map(([k, n]) => { const g = templates.filter((t) => (t.type === "inc" ? "inc" : t.cat) === k).sort((a, b) => (a.order || 99) - (b.order || 99) || a.name.localeCompare(b.name)); return g.length ? (

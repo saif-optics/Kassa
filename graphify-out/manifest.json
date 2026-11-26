@@ -642,15 +642,15 @@
     "semantic_hash": ""
   },
   "web/src/features/kassa/AddForm.tsx": {
-    "mtime": 1795718065.4669623,
-    "seen": 1795718462.1401973,
-    "ast_hash": "327d45b240899272bb0b4b46a50341d1",
+    "mtime": 1795726008.4439054,
+    "seen": 1795726346.4215827,
+    "ast_hash": "0f251e5904cd24a621b923c68fb849cf",
     "semantic_hash": ""
   },
   "web/src/features/kassa/Analysis.tsx": {
-    "mtime": 1795715075.183714,
-    "seen": 1795715731.092183,
-    "ast_hash": "c7433c8ca22290d56c6cf6f4227dbee2",
+    "mtime": 1795726294.5930445,
+    "seen": 1795726346.4215827,
+    "ast_hash": "caf291b5bf284a882388bde7ea008f50",
     "semantic_hash": ""
   },
   "web/src/features/kassa/Journal.tsx": {
@@ -660,21 +660,21 @@
     "semantic_hash": ""
   },
   "web/src/features/kassa/KassaPage.tsx": {
-    "mtime": 1795717699.1867797,
-    "seen": 1795718462.1401973,
-    "ast_hash": "4aa65d4f601919ae9a040bbd5d804997",
+    "mtime": 1795726197.7497134,
+    "seen": 1795726346.4215827,
+    "ast_hash": "f0eca517cf716c1b57627ef7093a980d",
     "semantic_hash": ""
   },
   "web/src/features/kassa/Steps.tsx": {
-    "mtime": 1795536321.7868397,
-    "seen": 1795591505.8980424,
-    "ast_hash": "7db5c70b1f34f6d647437c62da531764",
+    "mtime": 1795726170.7553368,
+    "seen": 1795726346.4215827,
+    "ast_hash": "ef16dd20746bb15471189d63698654ba",
     "semantic_hash": ""
   },
   "web/src/features/kassa/Tiles.tsx": {
-    "mtime": 1795718065.4749897,
-    "seen": 1795718462.1401973,
-    "ast_hash": "6d45b85735c8d7b478ccb87f989b54ba",
+    "mtime": 1795726170.7929237,
+    "seen": 1795726346.4215827,
+    "ast_hash": "ff1b47d543ee051ea835f9fa0e217f38",
     "semantic_hash": ""
   },
   "web/src/features/kassa/logic.ts": {
@@ -1239,6 +1239,12 @@
     "mtime": 1795724027.6894755,
     "seen": 1795724887.8202357,
     "ast_hash": "90b4e21320d0c0d5e81d997f0e6b1765",
+    "semantic_hash": ""
+  },
+  "web/src/features/kassa/JournalMini.tsx": {
+    "mtime": 1795726040.3844092,
+    "seen": 1795726346.4215827,
+    "ast_hash": "47108b5ce8de1804352fb7a5ae88250d",
     "semantic_hash": ""
   }
 }
