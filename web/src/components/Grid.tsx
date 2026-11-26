@@ -6,6 +6,13 @@ export const Grid = ({ className, children }: { className?: string; children: Re
   <div className={cn("grid grid-cols-1 items-start gap-4 @min-[640px]/main:grid-cols-6 @min-[1024px]/main:grid-cols-12 @min-[1700px]/main:grid-cols-16", className)}>{children}</div>
 );
 
+/** Бенто-мозаика Главной: 2 колонки на телефоне, 6 от 640, 12 от 1024; ряд фиксированной высоты (124 / 132 / 142 от 1600), зазор 16 */
+export const Bento = ({ children }: { children: React.ReactNode }) => (
+  <div className="grid grid-flow-dense grid-cols-2 auto-rows-[minmax(118px,auto)] gap-2.5 @min-[640px]/main:grid-cols-6 @min-[640px]/main:auto-rows-[124px] @min-[640px]/main:gap-4 @min-[1024px]/main:grid-cols-12 @min-[1024px]/main:auto-rows-[132px] @min-[1600px]/main:auto-rows-[142px]">{children}</div>
+);
+/** блок мозаики: c — классы спанов и порядка (литералами, чтобы Tailwind их увидел); ребёнок растягивается на весь блок */
+export const Item = ({ c, children }: { c: string; children: React.ReactNode }) => <div className={cn("min-h-0 min-w-0 [&>*]:h-full", c)}>{children}</div>;
+
 // карты «число колонок → класс»
 const S6: Record<number, string> = { 3: "@min-[640px]/main:col-span-3", 6: "@min-[640px]/main:col-span-6" };
 const S12: Record<number, string> = {

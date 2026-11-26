@@ -10,13 +10,13 @@ const isLink = (a: unknown): a is ActionLink => !!a && typeof a === "object" && 
 
 export function Card({ title, note, action, i = 0, className, children }: { title: string; note?: React.ReactNode; action?: ActionLink | React.ReactNode; i?: number; className?: string; children: React.ReactNode }) {
   return (
-    <motion.section {...land(i)} className={cn("glass flex min-w-0 flex-col gap-2.5 rounded-[24px] px-[18px] py-4", className)}>
+    <motion.section {...land(i)} className={cn("glass flex h-full min-w-0 flex-col gap-2.5 rounded-3xl p-4 @min-[640px]/main:rounded-[28px] @min-[640px]/main:px-6 @min-[640px]/main:py-[22px]", className)}>
       <header className="flex items-baseline justify-between gap-3">
-        <h2 className="shrink-0 text-base font-semibold whitespace-nowrap">{title}</h2>
+        <h2 className="shrink-0 text-lg font-bold whitespace-nowrap">{title}</h2>
         {action ? (isLink(action)
-          ? <button type="button" onClick={action.onClick} aria-label={action["aria-label"]} className="shrink-0 rounded text-[12.5px] font-semibold text-primary hover:underline">{action.label}</button>
+          ? <button type="button" onClick={action.onClick} aria-label={action["aria-label"]} className="shrink-0 rounded text-[13px] font-semibold text-primary hover:underline">{action.label}</button>
           : <span className="shrink-0 self-center">{action}</span>)
-          : note ? <span className="line-clamp-2 min-w-0 text-right text-xs leading-snug text-muted-foreground sm:line-clamp-1">{note}</span> : null}
+          : note ? <span className="line-clamp-2 min-w-0 text-right text-sm leading-snug text-muted-foreground sm:line-clamp-1">{note}</span> : null}
       </header>
       {children}
     </motion.section>

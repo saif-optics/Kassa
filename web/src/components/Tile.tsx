@@ -12,7 +12,7 @@ export function Tile({ i = 0, hero, warn, className, children }: { i?: number; h
   return (
     <OnHero.Provider value={!!hero}>
       <motion.div {...land(i)}
-        className={cn("flex min-h-32 min-w-0 flex-col justify-between overflow-hidden rounded-[24px] p-4",
+        className={cn("flex h-full relative min-h-[118px] min-w-0 flex-col justify-between overflow-hidden rounded-3xl p-4 @min-[640px]/main:rounded-[28px] @min-[640px]/main:px-6 @min-[640px]/main:py-4 @min-[1600px]/main:py-[22px]",
           hero ? "border border-white/25 bg-[linear-gradient(135deg,var(--brand),#0a4f7a_60%,var(--brand-navy))] text-white shadow-[0_14px_36px_rgb(2_110_166/0.32)]" : "glass",
           warn && "ring-1 ring-minus/50", className)}>{children}</motion.div>
     </OnHero.Provider>
@@ -21,30 +21,38 @@ export function Tile({ i = 0, hero, warn, className, children }: { i?: number; h
 
 export function TileLabel({ children, className }: { children: React.ReactNode; className?: string }) {
   const hero = useContext(OnHero);
-  return <span className={cn("text-xs font-semibold tracking-[.06em] uppercase", hero ? "text-white/80" : "text-muted-foreground", className)}>{children}</span>;
+  return <span className={cn("text-[13px] font-semibold tracking-[.06em] uppercase", hero ? "text-white/80" : "text-muted-foreground", className)}>{children}</span>;
 }
 
 /** значение плитки; count — число с досчётом: «sum» — целое с пробелами, «mln» — «1,2 млн» */
-export function TileValue({ children, count, format = "sum", suffix, className }: { children?: React.ReactNode; count?: number; format?: "sum" | "mln"; suffix?: string; className?: string }) {
+export function TileValue({ children, count, format = "sum", suffix, compact, className }: { children?: React.ReactNode; count?: number; format?: "sum" | "mln"; suffix?: string; compact?: boolean; className?: string }) {
+  const hero = useContext(OnHero);
   const v = useCountUp(count ?? 0);
   const fmtOf = (n: number) => (format === "mln" ? fmtM(n) : fmt(n)) + (suffix ?? "");
   const body = count == null ? children : fmtOf(v);
   // длину считаем по конечному значению, чтобы размер не прыгал во время досчёта
   const full = count == null ? children : fmtOf(count);
   const long = typeof full === "string" && full.length > 13;
-  return <span className={cn("num block max-w-full min-w-0 font-bold tracking-[-0.01em] whitespace-nowrap", long ? "text-[22px]" : "text-[26px]", "leading-[1.1]", className)}>{body}</span>;
+  const size = hero ? "text-[40px] @min-[640px]/main:text-[52px]" : long ? "text-[26px] @min-[640px]/main:text-[30px]" : "text-[30px] @min-[640px]/main:text-[38px]";
+  const cls = cn(size, "num block max-w-full min-w-0 font-extrabold tracking-[-0.02em] whitespace-nowrap leading-none", className);
+  // compact: на телефоне короткая запись «52,9 млн», от 640 px полная
+  if (compact && count != null) return <>
+    <span className={cn(cls, "@min-[640px]/main:hidden")}>{fmtM(v)}</span>
+    <span className={cn(cls, "hidden @min-[640px]/main:block")}>{body}</span>
+  </>;
+  return <span className={cls}>{body}</span>;
 }
 
 export const TileSub = ({ children, className }: { children: React.ReactNode; className?: string }) => {
   const hero = useContext(OnHero);
-  return <span className={cn("mt-1.5 flex min-w-0 flex-nowrap items-center gap-1.5 text-xs leading-5 [&>span]:min-w-0 [&>span]:truncate", hero ? "text-white/85" : "text-muted-foreground", className)}>{children}</span>;
+  return <span className={cn("mt-1.5 flex min-w-0 flex-nowrap items-center gap-2 text-[13px] leading-6 @min-[640px]/main:text-sm [&>span]:min-w-0 [&>span]:truncate", hero ? "text-white/85" : "text-muted-foreground", className)}>{children}</span>;
 };
 
 export type ChipTone = "plus" | "minus" | "warn" | "info" | "muted";
 const TONE: Record<ChipTone, string> = { plus: "bg-plus-soft text-plus", minus: "bg-minus-soft text-minus", warn: "bg-warn-soft text-warn", info: "bg-primary/12 text-primary", muted: "bg-muted text-muted-foreground" };
 export function Chip({ tone, children, className }: { tone: ChipTone; children: React.ReactNode; className?: string }) {
   const hero = useContext(OnHero);
-  return <span className={cn("inline-flex h-5 shrink-0 items-center rounded-full px-2 text-[11.5px] font-semibold", hero ? "bg-white/20 text-white" : TONE[tone], className)}>{children}</span>;
+  return <span className={cn("inline-flex h-6 shrink-0 items-center rounded-full px-2.5 text-[12.5px] font-semibold", hero ? "bg-white/20 text-white" : TONE[tone], className)}>{children}</span>;
 }
 
 /** верх плитки: подпись слева, кольцо или искра справа (40 px) */
