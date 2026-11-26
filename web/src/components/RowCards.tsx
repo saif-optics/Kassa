@@ -1,12 +1,13 @@
 // Таблица, которая на телефоне становится карточками. main/sub/первая правая колонка — в шапке карточки,
 // остальное — в раскрывающейся части (подпись/значение) и expand.
-import { Fragment, useState, type ReactNode } from "react";
+import { Fragment, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ChevronDown } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { DUR, EASE, land } from "@/lib/motion";
-import { useIsPhone } from "@/lib/useMedia";
+import { useMedia } from "@/lib/useMedia";
+import { Shades, useScrollShade } from "@/components/ScrollShade";
 
 export type RowColumn<T> = { key: string; title: ReactNode; cell: (row: T) => ReactNode; align?: "right"; main?: boolean; sub?: boolean; hideMobile?: boolean; width?: string };
 
@@ -16,13 +17,14 @@ type Props<T> = {
   rowClass?: (row: T) => string | undefined;         // подсветка строки/карточки
   expandedKey?: string | null;                        // раскрытая строка снаружи (управляемый режим)
   onExpandChange?: (key: string | null) => void;
-  selectedKey?: string | null;                        // выбранная строка: подсветка на ≥ 640 (aria-selected)
+  selectedKey?: string | null;                        // выбранная строка в режиме таблицы (aria-selected)
+  cardsBelow?: "sm" | "md" | "lg";                    // ниже этой ширины — карточки (sm 640, md 768, lg 1024; по умолчанию lg)
 };
 
 const LAND_MAX = 12; // анимируем посадку только первых строк
 
 export function RowCards<T>(p: Props<T>) {
-  const phone = useIsPhone();
+  const phone = useMedia(`(max-width: ${{ sm: 639, md: 767, lg: 1023 }[p.cardsBelow ?? "lg"]}px)`);
   if (!p.rows.length) return <div className="rounded-2xl px-4 py-8 text-center text-[13.5px] text-muted-foreground">{p.empty ?? "Нет данных"}</div>;
   return phone ? <Cards {...p} /> : <Grid {...p} />;
 }
@@ -35,16 +37,18 @@ function useOpenKey(p: { expandedKey?: string | null; onExpandChange?: (key: str
   return [open, toggle] as const;
 }
 
-function Grid<T>({ columns, rows, rowKey, expand, onRowClick, stickyHead, dense, footer, className, rowClass, selectedKey, ...ex }: Props<T>) {
+function Grid<T>({ cardsBelow: _c, columns, rows, rowKey, expand, onRowClick, stickyHead, dense, footer, className, rowClass, selectedKey, ...ex }: Props<T>) {
   const [open, toggle] = useOpenKey(ex);
   const click = (r: T, k: string) => { if (expand) toggle(k); onRowClick?.(r); };
   const act = !!(expand || onRowClick), py = dense ? "py-1.5" : "py-2.5";
+  const sref = useRef<HTMLDivElement>(null), sh = useScrollShade(sref);
   return (
-    <div className={cn("overflow-x-auto", className)}>
+    <div className={cn("relative", className)}>
+    <div ref={sref} className="overflow-x-auto">
       <Table>
         <TableHeader className={cn(stickyHead && "sticky top-0 z-10 bg-card")}>
           <TableRow>
-            {columns.map((c) => <TableHead key={c.key} style={{ width: c.width }} className={cn("text-[12px] font-semibold text-muted-foreground", c.align === "right" && "text-right")}>{c.title}</TableHead>)}
+            {columns.map((c) => <TableHead key={c.key} style={{ width: c.width }} className={cn("text-[12px] font-semibold text-muted-foreground", c.align === "right" && "text-right", c.hideMobile && "max-[1439px]:hidden")}>{c.title}</TableHead>)}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -54,7 +58,7 @@ function Grid<T>({ columns, rows, rowKey, expand, onRowClick, stickyHead, dense,
               <Fragment key={k}>
                 <TableRow className={cn(act && "cursor-pointer", rowClass?.(r), selectedKey === k && "bg-primary/10 hover:bg-primary/15")} aria-selected={selectedKey != null ? selectedKey === k : undefined} data-state={on ? "selected" : undefined} tabIndex={act ? 0 : undefined} aria-expanded={expand ? on : undefined}
                   onClick={() => click(r, k)} onKeyDown={act ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); click(r, k); } } : undefined}>
-                  {columns.map((c) => <TableCell key={c.key} className={cn(py, "num", c.align === "right" && "text-right", c.main && "font-semibold")}>{c.cell(r)}</TableCell>)}
+                  {columns.map((c) => <TableCell key={c.key} className={cn(py, "num", c.align === "right" && "text-right", c.main && "font-semibold", c.hideMobile && "max-[1439px]:hidden")}>{c.cell(r)}</TableCell>)}
                 </TableRow>
                 {expand && on && <TableRow className="hover:bg-transparent"><TableCell colSpan={columns.length} className="bg-muted/40 text-[13px]">{expand(r)}</TableCell></TableRow>}
               </Fragment>
@@ -62,12 +66,14 @@ function Grid<T>({ columns, rows, rowKey, expand, onRowClick, stickyHead, dense,
           })}
         </TableBody>
       </Table>
-      {footer && <div className="px-2 pt-3 text-[13px]">{footer}</div>}
+    </div>
+    <Shades l={sh.l} r={sh.r} />
+    {footer && <div className="px-2 pt-3 text-[13px]">{footer}</div>}
     </div>
   );
 }
 
-function Cards<T>({ columns, rows, rowKey, expand, onRowClick, dense, footer, className, rowClass, ...ex }: Props<T>) {
+function Cards<T>({ cardsBelow: _c, columns, rows, rowKey, expand, onRowClick, dense, footer, className, rowClass, ...ex }: Props<T>) {
   const [open, toggle] = useOpenKey(ex);
   const main = columns.filter((c) => c.main), right = columns.find((c) => c.align === "right"), sub = columns.filter((c) => c.sub);
   const used = new Set([...main, ...sub, ...(right ? [right] : [])].map((c) => c.key));

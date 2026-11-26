@@ -55,7 +55,7 @@ export function StockFile({ c, pick }: { c: Ctx; pick: React.MutableRefObject<((
   };
 
   pick.current = () => file.current?.click();
-  let k = 0; const nx = () => k++; // сквозной номер посадки сверху вниз
+  let k = 0; const nx = () => Math.min(k++, 8); // сквозной номер посадки сверху вниз
 
   const pendCols: RowColumn<BItem>[] = [
     { key: "n", title: "Модель / наименование", main: true, cell: (i) => i.m || i.n || i.s },

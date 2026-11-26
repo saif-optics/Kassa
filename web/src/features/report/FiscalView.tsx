@@ -62,7 +62,7 @@ export function FiscalView({ d, F, setF }: { d: Data; F: FmState; setF: (f: Part
     { key: "n", title: "Итого безнал", align: "right", cell: (x) => <b>{fmt(sums(x).n)}</b> },
     { key: "g", title: "Гросс всего", align: "right", cell: (x) => <span className="text-muted-foreground">{fmt(sums(x).g)}</span> },
   ];
-  let k = 0; const nx = () => k++; // сквозной номер посадки сверху вниз
+  let k = 0; const nx = () => Math.min(k++, 8); // сквозной номер посадки сверху вниз
 
   return (
     <div className="flex flex-col gap-3.5">

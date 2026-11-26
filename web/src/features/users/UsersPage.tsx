@@ -63,7 +63,7 @@ export function UsersPage() {
     if (await run("create", { email: mail, password: v.password, ...bodyOf(v) }, "Пользователь добавлен")) { setOnce({ email: mail, pw: v.password }); setAdding(false); }
   };
 
-  let k = 0; const nx = () => Math.min(k++, 14); // сквозной номер посадки сверху вниз
+  let k = 0; const nx = () => Math.min(k++, 8); // сквозной номер посадки сверху вниз
   const showRecent = rows.some((u) => u.last_sign_in_at);
   const roleTxt = byRoles(rows);
   const on = rows.filter((u) => u.active !== false).length;

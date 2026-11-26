@@ -1,6 +1,10 @@
 // Элементы Аналитики на общих компонентах: плитки показателей (крупные и компактные), панель графика с пояснением.
 import { useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { ChevronDown } from "lucide-react";
 import { Card } from "@/components/Card";
+import { useIsPhone } from "@/lib/useMedia";
+import { DUR, EASE, land } from "@/lib/motion";
 import { Tile, TileLabel, TileSub, TileValue } from "@/components/Tile";
 import { cn } from "@/lib/utils";
 import type { Card as MCard } from "./base";
@@ -50,14 +54,37 @@ export function MiniTile({ c, hintsOn }: { c: MCard; hintsOn: boolean }) {
 }
 
 /** панель графика: короткий заголовок, пояснение и заметка — абзацем в теле */
-export function Panel({ title, note, i, hintsOn, className, children }: { title: string; note?: string; i: number; hintsOn: boolean; className?: string; children: React.ReactNode }) {
-  const { h, show, toggle } = useHint(title, hintsOn);
+export function Panel({ title, note, sum, i, hintsOn, className, children }: { title: string; note?: string; sum?: string; i: number; hintsOn: boolean; className?: string; children: React.ReactNode }) {
+  const { h, show, toggle } = useHint(title, hintsOn), phone = useIsPhone(), [open, setOpen] = useState(false);
   const showNote = note && !(h && hintsOn && !/\d/.test(note));
+  if (!phone) {
+    return (
+      <Card title={title} i={i} className={className} action={toggle ? { label: "Что это?", onClick: toggle } : undefined}>
+        {show && <p className="max-w-[72ch] text-[13px] leading-snug text-muted-foreground">{h}</p>}
+        {showNote && <p className="text-[13px] leading-snug text-muted-foreground">{note}</p>}
+        <div className="min-w-0">{children}</div>
+      </Card>
+    );
+  }
+  // телефон: блок свёрнут, содержимое рисуется только при раскрытии
   return (
-    <Card title={title} i={i} className={className} action={toggle ? { label: "Что это?", onClick: toggle } : undefined}>
-      {show && <p className="max-w-[72ch] text-[13px] leading-snug text-muted-foreground">{h}</p>}
-      {showNote && <p className="text-[13px] leading-snug text-muted-foreground">{note}</p>}
-      <div className="min-w-0">{children}</div>
-    </Card>
+    <motion.section {...land(i)} className="glass flex min-w-0 flex-col rounded-[24px] px-4 py-2.5">
+      <button type="button" onClick={() => setOpen((x) => !x)} aria-expanded={open} className="flex min-h-10 w-full items-center justify-between gap-3 text-left">
+        <h2 className="min-w-0 text-base font-semibold">{title}</h2>
+        <span className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">{sum}<ChevronDown className={cn("size-5 transition-transform", open && "rotate-180")} /></span>
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div key="b" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: DUR.base, ease: EASE.out }} className="overflow-hidden">
+            <div className="flex flex-col gap-3 pt-3">
+              {toggle && <button type="button" onClick={toggle} className="inline-flex h-9 items-center self-start text-[12.5px] font-semibold text-primary">Что это?</button>}
+              {show && <p className="max-w-[72ch] text-[13px] leading-snug text-muted-foreground">{h}</p>}
+              {showNote && <p className="text-[13px] leading-snug text-muted-foreground">{note}</p>}
+              <div className="min-w-0">{children}</div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.section>
   );
 }

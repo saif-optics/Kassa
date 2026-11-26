@@ -14,7 +14,7 @@ export function Card({ title, note, action, i = 0, className, children }: { titl
       <header className="flex items-baseline justify-between gap-3">
         <h2 className="shrink-0 text-base font-semibold whitespace-nowrap">{title}</h2>
         {action ? (isLink(action)
-          ? <button type="button" onClick={action.onClick} aria-label={action["aria-label"]} className="shrink-0 rounded text-[12.5px] font-semibold text-primary hover:underline">{action.label}</button>
+          ? <button type="button" onClick={action.onClick} aria-label={action["aria-label"]} className="shrink-0 rounded text-[12.5px] max-sm:inline-flex max-sm:h-9 max-sm:items-center font-semibold text-primary hover:underline">{action.label}</button>
           : <span className="shrink-0 self-center">{action}</span>)
           : note ? <span className="line-clamp-2 min-w-0 text-right text-xs leading-snug text-muted-foreground sm:line-clamp-1">{note}</span> : null}
       </header>

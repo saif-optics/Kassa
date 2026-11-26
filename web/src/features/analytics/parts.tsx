@@ -6,7 +6,7 @@ import type { Card } from "./base";
 import { HINT } from "./texts";
 import { MiniRing, Spark } from "./charts";
 import { pctF } from "./util";
-import { STAGGER, DUR, EASE } from "@/lib/motion";
+import { land } from "@/lib/motion";
 
 export const hintOf = (title: string) => {
   const k = title.trim();
@@ -25,9 +25,9 @@ export function Tile({ c, i = 0, hintsOn = true }: { c: Card; i?: number; hintsO
   const { h, show, toggle } = useHint(c.label, hintsOn);
   const hero = !!c.main;
   return (
-    <motion.div initial={{ opacity: 0, y: 12, filter: "blur(6px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ delay: Math.min(i, 12) * STAGGER, duration: DUR.land * 0.5, ease: EASE.expo }} whileHover={{ y: -3 }}
+    <motion.div {...land(i)}
       onClick={toggle} role={toggle ? "button" : undefined}
-      className={cn("flex min-w-0 flex-col gap-1.5 rounded-[22px] px-5 py-4", hero ? "bg-gradient-to-br from-[#0a84ff] to-[#5e5ce6] text-white shadow-[0_14px_36px_rgb(10_132_255/0.38)]" : "glass", c.warn && "ring-1 ring-warn/50", toggle && "cursor-pointer")}>
+      className={cn("flex min-w-0 flex-col gap-1.5 rounded-[22px] px-5 py-4", hero ? "bg-gradient-to-br from-brand to-brand-navy text-white shadow-[0_14px_36px_rgb(2_110_166/0.32)]" : "glass", c.warn && "ring-1 ring-warn/50", toggle && "cursor-pointer")}>
       <span className={cn("text-[11px] font-semibold tracking-wide uppercase", hero ? "text-white/85" : "text-muted-foreground")}>{c.label}</span>
       {show && <p className={cn("text-[12px] leading-snug", hero ? "text-white/85" : "text-muted-foreground")}>{h}</p>}
       <div className="flex items-center justify-between gap-3">

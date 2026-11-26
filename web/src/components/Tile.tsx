@@ -12,7 +12,7 @@ export function Tile({ i = 0, hero, warn, className, children }: { i?: number; h
   return (
     <OnHero.Provider value={!!hero}>
       <motion.div {...land(i)}
-        className={cn("flex min-h-[128px] min-w-0 flex-col justify-between gap-2.5 rounded-[24px] p-4 sm:p-[18px]",
+        className={cn("@container flex min-h-[128px] min-w-0 flex-col justify-between gap-2.5 rounded-[24px] p-4 sm:p-[18px]",
           hero ? "border border-white/25 bg-[linear-gradient(135deg,var(--brand),#0a4f7a_60%,var(--brand-navy))] text-white shadow-[0_14px_36px_rgb(2_110_166/0.32)]" : "glass",
           warn && "ring-2 ring-minus/50", className)}>{children}</motion.div>
     </OnHero.Provider>
@@ -32,8 +32,8 @@ export function TileValue({ children, count, format = "sum", suffix, className }
   // длину считаем по конечному значению, чтобы размер не прыгал во время досчёта
   const full = count == null ? children : fmtOf(count);
   const long = typeof full === "string" && full.length > 13;
-  return <span className={cn("num max-w-full min-w-0 truncate leading-tight font-bold tracking-[-0.02em] whitespace-nowrap",
-    long ? "text-[19px] xl:text-[21px] 2xl:text-[23px]" : "text-[22px] xl:text-[24px] 2xl:text-[26px]", className)}>{body}</span>;
+  return <span className={cn("num max-w-full min-w-0 leading-tight font-bold tracking-[-0.02em] whitespace-nowrap",
+    long ? "text-[clamp(15px,6cqw,23px)]" : "text-[clamp(17px,7cqw,26px)]", className)}>{body}</span>;
 }
 
 export const TileSub = ({ children, className }: { children: React.ReactNode; className?: string }) => {

@@ -15,7 +15,7 @@ import { useWidth } from "./useWidth";
 const GROUPS: [Group, string][] = [["day", "Дни"], ["week", "Недели"], ["month", "Месяцы"]];
 const Dash = () => <span className="text-muted-foreground">—</span>;
 
-export function Stats({ c, F, list, resetKey, i = 0 }: { c: Ctx; F: Filter; list: SaleX[]; resetKey: string; i?: number }) {
+export function Stats({ c, F, list, resetKey, tab, i = 0 }: { c: Ctx; F: Filter; list: SaleX[]; resetKey: string; tab?: "overview" | "sale" | "journal"; i?: number }) {
   const [g, setG] = useState<Group>("day"), [stF, setStF] = useState<StF>({ from: "", to: "", wd: [] });
   useEffect(() => setStF({ from: "", to: "", wd: [] }), [resetKey]);
   const S = statsOf(c, F, list, g, stF), pg = usePager(S.desc.length);
@@ -27,8 +27,8 @@ export function Stats({ c, F, list, resetKey, i = 0 }: { c: Ctx; F: Filter; list
     { key: "k", title: g === "day" ? "День" : g === "week" ? "Неделя" : "Месяц", main: true, cell: (r) => <span className="whitespace-nowrap">{periodLabel(r.k, g)}{g === "day" && <> <span className="text-xs font-normal text-muted-foreground">{WD[wdIdx(r.k)]}</span></>}</span> },
     ...S.pts.map((p): RowColumn<R> => ({ key: "p:" + p, title: p, align: al, cell: (r) => (r.by[p] ? fmt(r.by[p]) : <Dash />) })),
     { key: "tot", title: "Итого", align: "right", cell: (r) => <b>{fmt(r.tot)}</b> },
-    { key: "ch", title: "Чеков", align: al, sub: phone, cell: (r) => (phone ? r.ch + " чек." : r.ch) },
-    { key: "avg", title: "Ср. чек", align: al, sub: phone, cell: (r) => (r.ch ? (phone ? "ср. " : "") + fmt(r.tot / r.ch) : "—") },
+    { key: "ch", title: "Чеков", align: al, sub: phone, hideMobile: true, cell: (r) => (phone ? r.ch + " чек." : r.ch) },
+    { key: "avg", title: "Ср. чек", align: al, sub: phone, hideMobile: true, cell: (r) => (r.ch ? (phone ? "ср. " : "") + fmt(r.tot / r.ch) : "—") },
   ];
   const n = S.asc.length, slot = n > 24 ? 26 : Math.max(26, Math.max(w - 56, 200) / Math.max(n, 1)), W = Math.max(w, 56 + slot * n);
   const data = S.asc.map((r) => ({ k: r.k, label: periodLabel(r.k, g), tot: r.tot, ...Object.fromEntries(S.pts.map((p) => [p, r.by[p] || 0])) }));
@@ -38,7 +38,7 @@ export function Stats({ c, F, list, resetKey, i = 0 }: { c: Ctx; F: Filter; list
 
   return (
     <div className="grid gap-4 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-      <Card title="Выручка по точкам" i={i}>
+      <div className={cn("min-w-0", tab && tab !== "overview" && "hidden")}><Card title="Выручка по точкам" i={i}>
         <Note>Столбик — выручка периода, цвет — точка</Note>
         <Segments size="sm" aria-label="Группировка" items={GROUPS.map(([key, label]) => ({ key, label }))} value={g} onChange={(v) => setG(v as Group)} />
         <div ref={ref} className="h-[342px] overflow-x-auto" role="img" aria-label="Выручка по периодам">
@@ -55,15 +55,15 @@ export function Stats({ c, F, list, resetKey, i = 0 }: { c: Ctx; F: Filter; list
             </BarChart>)}
         </div>
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-muted-foreground">{S.pts.map((p) => <span key={p} className="inline-flex items-center gap-1.5"><i className="size-2 rounded-full" style={{ background: pointColor(p, c.settings.points) }} />{p}</span>)}</div>
-      </Card>
+      </Card></div>
 
-      <Card title="Таблица по периодам" i={i + 1}>
+      <div className={cn("min-w-0", tab && tab !== "journal" && "hidden")}><Card title="Таблица по периодам" i={i + 1}>
         <Note>Выручка точек, чеки и средний чек</Note>
         <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end">
           <Field label="С"><Input type="date" aria-label="Таблица: с" value={S.from} min={S.range.from} max={S.range.to} onChange={(e) => setStF((x) => ({ ...x, from: e.target.value, to: S.to }))} className="num w-full sm:w-[9.5rem]" /></Field>
           <Field label="По"><Input type="date" aria-label="Таблица: по" value={S.to} min={S.range.from} max={S.range.to} onChange={(e) => setStF((x) => ({ ...x, to: e.target.value, from: S.from }))} className="num w-full sm:w-[9.5rem]" /></Field>
           <Field label="Дни недели" className="max-sm:col-span-2"><div role="group" aria-label="Дни недели" className="inline-flex flex-wrap gap-0.5 rounded-xl bg-muted p-[3px]">
-            {WD.map((d, i) => <button key={d} type="button" data-wd={i} aria-pressed={!wd.has(i)} onClick={() => toggleWd(i)} className={cn("rounded-[9px] px-2 py-1 text-[12.5px] font-medium", !wd.has(i) ? "bg-popover text-foreground shadow-sm" : "text-muted-foreground line-through")}>{d}</button>)}</div></Field>
+            {WD.map((d, i) => <button key={d} type="button" data-wd={i} aria-pressed={!wd.has(i)} onClick={() => toggleWd(i)} className={cn("rounded-[9px] px-2 py-1 text-[12.5px] font-medium max-sm:h-9", !wd.has(i) ? "bg-popover text-foreground shadow-sm" : "text-muted-foreground line-through")}>{d}</button>)}</div></Field>
           <Button type="button" variant="secondary" onClick={() => setStF({ from: "", to: "", wd: [] })} className="max-sm:col-span-2 max-sm:h-11">Сбросить</Button>
         </div>
         {!n ? <p className="rounded-2xl px-4 py-8 text-center text-[13.5px] text-muted-foreground">Нет продаж в выбранные дни</p>
@@ -71,7 +71,7 @@ export function Stats({ c, F, list, resetKey, i = 0 }: { c: Ctx; F: Filter; list
             <b>Всего</b>{S.pts.map((p) => <span key={p} className="text-muted-foreground">{p} <b className="num text-foreground">{fmt(S.ptTot[p])}</b></span>)}
             <span className="text-muted-foreground">итого <b className="num text-foreground">{fmt(S.sa.rev)}</b></span><span className="text-muted-foreground">чеков <b className="num text-foreground">{S.sa.checks}</b></span><span className="text-muted-foreground">ср. чек <b className="num text-foreground">{S.sa.checks ? fmt(S.sa.avg) : "—"}</b></span></div>} />}
         <Pager pg={pg} />
-      </Card>
+      </Card></div>
     </div>
   );
 }

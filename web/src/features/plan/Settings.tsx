@@ -13,7 +13,7 @@ import type { Data } from "@/lib/types";
 import { useMutations } from "@/lib/useData";
 import { useIsPhone } from "@/lib/useMedia";
 import { buildPlanDoc, fmt, parseAmt, plPrevShares, type PlanCalc, type PlanCfg, type PlanEnv } from "./logic";
-import { DUR } from "@/lib/motion";
+import { DUR, EASE } from "@/lib/motion";
 
 const comma = (v: number | undefined) => String(v ?? 0).replace(".", ",");
 
@@ -52,7 +52,7 @@ export function PlanSettings({ i = 0, d, env, cfg, month, K, open, setOpen }: { 
       <Card i={i} title="Настроить план" note="сумма месяца, доли, продавцы" action={{ label: open ? "Свернуть" : "Развернуть", onClick: () => setOpen((o) => !o) }}>
         <AnimatePresence initial={false}>
           {open && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: DUR.base }} className="overflow-hidden">
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: DUR.base, ease: EASE.out }} className="overflow-hidden">
               <form className="flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); void save(); }}>
                 <div className="grid gap-1.5 sm:max-w-sm">
                   <Label htmlFor="plTotal">План месяца, сум</Label>

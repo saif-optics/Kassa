@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Brand } from "@/components/Logo";
 import { FlowPill } from "@/components/FlowPill";
-import { DUR, land } from "@/lib/motion";
+import { DUR, fade } from "@/lib/motion";
 import { NAV } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 import { getSession, isDemo, onAuth, signOut } from "@/lib/source";
@@ -21,6 +21,7 @@ import { TasksPage } from "@/features/tasks/TasksPage";
 import { UsersPage } from "@/features/users/UsersPage";
 import { useData } from "@/lib/useData";
 import { Login } from "@/components/Login";
+import { useIsPhone } from "@/lib/useMedia";
 import { PayPage } from "@/features/pay/PayPage";
 import { KassaPage } from "@/features/kassa/KassaPage";
 import { HomePage } from "@/features/home/HomePage";
@@ -37,7 +38,7 @@ import type { Data } from "@/lib/types";
 // витрина общих компонентов — только в демо-режиме: ?demo#kit
 const KIT = () => isDemo && location.hash === "#kit";
 const PAGES: Record<string, (p: { d: Data }) => React.ReactNode> = { home: HomePage, kassa: KassaPage, report: ReportPage, pay: PayPage, sales: SalesPage, recon: ReconPage, analytics: AnalyticsPage, plan: PlanPage, lens: LensPage, batch: StockPage, tasks: TasksPage, users: UsersPage };
-// ширина страницы: true — «данные», на всю ширину; false — «сводка», не шире 1600px по центру
+// ширина страницы: true — «данные», не шире 2000px; false — «сводка», не шире 1600px; всё по центру
 const WIDE: Record<string, boolean> = { home: false, pay: false, plan: false, kassa: false, tasks: false, users: false, sales: true, report: true, recon: true, analytics: true, lens: true, batch: true };
 
 const qc = new QueryClient({ defaultOptions: { queries: { refetchOnWindowFocus: false, retry: 1 } } });
@@ -92,7 +93,7 @@ function Shell({ email }: { email: string }) {
   const access = useAccess();
   const nav = NAV.filter((n) => n.ready && canTab(access, n.id));
   const [tab, go] = useTab(nav.map((n) => n.id));
-  const sb = useSidebar();
+  const sb = useSidebar(), phone = useIsPhone();
   const [more, setMore] = useState(false);
   const sideRef = useRef<HTMLElement>(null), botRef = useRef<HTMLElement>(null);
   const MAIN = nav.length <= 5 ? nav : nav.slice(0, 4), REST = nav.slice(MAIN.length);
@@ -101,7 +102,7 @@ function Shell({ email }: { email: string }) {
   return (
     <div className="min-h-dvh">
       {/* панель разделов: на телефоне — снизу, равные колонки */}
-      <nav ref={botRef} aria-label="Разделы" style={{ gridTemplateColumns: `repeat(${MAIN.length + (REST.length ? 1 : 0)}, minmax(0, 1fr))` }} className="glass fixed inset-x-3 bottom-3 z-30 grid rounded-[30px] p-1.5 sm:hidden">
+      <nav ref={botRef} aria-label="Разделы" style={{ gridTemplateColumns: `repeat(${MAIN.length + (REST.length ? 1 : 0)}, minmax(0, 1fr))` }} className="glass fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-30 grid rounded-[30px] p-1.5 sm:hidden">
         <FlowPill containerRef={botRef} activeKey={botKey} axis="x" className="inset-y-1.5" />
         {MAIN.map((n) => (
           <button key={n.id} type="button" data-key={n.id} aria-current={n.id === tab ? "page" : undefined} onClick={() => go(n.id)}
@@ -115,7 +116,7 @@ function Shell({ email }: { email: string }) {
         </button>}
       </nav>
       <Sheet open={more} onOpenChange={setMore}>
-        <SheetContent side="bottom" showCloseButton={false} className="rounded-t-[28px] p-4 pb-6 sm:hidden">
+        <SheetContent side="bottom" showCloseButton={false} className="max-h-[85dvh] overflow-y-auto rounded-t-[28px] p-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))] sm:hidden">
           <SheetTitle className="sr-only">Разделы</SheetTitle>
           <div className="grid gap-1">
             {REST.map((n) => (
@@ -132,7 +133,7 @@ function Shell({ email }: { email: string }) {
         </SheetContent>
       </Sheet>
       {/* боковая панель на компьютере */}
-      <aside aria-label="Разделы" className={cn("glass fixed inset-y-0 left-0 z-30 hidden flex-col overflow-x-hidden overflow-y-auto rounded-none border-y-0 border-l-0 py-4 transition-[width] duration-200 sm:flex", sb.min ? "w-16" : "w-64")}>
+      <aside aria-label="Разделы" className={cn("glass fixed inset-y-0 left-0 z-30 hidden flex-col overflow-x-hidden overflow-y-auto rounded-none border-y-0 border-l-0 py-4 transition-[width] duration-(--dur-base) ease-(--ease-out) sm:flex", sb.min ? "w-16" : "w-64")}>
         <div className="mb-3 flex h-11 items-center gap-3 px-3">
           <Brand compact={sb.min} />
         </div>
@@ -145,8 +146,8 @@ function Shell({ email }: { email: string }) {
           <SideBtn key="fold" min={sb.min} label={sb.min ? "Развернуть панель" : "Свернуть панель"} icon={sb.min ? ChevronsRight : ChevronsLeft} expanded={!sb.min} onClick={sb.toggle} />
         </div>
       </aside>
-      <div className={cn("transition-[padding] duration-200", sb.min ? "sm:pl-16" : "sm:pl-64")}>
-      <div className={cn("mx-auto px-4 @container/main pt-5 pb-28 sm:px-6 sm:pb-10 xl:px-9", !WIDE[tab] && "max-w-[1600px]")}>
+      <div className={cn("transition-[padding] duration-(--dur-base) ease-(--ease-out)", sb.min ? "sm:pl-16" : "sm:pl-64")}>
+      <div className={cn("mx-auto px-4 @container/main pt-5 pb-[calc(7rem+env(safe-area-inset-bottom))] sm:px-6 sm:pb-10 xl:px-9", WIDE[tab] ? "max-w-[2000px]" : "max-w-[1600px]")}>
         <div className="mb-6 flex min-h-11 items-center gap-2.5">
           <span className="glass flex items-center rounded-full px-4 py-2 sm:hidden"><Brand sub={false} /></span>
           <span className="glass hidden items-center gap-2 rounded-full px-4 py-2.5 text-[13.5px] sm:flex"><b>Saif-Optics</b><span className="text-muted-foreground">›</span><span className="text-muted-foreground">{NAV.find((n) => n.id === tab)?.label}</span></span>
@@ -164,12 +165,12 @@ function Shell({ email }: { email: string }) {
           ) : q.error ? (
             <motion.p key="err" className="glass rounded-3xl p-6 text-minus">Не удалось загрузить данные: {String((q.error as Error).message || q.error)}</motion.p>
           ) : q.data ? (
-            <motion.div key={tab} {...land(0)} exit={{ opacity: 0, transition: { duration: DUR.fast } }}>{KIT() ? <KitDemo /> : (() => { const P = PAGES[tab] || KassaPage; return <P d={q.data} />; })()}</motion.div>
+            <motion.div key={tab} {...fade} exit={{ opacity: 0, transition: { duration: DUR.fast } }}>{KIT() ? <KitDemo /> : (() => { const P = PAGES[tab] || KassaPage; return <P d={q.data} />; })()}</motion.div>
           ) : null}
         </AnimatePresence>
       </div>
       </div>
-      <Toaster theme={dark ? "dark" : "light"} position="bottom-right" richColors />
+      <Toaster theme={dark ? "dark" : "light"} position={phone ? "top-center" : "bottom-right"} richColors />
     </div>
   );
 }

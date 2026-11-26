@@ -13,14 +13,15 @@ import { DUR, EASE } from "@/lib/motion";
 type Props = { d: Data; M: string; T: string; rows: MonthRow[]; open: string | null; setOpen: (id: string | null) => void;
   onPlan: (id: string, v: number | null) => void; onPaid: (r: MonthRow, v: number | null) => void; onToggle: (r: MonthRow) => void; onReset: (id: string) => void; onEdit: (id: string) => void; filtered?: boolean };
 
-const GRID = "grid grid-cols-[52px_minmax(0,1fr)_128px_128px_168px] items-center gap-2.5 max-lg:grid-cols-[46px_minmax(0,1fr)_minmax(0,1fr)] max-lg:gap-y-1.5";
+// сетка строки платежа; компактный вариант включается по ширине самого списка (@container ниже), а не окна
+const GRID = "grid grid-cols-[52px_minmax(0,1fr)_128px_128px_168px] items-center gap-2.5 @max-2xl:grid-cols-[46px_minmax(0,1fr)_minmax(0,1fr)] @max-2xl:gap-y-1.5";
 
 export function MonthList({ d, M, T, rows, open, setOpen, onPlan, onPaid, onToggle, onReset, onEdit, filtered }: Props) {
   const weeks: [number, number][] = [[1, 7], [8, 14], [15, 21], [22, 28], [29, 31]];
   const tot = rows.reduce((s, r) => s + r.am.a, 0), paid = rows.reduce((s, r) => s + Math.min(r.paid, r.am.a || r.paid), 0), left = rows.reduce((s, r) => s + r.left, 0);
   return (
-    <div className="flex flex-col gap-1">
-      <div className={cn(GRID, "border-b border-border px-2 pb-2 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase max-lg:hidden")}>
+    <div className="@container flex flex-col gap-1">
+      <div className={cn(GRID, "border-b border-border px-2 pb-2 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase @max-2xl:hidden")}>
         <span>День</span><span>Платёж</span><span className="text-right">Сумма</span><span className="text-right">Оплачено</span><span>Статус</span>
       </div>
       {weeks.map(([a, b]) => {
@@ -34,25 +35,25 @@ export function MonthList({ d, M, T, rows, open, setOpen, onPlan, onPaid, onTogg
                 <div key={it.id} className={cn("glass-inner mb-2 rounded-2xl transition-colors", sel && "ring-1 ring-primary/40")}>
                   <div className={cn(GRID, "p-2", r.st === "ok" && "opacity-90")}>
                     <button type="button" onClick={() => setOpen(sel ? null : it.id)} aria-expanded={sel}
-                      className={cn("flex size-[46px] border border-border bg-background/50 flex-col max-lg:row-span-3 max-lg:self-start items-center justify-center rounded-2xl leading-tight outline-none focus-visible:ring-3 focus-visible:ring-primary/30",
+                      className={cn("flex size-[46px] border border-border bg-background/50 flex-col @max-2xl:row-span-3 @max-2xl:self-start items-center justify-center rounded-2xl leading-tight outline-none focus-visible:ring-3 focus-visible:ring-primary/30",
                         r.due === T && "ring-2 ring-primary", r.st === "late" && "border-minus/50")}>
                       <b className="num text-[17px]">{+r.due.slice(8)}</b><small className="text-[10.5px] text-muted-foreground">{wd(r.due)}</small>
                     </button>
-                    <button type="button" onClick={() => setOpen(sel ? null : it.id)} aria-expanded={sel} className="flex min-w-0 items-center gap-2.5 text-left outline-none max-lg:col-span-2">
+                    <button type="button" onClick={() => setOpen(sel ? null : it.id)} aria-expanded={sel} className="flex min-w-0 items-center gap-2.5 text-left outline-none @max-2xl:col-span-2">
                       <CatIcon cat={it.cat} size="sm" />
-                      <span className="flex min-w-0 flex-col leading-snug"><b className="truncate font-semibold">{it.name}</b>
-                        <small className="truncate text-xs text-muted-foreground">{dLong(r.due)} · {CATS[it.cat] || CATS.other} · {SRC[it.src]}{it.point && it.point !== "Общее" ? " · " + it.point : ""}{it.kind === "plan" ? " · разовый" : it.kind === "debt" ? " · погашение долга" : ""}</small></span>
+                      <span className="flex min-w-0 flex-col leading-snug"><b className="line-clamp-2 font-semibold">{it.name}</b>
+                        <small className="line-clamp-2 text-xs text-muted-foreground">{dLong(r.due)} · {CATS[it.cat] || CATS.other} · {SRC[it.src]}{it.point && it.point !== "Общее" ? " · " + it.point : ""}{it.kind === "plan" ? " · разовый" : it.kind === "debt" ? " · погашение долга" : ""}</small></span>
                     </button>
-                    <span className="flex flex-col items-end gap-0.5 max-lg:col-start-2 max-lg:row-start-2 max-lg:items-start">
-                      <InlineNumber value={r.am.a} label="Сумма за месяц" onSave={(v) => onPlan(it.id, v)} className="max-lg:-ml-2 max-lg:text-left" />
+                    <span className="flex flex-col items-end gap-0.5 @max-2xl:col-start-2 @max-2xl:row-start-2 @max-2xl:items-start">
+                      <InlineNumber value={r.am.a} label="Сумма за месяц" onSave={(v) => onPlan(it.id, v)} className="@max-2xl:-ml-2 @max-2xl:text-left" />
                       {r.am.own ? <button type="button" onClick={() => onReset(it.id)} className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary" title={`Вернуть общую сумму ${fmt(baseAmount(d, it, M).a)}`}><RotateCcw className="size-3" />своя сумма</button>
                         : r.am.est ? <small className="text-[11px] text-muted-foreground">расчётно</small> : r.am.usd ? <small className="text-[11px] text-muted-foreground">{fmt(r.am.usd)} $</small> : null}
                     </span>
-                    <span className="flex flex-col items-end gap-0.5 max-lg:col-start-3 max-lg:row-start-2">
+                    <span className="flex flex-col items-end gap-0.5 @max-2xl:col-start-3 @max-2xl:row-start-2">
                       <InlineNumber value={r.paid || null} placeholder="—" label="Оплачено" onSave={(v) => onPaid(r, v)} className={cn(r.st === "ok" && "text-plus")} />
                       {r.auto > 0 && <small className="text-[11px] text-muted-foreground">по выписке {fmt(r.auto)}</small>}
                     </span>
-                    <span className="max-lg:col-span-2 max-lg:col-start-2 max-lg:row-start-3"><StatusChip r={r} T={T} onClick={() => onToggle(r)} /></span>
+                    <span className="@max-2xl:col-span-2 @max-2xl:col-start-2 @max-2xl:row-start-3"><StatusChip r={r} T={T} onClick={() => onToggle(r)} /></span>
                   </div>
                   <AnimatePresence initial={false}>
                     {sel && (
@@ -80,9 +81,9 @@ export function MonthList({ d, M, T, rows, open, setOpen, onPlan, onPaid, onTogg
           </div>
         );
       })}
-      <div className="mt-2 grid grid-cols-[minmax(0,1fr)_128px_128px_168px] items-center gap-2.5 border-t border-border px-2 pt-3 font-semibold max-lg:grid-cols-[minmax(0,1fr)_auto_auto]">
+      <div className="mt-2 grid grid-cols-[minmax(0,1fr)_128px_128px_168px] items-center gap-2.5 border-t border-border px-2 pt-3 font-semibold @max-2xl:grid-cols-[minmax(0,1fr)_auto_auto]">
         <span>{filtered ? "Итого по списку" : "Итого за месяц"}</span><span className="num text-right">{fmt(tot)}</span><span className="num pr-2 text-right">{fmt(paid)}</span>
-        <span className="max-lg:hidden">{left ? `осталось ${fmt(left)}` : <Chip tone="plus">Всё оплачено</Chip>}</span>
+        <span className="@max-2xl:hidden">{left ? `осталось ${fmt(left)}` : <Chip tone="plus">Всё оплачено</Chip>}</span>
       </div>
     </div>
   );

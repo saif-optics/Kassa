@@ -33,7 +33,7 @@ export function LensPage({ d }: { d: Data }) {
     const sh = lensSheets(c, F); if (!sh) { toast.error("Нет продаж линз за период."); return; }
     try { await saveXlsx(sh, fname(c, F, "linzy", "xlsx")); toast.success("Файл скачан"); } catch (e) { toast.error("Не удалось выгрузить: " + String(e)); }
   };
-  let k = 0; const nx = () => Math.min(k++, 14); // сквозной номер посадки сверху вниз (после 14-го — без задержки)
+  let k = 0; const nx = () => Math.min(k++, 8); // сквозной номер посадки сверху вниз (после 8-го — без задержки)
   const U = v.rows.reduce((q, x) => q + (+(x.s.qty || 0)), 0), R = v.rows.reduce((q, x) => q + (+x.s.sum || 0), 0);
   const cols = (title: string, dot?: (k: string) => string): RowColumn<G>[] => [
     { key: "k", title, main: true, cell: (o) => <>{dot && <Sw color={dot(o.k)} />}{o.k}</> },

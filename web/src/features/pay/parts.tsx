@@ -26,7 +26,7 @@ export function StatusChip({ r, T, onClick }: { r: MonthRow; T: string; onClick?
   const title = r.st === "ok" ? (r.man && !r.auto ? "Снять отметку" : "Оплачено по выписке") : "Отметить оплату";
   const chip = <Chip tone={ST[r.st][0]} className="px-3 py-1.5 text-[12.5px] whitespace-nowrap">{statusText(r, T)}</Chip>;
   if (!onClick) return chip;
-  return <button type="button" onClick={onClick} title={title} className="rounded-full outline-none transition-transform active:scale-[0.97] focus-visible:ring-3 focus-visible:ring-primary/30">{chip}</button>;
+  return <button type="button" onClick={onClick} title={title} className="rounded-full outline-none max-sm:inline-flex max-sm:min-h-9 max-sm:items-center transition-transform active:scale-[0.97] focus-visible:ring-3 focus-visible:ring-primary/30">{chip}</button>;
 }
 
 export function Ring({ p, className }: { p: number; className?: string }) {
@@ -48,7 +48,7 @@ export function Kpi({ label, value, sub, tone, extra, i = 0 }: { label: string; 
       <div className="flex items-center justify-between gap-3">
         <span className={cn("num truncate text-[22px] font-semibold tracking-tight", tone === "plus" && "text-plus", tone === "primary" && "text-primary")}>{value}</span>{extra}
       </div>
-      <span className="truncate text-xs text-muted-foreground">{sub || " "}</span>
+      <span className="line-clamp-2 text-xs text-muted-foreground">{sub || " "}</span>
     </motion.div>
   );
 }

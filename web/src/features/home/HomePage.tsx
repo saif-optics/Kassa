@@ -20,6 +20,7 @@ import { homeData, dateTitle, type AlertIcon } from "./logic";
 import { WeekChart } from "./WeekChart";
 
 const GO = (id: string, field?: string) => () => {
+  if (field === F_SALE) { try { sessionStorage.setItem("kassa-web.sales.tab", "sale"); } catch { /* без хранилища */ } } // на телефоне открыть вкладку «Продажа»
   location.hash = id; window.scrollTo({ top: 0, behavior: "smooth" });
   // быстрые действия: после перехода — курсор в нужное поле раздела
   if (field) { let n = 0; const t = window.setInterval(() => { const el = document.querySelector<HTMLInputElement>(field); if (el || ++n > 40) { window.clearInterval(t); if (el) { el.scrollIntoView({ behavior: "smooth", block: "center" }); el.focus({ preventScroll: true }); } } }, 100); }
@@ -39,7 +40,7 @@ export function HomePage({ d }: { d: Data }) {
   const mx = Math.max(1, ...h.pts.map((o) => o.r));
   const t = h.tiles, nav = Object.fromEntries(NAV.map((n) => [n.id, n]));
   // сквозной номер посадки по порядку чтения
-  let k = 0; const nx = () => k++;
+  let k = 0; const nx = () => Math.min(k++, 8);
   const planCol = t.plan.fpct == null ? "var(--primary)" : t.plan.fpct >= 1 ? "var(--plus)" : t.plan.fpct >= 0.85 ? "var(--warn)" : "var(--minus)";
   return (
     <div className="flex flex-col gap-3.5">
@@ -74,7 +75,7 @@ export function HomePage({ d }: { d: Data }) {
           <TileLabel>Расчётный счёт</TileLabel>
           {t.rs.value != null ? <TileValue count={t.rs.value} suffix=" сум" /> : <TileValue>—</TileValue>}
           <TileSub>{t.rs.delta != null && <span>{sgn(t.rs.delta)} за день</span>}
-            {t.rs.nextPay ? <Chip tone="warn" className="max-w-full"><span className="truncate">{t.rs.nextPay.name} · {t.rs.nextPay.days <= 0 ? "сегодня" : `через ${t.rs.nextPay.days} дн.`}</span></Chip>
+            {t.rs.nextPay ? <Chip tone="warn" className="max-w-full"><span className="line-clamp-2">{t.rs.nextPay.name} · {t.rs.nextPay.days <= 0 ? "сегодня" : `через ${t.rs.nextPay.days} дн.`}</span></Chip>
               : t.rs.value == null ? <span>выписки пока нет</span> : <span>платежей впереди нет</span>}</TileSub>
         </Tile>}
       </div>}
@@ -85,7 +86,7 @@ export function HomePage({ d }: { d: Data }) {
             {h.alerts.map((a, j) => { const I = AL_ICON[a.icon]; return (
               <button key={j} type="button" onClick={GO(a.go.tab, a.go.field)} className="glass-inner flex min-w-0 items-center gap-3 rounded-2xl p-2.5 text-left transition-colors hover:bg-accent">
                 <span className={cn("grid size-9 shrink-0 place-items-center rounded-[10px]", AL_TONE[a.tone])}><I className="size-[18px]" strokeWidth={1.9} /></span>
-                <span className="min-w-0 flex-1"><b className="block truncate text-[13.5px] font-semibold">{a.title}</b><span className="line-clamp-2 text-xs text-muted-foreground sm:line-clamp-1">{a.sub}</span></span>
+                <span className="min-w-0 flex-1"><b className="line-clamp-2 text-[13.5px] font-semibold">{a.title}</b><span className="line-clamp-2 text-xs text-muted-foreground sm:line-clamp-1">{a.sub}</span></span>
                 <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
               </button>); })}
           </div>
@@ -99,11 +100,11 @@ export function HomePage({ d }: { d: Data }) {
               {h.pts.map((o) => (
                 <div key={o.p} className="flex flex-col gap-1.5">
                   <div className="flex items-baseline justify-between gap-3">
-                    <span className="flex min-w-0 items-center gap-2"><i className="size-2.5 shrink-0 rounded-full" style={{ background: pointColor(d.points, o.p) }} /><b className="truncate text-sm">{o.p}</b><span className="truncate text-xs text-muted-foreground">{o.checks}{o.seller ? " · " + o.seller : ""}</span></span>
+                    <span className="flex min-w-0 items-center gap-2"><i className="size-2.5 shrink-0 rounded-full" style={{ background: pointColor(d.points, o.p) }} /><b className="truncate text-sm">{o.p}</b><span className="line-clamp-2 text-xs text-muted-foreground">{o.checks}{o.seller ? " · " + o.seller : ""}</span></span>
                     <b className="num shrink-0 text-sm">{fmt(o.r)}</b>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-muted">
-                    <motion.div className="h-full rounded-full" style={{ background: pointColor(d.points, o.p) }} initial={{ width: 0 }} animate={{ width: Math.min(100, (o.r / mx) * 100) + "%" }} transition={{ duration: DUR.land, ease: EASE.expo }} />
+                    <motion.div className="h-full rounded-full" style={{ background: pointColor(d.points, o.p) }} initial={{ width: 0 }} animate={{ width: Math.min(100, (o.r / mx) * 100) + "%" }} transition={{ duration: DUR.slow, ease: EASE.out }} />
                   </div>
                   <span className="text-xs text-muted-foreground">за месяц {fmt(o.month)}{o.planPct ? ` · ${o.planPct} плана точки` : ""}</span>
                 </div>
@@ -137,7 +138,7 @@ export function HomePage({ d }: { d: Data }) {
             {h.last.map((s) => (
               <div key={s.id} className="flex items-center gap-3 border-b border-border py-2.5 last:border-b-0">
                 <i className="size-2.5 shrink-0 rounded-full" style={{ background: pointColor(d.points, s.point) }} />
-                <div className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{s.product}</span><span className="block truncate text-xs text-muted-foreground">{s.when} · {s.point}</span></div>
+                <div className="min-w-0 flex-1"><span className="line-clamp-2 text-sm font-medium">{s.product}</span><span className="line-clamp-2 text-xs text-muted-foreground">{s.when} · {s.point}</span></div>
                 {s.pay && <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">{s.pay}</span>}
                 <b className="num shrink-0 text-sm">{fmt(s.sum)}</b>
               </div>

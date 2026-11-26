@@ -54,7 +54,7 @@ export function Tiles({ c, M, isLast, rec, st, lastRecNote, rsv, onCash, onReser
         </div>
         {isLast && <form className="flex flex-col gap-2" onSubmit={async (e) => { e.preventDefault(); const v = digits(rv); if (isNaN(v) || v <= 0) { setRmsg("Введите сумму пополнения цифрами"); return; } try { await onReserve(v, from); setRv(""); setRmsg(""); } catch { setRmsg("Не удалось сохранить, попробуйте ещё раз"); } }}>
           <Input value={rv} onChange={(e) => setRv(fmtIn(e.target.value))} inputMode="numeric" placeholder="Сумма пополнения" aria-label="Сумма пополнения резерва" className="num w-full" />
-          <div className="flex gap-2"><Select value={from} onValueChange={(x) => setFrom(x as "kassa" | "out")}><SelectTrigger className="min-w-0 flex-1" aria-label="Откуда пополнение"><SelectValue /></SelectTrigger>
+          <div className="flex flex-wrap gap-2"><Select value={from} onValueChange={(x) => setFrom(x as "kassa" | "out")}><SelectTrigger className="min-w-[8.5rem] shrink-0" aria-label="Откуда пополнение"><SelectValue /></SelectTrigger>
             <SelectContent><SelectItem value="kassa">из кассы</SelectItem><SelectItem value="out">со стороны</SelectItem></SelectContent></Select><Button type="submit">Пополнить</Button></div>
         </form>}
         {rmsg && <small className="text-xs text-minus">{rmsg}</small>}

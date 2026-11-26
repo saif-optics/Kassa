@@ -8,7 +8,7 @@ import { DUR, EASE } from "@/lib/motion";
 import { useIsPhone } from "@/lib/useMedia";
 import { cn } from "@/lib/utils";
 import { Note } from "./parts";
-import { MONTHS_F, WD, WD_FULL, calDayOf, calDefaultSel, calOf, calShort, dLong, fmt, monthEnd, monthGen, pd, plural, pointColor, type Ctx, type Filter } from "./logic";
+import { MONTHS_F, WD, WD_FULL, wdIdx, calDayOf, calDefaultSel, calOf, calShort, dLong, fmt, monthEnd, monthGen, pd, plural, pointColor, type Ctx, type Filter } from "./logic";
 
 const mS = (v: number) => (v < 0 ? "−" : "+") + calShort(Math.abs(v));
 const mln = (v: number) => (v / 1e6).toFixed(1).replace(".", ",");
@@ -49,7 +49,7 @@ export function Calendar({ c, F, jDay, onOpenDay, i = 0 }: { c: Ctx; F: Filter; 
         <Button type="button" variant="secondary" size="icon-sm" aria-label="Предыдущий месяц" disabled={M <= months[0]} onClick={() => shift(-1)}><ChevronLeft /></Button>
         <b className="min-w-[9rem] text-center text-[14px]" aria-live="polite">{MONTHS_F[+M.slice(5, 7) - 1]} {M.slice(0, 4)}</b>
         <Button type="button" variant="secondary" size="icon-sm" aria-label="Следующий месяц" disabled={M >= months[months.length - 1]} onClick={() => shift(1)}><ChevronRight /></Button>
-        <Button type="button" variant="secondary" size="sm" className="ml-2" onClick={() => go(today.slice(0, 7), today)}>Сегодня</Button></div>
+        <Button type="button" variant="secondary" size="sm" className="ml-2 max-sm:h-9" onClick={() => go(today.slice(0, 7), today)}>Сегодня</Button></div>
       <div className="grid grid-cols-2 gap-2 xl:grid-cols-4">
         <Sum l="Выручка за месяц" v={fmt(total)} /><Sum l="Дней с продажами" v={String(wd)} /><Sum l="В среднем за день" v={fmt(wd ? total / wd : 0)} />
         {best && <Sum l="Лучший день" v={`${+best[0].slice(8)} ${monthGen(M)} · ${calShort(best[1].rev)}`} />}
@@ -68,13 +68,29 @@ export function Calendar({ c, F, jDay, onOpenDay, i = 0 }: { c: Ctx; F: Filter; 
             </div>
           </div>);
       })()}
-      <div className="grid gap-3.5 lg:grid-cols-[minmax(0,1fr)_300px]">
+      <div className="grid gap-3.5 @4xl/main:grid-cols-[minmax(0,1fr)_300px]">
         <motion.div key={M} initial={{ opacity: 0, x: dir * 16 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: DUR.base, ease: EASE.out }} className="min-w-0">
-          <div className="grid grid-cols-7 gap-1 pb-1 text-center text-[11px] font-semibold text-muted-foreground sm:grid-cols-[repeat(7,minmax(0,1fr))_92px] sm:gap-1.5">
-            {[...WD, "Неделя"].map((x, i) => <span key={x} className={i === 7 ? "max-sm:hidden" : ""}>{x}</span>)}</div>
+          {isPhone ? <div className="grid gap-1" role="list" aria-label="Дни месяца">
+            {cells.filter((d): d is string => !!d).map((d) => {
+              const x = byD[d], v = x ? x.rev : 0, dow = pd(d).getDay(), off = dow === 0 || dow === 6, fut = d > today, on = d === calSel, isT = d === today;
+              return (
+                <button key={d} type="button" data-cd={d} aria-pressed={on} disabled={fut} onClick={() => setSel(d)}
+                  className={cn("relative flex min-h-11 items-center gap-3 overflow-hidden rounded-xl border px-3 py-1.5 text-left outline-none transition focus-visible:ring-3 focus-visible:ring-primary/40",
+                    "bg-[color-mix(in_srgb,var(--primary)_calc(var(--h)*22%),var(--muted))]", on ? "border-primary ring-2 ring-primary/50" : isT ? "border-foreground/40" : "border-transparent", fut && "opacity-40", off && !on && "opacity-60")}
+                  style={{ ["--h" as string]: (v / mx).toFixed(3) }}>
+                  <span className="flex w-12 shrink-0 items-baseline gap-1"><b className="num text-[15px]">{+d.slice(8)}</b><span className="text-[12px] text-muted-foreground">{WD[wdIdx(d)]}</span></span>
+                  <b className="num min-w-0 flex-1 text-[14px] whitespace-nowrap">{x ? fmt(v) : dow === 0 ? "выходной" : fut ? "" : "—"}</b>
+                  {x && <span className="shrink-0 text-[12px] whitespace-nowrap text-muted-foreground">{x.ck.size} {plural(x.ck.size, "чек", "чека", "чеков")}</span>}
+                  {x && <span className="flex shrink-0 gap-1">{Object.keys(x.pts).sort((p, q) => x.pts[q] - x.pts[p]).map((p) => <i key={p} title={p} className="size-2.5 rounded-full" style={{ background: pointColor(p, c.settings.points) }} />)}</span>}
+                  {tgt && v >= tgt ? <i title="План дня выполнен" className="size-1.5 shrink-0 rounded-full bg-plus" /> : null}
+                </button>);
+            })}
+          </div> : <>
+          <div className="grid grid-cols-7 gap-1 pb-1 text-center text-[11px] font-semibold text-muted-foreground @lg/main:grid-cols-[repeat(7,minmax(0,1fr))_92px] sm:gap-1.5">
+            {[...WD, "Неделя"].map((x, i) => <span key={x} className={i === 7 ? "hidden @lg/main:block" : ""}>{x}</span>)}</div>
           <div className="grid gap-1 sm:gap-1.5">
             {weeks.map((wk, wi) => (
-              <div key={wi} className="grid grid-cols-7 gap-1 sm:grid-cols-[repeat(7,minmax(0,1fr))_92px] sm:gap-1.5">
+              <div key={wi} className="grid grid-cols-7 gap-1 @lg/main:grid-cols-[repeat(7,minmax(0,1fr))_92px] sm:gap-1.5">
                 {wk.map((d, di) => {
                   if (!d) return <div key={di} aria-hidden />;
                   const x = byD[d], v = x ? x.rev : 0, sun = pd(d).getDay() === 0, fut = d > today, top = best && best[0] === d, on = d === calSel;
@@ -94,12 +110,12 @@ export function Calendar({ c, F, jDay, onOpenDay, i = 0 }: { c: Ctx; F: Filter; 
                       </span>
                     </button>);
                 })}
-                <div className="flex flex-col justify-center rounded-xl bg-muted/60 px-2 py-1 text-right max-sm:hidden"><span className="text-[10px] text-muted-foreground">Неделя</span><b className="num text-[13px]">{weekInfo[wi].wsum ? calShort(weekInfo[wi].wsum) : "—"}</b>
+                <div className="hidden flex-col justify-center rounded-xl bg-muted/60 px-2 py-1 text-right @lg/main:flex"><span className="text-[10px] text-muted-foreground">Неделя</span><b className="num text-[13px]">{weekInfo[wi].wsum ? calShort(weekInfo[wi].wsum) : "—"}</b>
                   {weekInfo[wi].plan && <><small className="text-[10px] text-muted-foreground">{weekInfo[wi].plan!.sub}</small><em className={cn("num text-[10.5px] not-italic", weekInfo[wi].plan!.cls)}>{weekInfo[wi].plan!.text}</em></>}</div>
               </div>))}
-          </div>
+          </div></>}
         </motion.div>
-        <aside aria-live="polite" className="glass-inner grid content-start gap-3 self-start rounded-2xl p-4 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+        <aside aria-live="polite" className="glass-inner grid content-start gap-3 self-start rounded-2xl p-4 @4xl/main:col-start-2 @4xl/main:row-span-2 @4xl/main:row-start-1">
           {!calSel || !day ? <><div className="text-[15px] font-semibold">Выберите день</div><div className="text-[13px] text-muted-foreground">В этом месяце продаж пока нет.</div></> : (() => {
             const dt = pd(calSel), tops = Object.entries(day.prod).sort((a, b) => b[1] - a[1]).slice(0, 3);
             return <>
@@ -116,8 +132,8 @@ export function Calendar({ c, F, jDay, onOpenDay, i = 0 }: { c: Ctx; F: Filter; 
             </>;
           })()}
         </aside>
-        <div className="min-w-0 lg:col-start-1 lg:row-start-2">
-          {weekInfo.length > 0 && <div className="sm:hidden"><h4 className="mb-1 text-[12px] font-semibold text-muted-foreground uppercase">По неделям</h4>
+        <div className="min-w-0 @4xl/main:col-start-1 @4xl/main:row-start-2">
+          {weekInfo.length > 0 && <div className="@lg/main:hidden"><h4 className="mb-1 text-[12px] font-semibold text-muted-foreground uppercase">По неделям</h4>
             <div className="grid gap-1">{weekInfo.map((w, i) => <div key={i} className="flex items-baseline justify-between gap-2 text-[13px]"><span className="num text-muted-foreground">{+w.days[0].slice(8)}–{+w.days[w.days.length - 1].slice(8)}</span><b className="num">{w.wsum ? calShort(w.wsum) : "—"}</b>
               {w.plan && <span className={cn("num text-[12px]", w.plan.cls)}>{w.plan.text}</span>}</div>)}</div></div>}
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-muted-foreground">
@@ -133,5 +149,5 @@ export function Calendar({ c, F, jDay, onOpenDay, i = 0 }: { c: Ctx; F: Filter; 
 
 function Sum({ l, v, sub, flat, tone }: { l: string; v: string; sub?: string; flat?: boolean; tone?: "plus" | "minus" }) {
   return <div className={cn("min-w-0 rounded-xl px-3 py-2", !flat && "glass-inner")}><span className="block truncate text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{l}</span>
-    <b className={cn("num block truncate text-[15px]", tone === "plus" && "text-plus", tone === "minus" && "text-minus")}>{v}</b>{sub ? <small className="text-[11px] text-muted-foreground">{sub}</small> : null}</div>;
+    <b className={cn("num block text-[15px] max-sm:line-clamp-2 sm:truncate", tone === "plus" && "text-plus", tone === "minus" && "text-minus")}>{v}</b>{sub ? <small className="text-[11px] text-muted-foreground">{sub}</small> : null}</div>;
 }

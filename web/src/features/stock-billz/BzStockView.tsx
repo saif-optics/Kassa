@@ -44,7 +44,7 @@ export function BzStock({ reg }: { reg: Reg }) {
   const items = sortItems(L, only), pg = usePaging(items.length, "bz-stock", -1, (D?.cur.d || "") + pt + cat + qy + only);
   // выгрузка в Excel — то, что видно в таблице «Товары»
   useEffect(() => { reg.current = D ? async () => { await saveBook("Остатки Billz " + D.cur.d, [["Лист1", items.map((l) => ({ "Место": l.p, "Товар": l.n, "Артикул": l.s, "Категория": l.c, "Цена": l.price, "Было": l.was, "Продано": l.sold, "Пришло": l.tin, "Ушло": l.tout, "Сейчас": l.now, "Расхождение": l.un }))]]); } : null; return () => { reg.current = null; }; });
-  let k = 0; const nx = () => k++; // сквозной номер посадки сверху вниз
+  let k = 0; const nx = () => Math.min(k++, 8); // сквозной номер посадки сверху вниз
   if (q.isLoading) return note("Загружаю остатки Billz…");
   if (q.error) return note("Не удалось загрузить остатки: " + String((q.error as Error).message || q.error), true);
   if (!D) return note("Остатков Billz ещё нет — нажмите «Обновить из Billz».");
@@ -123,7 +123,7 @@ export function BzTransfers({ reg }: { reg: Reg }) {
   const L: Transfer[] = (q.data || []).filter((x) => x.d >= f && x.d <= t && (pt === "all" || x.from_point === pt || x.to_point === pt));
   const pg = usePaging(L.length, "bz-transfers", -1, f + t + pt);
   useEffect(() => { reg.current = async () => { const rows: Record<string, unknown>[] = []; L.forEach((x) => (x.items || []).forEach((i) => rows.push({ "Дата": dtm(x.accepted || x.created), "№": x.num, "Откуда": x.from_point, "Куда": x.to_point, "Статус": x.status, "Товар": i.n, "Артикул": i.sku, "Отправлено": i.sent, "Принято": i.arr, "Цена": i.price }))); if (!rows.length) throw new Error("нечего выгружать"); await saveBook("Перемещения Billz", [["Лист1", rows]]); }; return () => { reg.current = null; }; });
-  let k = 0; const nx = () => k++;
+  let k = 0; const nx = () => Math.min(k++, 8);
   const sent = L.reduce((a, x) => a + (+(x.sent || 0)), 0), arr = L.reduce((a, x) => a + (+(x.arrived || 0)), 0), way = L.filter((x) => x.status === "в пути"), bad = L.filter((x) => x.status === "принят" && +(x.sent || 0) !== +(x.arrived || 0));
   const periods = [...PER.filter((p) => p[0] !== "today" && p[0] !== "yday"), ["all", "Все"]] as [string, string][];
   const diff = (x: Transfer) => x.status === "принят" && +(x.sent || 0) !== +(x.arrived || 0);

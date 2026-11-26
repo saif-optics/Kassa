@@ -16,10 +16,10 @@ export function FilterBar({ summary, children, count }: { summary: ReactNode; ch
           <SlidersHorizontal className="size-4" />Фильтры
           {!!count && <span className="num rounded-full bg-primary px-1.5 text-[11px] leading-[18px] font-semibold text-primary-foreground">{count}</span>}
         </Button>
-        <span className="min-w-0 flex-1 truncate text-right text-[12.5px] text-muted-foreground">{summary}</span>
+        <span className="min-w-0 flex-1 line-clamp-2 text-right text-[12.5px] text-muted-foreground">{summary}</span>
       </div>
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="bottom" showCloseButton={false} className="max-h-[85dvh] gap-0 rounded-t-[28px] p-4 pb-5">
+        <SheetContent side="bottom" showCloseButton={false} className="max-h-[85dvh] gap-0 rounded-t-[28px] p-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
           <SheetTitle className="mb-3 text-[16px] font-semibold">Фильтры</SheetTitle>
           <SheetDescription className="sr-only">Выбор периода, точки и других условий</SheetDescription>
           <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-1 [&>*]:w-full">{children}</div>

@@ -27,8 +27,8 @@ export function MiniRing({ p, color = "var(--primary)", light }: { p: number; co
   return (
     <svg viewBox="0 0 52 52" className="size-12 shrink-0" aria-hidden>
       <circle cx="26" cy="26" r={R} fill="none" strokeWidth="6" stroke={light ? "rgb(255 255 255 / 0.3)" : "var(--border)"} />
-      <circle cx="26" cy="26" r={R} fill="none" strokeWidth="6" strokeLinecap="round" stroke={light ? "#fff" : color} strokeDasharray={`${C * v} ${C}`} transform="rotate(-90 26 26)" />
-      <text x="26" y="29.5" textAnchor="middle" fontSize="10.5" fontWeight="600" fill={light ? "#fff" : "currentColor"}>{Math.round(p * 100)}%</text>
+      <circle cx="26" cy="26" r={R} fill="none" strokeWidth="6" strokeLinecap="round" stroke={light ? "var(--primary-foreground)" : color} strokeDasharray={`${C * v} ${C}`} transform="rotate(-90 26 26)" />
+      <text x="26" y="29.5" textAnchor="middle" fontSize="10.5" fontWeight="600" fill={light ? "var(--primary-foreground)" : "currentColor"}>{Math.round(p * 100)}%</text>
     </svg>
   );
 }
@@ -135,10 +135,10 @@ export function HBars({ items, rank, dot }: { items: HBar[]; rank?: boolean; dot
     <div className="flex flex-col gap-3">
       {items.map((i, k) => (
         <div key={i.label + k} className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1.5">
-          <span className="flex min-w-0 items-baseline gap-2 text-[13.5px]">
+          <span className="flex min-w-0 flex-wrap items-baseline gap-x-2 text-[13.5px]">
             {rank && <span className="num grid size-5 shrink-0 place-items-center self-center rounded-full bg-muted text-[11px] font-semibold text-muted-foreground">{k + 1}</span>}
             {dot && i.color && <i className="size-2.5 shrink-0 self-center rounded-full" style={{ background: i.color }} />}
-            <span className="truncate">{lbl(i.label)}</span>{i.sub && <span className="truncate text-[12px] text-muted-foreground">{i.sub}</span>}
+            <span className="line-clamp-2 min-w-0 break-words">{lbl(i.label)}</span>{i.sub && <span className="text-[12px] text-muted-foreground">{i.sub}</span>}
           </span>
           <span className="num text-[13.5px] font-semibold">{i.valTxt != null ? i.valTxt : fmt(i.value)}</span>
           <div className="col-span-2 h-2 overflow-hidden rounded-full bg-muted"><span className="block h-full rounded-full" style={{ width: Math.max(0, i.value) / max * 100 + "%", background: i.color || "var(--primary)" }} /></div>

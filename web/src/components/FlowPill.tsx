@@ -33,7 +33,10 @@ export function FlowPill({ containerRef, activeKey, axis, className }: { contain
     if (!c) return;
     const ro = new ResizeObserver(() => { const p = measure(); if (p) { setAnim(false); prev.current = p.a; setPos(p); } });
     ro.observe(c);
-    return () => ro.disconnect();
+    // число кнопок изменилось — пересчитать положение
+    const mo = new MutationObserver(() => { const p = measure(); if (p) { setAnim(false); prev.current = p.a; setPos(p); } });
+    mo.observe(c, { childList: true });
+    return () => { ro.disconnect(); mo.disconnect(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeKey, axis]);
 

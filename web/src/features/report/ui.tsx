@@ -26,9 +26,6 @@ export function Pill({ tone, children, title }: { tone: Tone; children: React.Re
 }
 export const Dot = ({ color }: { color: string }) => <span aria-hidden className="mr-1.5 inline-block size-2 rounded-full align-[1px]" style={{ background: color }} />;
 
-/** старые цвета точек — только для Сверки; в «Отчёте р/с» берётся pointColor(d.points, p) */
-const PT: Record<string, string> = { "Премиум": "#0a84ff", "Яшнабад": "#af52de", "Сергели": "#34c759", "C1": "#ff9f0a", "Склад": "#8e8e93" };
-export const ptColor = (p: string) => PT[p] || "#8e8e93";
 
 export const FIELD = "h-9 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 text-[14px] outline-none transition focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/40 dark:bg-input/30";
 export function Field({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {

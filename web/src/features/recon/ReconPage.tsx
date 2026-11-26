@@ -82,7 +82,7 @@ function BzRecon({ d, F }: { d: Data; F: Filters }) {
   const B = { n: ch.length, q: ch.reduce((a, c) => a + bzQty(c), 0), s: ch.reduce((a, c) => a + bzSum(c), 0) };
   const K = { q: ks.reduce((a, s) => a + (+(s.qty || 0)), 0), s: ks.reduce((a, s) => a + kSum(s), 0), nodet: ks.some((s) => s.cat === "Без детализации") };
   const diff = K.s - B.s, same = Math.abs(diff) < 1;
-  let k = 0; const nx = () => k++; // сквозной номер посадки сверху вниз
+  let k = 0; const nx = () => Math.min(k++, 8); // сквозной номер посадки сверху вниз
   return (
     <>
       {ctl}

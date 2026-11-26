@@ -6,7 +6,8 @@ import { Chip, Tile, TileLabel, TileSub, TileValue, type ChipTone } from "@/comp
 import { useIsPhone } from "@/lib/useMedia";
 import type { Data } from "@/lib/types";
 import { fmAnyOn, fmMod, fmReconRows, type FmStatus } from "../report/logic";
-import { ptColor, saveBook, usePaging } from "../report/ui";
+import { saveBook, usePaging } from "../report/ui";
+import { pointColor } from "../analytics/base";
 import { Banner } from "./Banner";
 import { Controls, type Filters } from "./Controls";
 import { Dot, dash, ord } from "./parts";
@@ -32,14 +33,14 @@ export function FmRecon({ d, F }: { d: Data; F: Filters }) {
   const rows = fmReconRows(d, F.f, F.t, F.pt), bad = rows.filter((o) => o.st !== "ok" && o.st !== "off"), list = F.only ? bad : rows;
   const A = { kc: 0, kn: 0, fc: 0, fn: 0 }; rows.forEach((o) => { if (!o.on) return; A.kc += o.k.c; A.kn += o.k.n; if (o.x) { A.fc += o.x.c; A.fn += o.x.n; } });
   const dc = A.fc - A.kc, dn = A.fn - A.kn, pg = usePaging(list.length, "recon-fm", -1, F.f + F.t + F.pt + F.only);
-  let k = 0; const nx = () => k++; // сквозной номер посадки сверху вниз
+  let k = 0; const nx = () => Math.min(k++, 8); // сквозной номер посадки сверху вниз
   const dch = (v: number) => <Chip tone={Math.abs(v) < 1 ? "plus" : "minus"}>{"разница " + sgn(v)}</Chip>;
   const dcell = (v: number | null) => (v == null ? dash : Math.abs(v) < 1 ? <span className="text-plus">0</span> : <Chip tone="minus">{sgn(v)}</Chip>);
   const cell = (v: number | undefined, miss: boolean) => (miss ? dash : fmt(v || 0));
   const tn = (o: FmRow) => (o.st === "short" ? ("minus" as const) : o.st === "nofm" || o.st === "over" ? ("warn" as const) : undefined);
   const cols: RowColumn<FmRow>[] = [
     { key: "d", title: "День", main: true, cell: (o) => <><Dot tone={tn(o)} />{dS(o.d)} <span className="ml-1 text-[12px] font-normal text-muted-foreground">{wd(o.d)}</span></> },
-    { key: "p", title: "Точка", sub: true, cell: (o) => <><span className="mr-1.5 inline-block size-2 rounded-full align-middle" style={{ background: ptColor(o.p) }} />{o.p}</> },
+    { key: "p", title: "Точка", sub: true, cell: (o) => <><span className="mr-1.5 inline-block size-2 rounded-full align-middle" style={{ background: pointColor(d.points, o.p) }} />{o.p}</> },
     { key: "st", title: "Статус", sub: true, cell: (o) => <Chip tone={ST[o.st][0]}>{ST[o.st][1]}</Chip> },
     { key: "kc", title: "Нал · Касса", align: "right", cell: (o) => fmt(o.k.c) },
     { key: "xc", title: "Нал · ФМ", align: "right", cell: (o) => cell(o.x?.c, !o.x) },

@@ -39,7 +39,7 @@ export function TasksPage({ d }: { d: Data }) {
   }, [list, point, admin]);
   const byTask = useMemo(() => { const m = new Map<string, TaskComment[]>(); (q.data?.comments || []).forEach((c) => m.set(c.task_id, [...(m.get(c.task_id) || []), c])); return m; }, [q.data]);
 
-  let k = 0; const nx = () => k++;
+  let k = 0; const nx = () => Math.min(k++, 8);
   const filtersOn = (status !== "open" ? 1 : 0) + (pri !== "all" ? 1 : 0) + (text.trim() ? 1 : 0) + (showDone ? 1 : 0);
   const dot = (p: string) => <i className="size-2.5 shrink-0 rounded-full" style={{ background: pointColor(d.points, p) }} />;
   const emptyText = (all?.length ?? 0) > 0 ? "По фильтрам ничего не найдено" : admin ? "Заданий пока нет. Нажмите «Новое задание»" : "Для вашей точки заданий нет. Если что-то не так — нажмите «Сообщить о проблеме»";

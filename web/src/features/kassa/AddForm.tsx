@@ -40,10 +40,10 @@ export function AddForm({ templates, editing, reserveBal, onSubmit, onCancel, on
     <div>
       {templates.length ? <div className="mb-4 flex flex-col gap-2">{groups.map(([k, n]) => { const g = templates.filter((t) => (t.type === "inc" ? "inc" : t.cat) === k).sort((a, b) => (a.order || 99) - (b.order || 99) || a.name.localeCompare(b.name)); return g.length ? (
         <div key={k}><span className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">{n}</span>
-          <div className="mt-1 flex gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none] sm:flex-wrap sm:overflow-visible [&::-webkit-scrollbar]:hidden">{g.map((t) => (
-            <span key={t.id} className="glass-inner inline-flex shrink-0 items-center gap-1.5 rounded-full py-1 pr-1 pl-3 text-[13px]">
-              <button type="button" onClick={() => tpl(t)} className="inline-flex items-center gap-1.5 font-medium"><i className={cn("size-2 rounded-full", t.type === "inc" ? "bg-plus" : t.cat === "op" ? "bg-primary" : "bg-warn")} />{t.name}{t.amount ? <span className="num text-muted-foreground">{fmt(t.amount)}</span> : null}</button>
-              <Button type="button" variant="ghost" size="icon-xs" aria-label={"Удалить шаблон " + t.name} onClick={() => onDelTpl(t.id)}><X /></Button></span>))}</div></div>) : null; })}</div>
+          <div className="mt-1 flex flex-wrap gap-1.5">{g.map((t) => (
+            <span key={t.id} className="glass-inner inline-flex max-w-full items-center gap-1.5 rounded-full py-1 pr-1 pl-3 text-[13px] max-sm:h-9">
+              <button type="button" onClick={() => tpl(t)} className="inline-flex min-w-0 items-center gap-1.5 font-medium max-sm:h-9"><i className={cn("size-2 rounded-full", t.type === "inc" ? "bg-plus" : t.cat === "op" ? "bg-primary" : "bg-warn")} />{t.name}{t.amount ? <span className="num text-muted-foreground">{fmt(t.amount)}</span> : null}</button>
+              <Button type="button" variant="ghost" size="icon-xs" className="max-sm:size-9" aria-label={"Удалить шаблон " + t.name} onClick={() => onDelTpl(t.id)}><X /></Button></span>))}</div></div>) : null; })}</div>
         : <p className="mb-4 text-[13px] text-muted-foreground">Шаблонов пока нет. Отметьте «сохранить как шаблон» при добавлении расхода.</p>}
       <form onSubmit={submit} className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <div className="grid gap-1.5"><Label>Тип</Label><Select value={f.type} onValueChange={(v) => set("type", v as "exp" | "inc")}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="exp">Расход</SelectItem><SelectItem value="inc">Приход</SelectItem></SelectContent></Select></div>

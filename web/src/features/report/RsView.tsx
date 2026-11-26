@@ -18,6 +18,7 @@ const fm1 = (v: number) => (Math.abs(v) >= 1e6 ? (v / 1e6).toFixed(1).replace(".
 const dash = <span className="text-muted-foreground">—</span>;
 
 function Chart({ L }: { L: RsDay[] }) {
+  const phone = useIsPhone();
   const rows = L.filter((x) => x.e != null || x.out || x.in);
   if (rows.length < 2) return <p className="text-[13px] text-muted-foreground">Для графика нужно хотя бы два дня с выпиской.</p>;
   const data = rows.map((x) => ({ d: x.d.slice(8), full: dShort(x.d), in: x.in != null && x.in > 0 ? x.in : 0, out: -x.out, e: x.e }));
@@ -26,11 +27,11 @@ function Chart({ L }: { L: RsDay[] }) {
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={data} margin={{ top: 8, right: 4, bottom: 0, left: 0 }}>
           <CartesianGrid vertical={false} stroke="var(--border)" />
-          <XAxis dataKey="d" tickLine={false} axisLine={false} fontSize={11} stroke="var(--muted-foreground)" interval="preserveStartEnd" />
-          <YAxis yAxisId="m" tickFormatter={(v) => fm1(Math.abs(v))} width={64} tickLine={false} axisLine={false} fontSize={11} stroke="var(--muted-foreground)" />
+          <XAxis dataKey="d" tickLine={false} axisLine={false} fontSize={11} stroke="var(--muted-foreground)" interval="preserveStartEnd" minTickGap={phone ? 24 : 8} />
+          <YAxis yAxisId="m" tickFormatter={(v) => fm1(Math.abs(v))} width={phone ? 44 : 64} tickLine={false} axisLine={false} fontSize={11} stroke="var(--muted-foreground)" />
           <YAxis yAxisId="b" orientation="right" hide domain={[0, "dataMax"]} />
           <ReferenceLine yAxisId="m" y={0} stroke="var(--border)" />
-          <Tooltip cursor={{ fill: "var(--muted)" }} contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 12.5 }}
+          <Tooltip cursor={{ fill: "var(--muted)" }} wrapperStyle={phone ? { maxWidth: "calc(100vw - 32px)", zIndex: 10 } : undefined} contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 12, fontSize: 12.5 }}
             labelFormatter={(_, p) => (p?.[0]?.payload?.full as string) || ""} formatter={(v, n) => [fmt(Math.abs(+(v as number) || 0)) + " сум", n === "in" ? "Поступило" : n === "out" ? "Списано" : "Остаток вечером"]} />
           <Bar yAxisId="m" dataKey="in" fill="var(--plus)" radius={[4, 4, 0, 0]} maxBarSize={22} />
           <Bar yAxisId="m" dataKey="out" fill="var(--minus)" radius={[0, 0, 4, 4]} maxBarSize={22} />
@@ -41,6 +42,8 @@ function Chart({ L }: { L: RsDay[] }) {
   );
 }
 
+const TAPROW = () => "max-sm:[&>[role=button]]:min-h-10 max-sm:[&>[role=button]]:justify-center";
+
 export function RsView({ d }: { d: Data }) {
   const mu = useMutations(), phone = useIsPhone();
   const BM = useMemo(() => rsByMonth(d), [d]);
@@ -50,7 +53,7 @@ export function RsView({ d }: { d: Data }) {
   const C = useMemo(() => rsCalc(d, m), [d, m]);
   const L = useMemo(() => C.days.slice().reverse(), [C]);
   const pg = usePaging(L.length, "rs-days", -1, m);
-  let k = 0; const nx = () => k++; // сквозной номер посадки сверху вниз
+  let k = 0; const nx = () => Math.min(k++, 8); // сквозной номер посадки сверху вниз
   if (!ms.length) return <Card i={nx()} title="Выписок по счёту ещё нет"><p className="text-[13.5px] text-muted-foreground">Выписка Анор Банка загружается в базу — остатки и расходы со счёта появятся здесь.</p></Card>;
   const lbl = m === "all" ? "за всё время" : "за " + mn(m).toLowerCase(), per = m === "all" ? "" : " · " + mn(m).toLowerCase();
   const cats = CAT_NAMES.filter((c) => ms.some((x) => BM.rows[x].cat[c])).sort((a, b) => ms.reduce((s, x) => s + (BM.rows[x].cat[b] || 0), 0) - ms.reduce((s, x) => s + (BM.rows[x].cat[a] || 0), 0));
@@ -118,10 +121,10 @@ export function RsView({ d }: { d: Data }) {
 
       <Card i={nx()} title="Расходы по месяцам" note="по статьям">
         <p className="text-[12.5px] text-muted-foreground">Все списания со счёта по статьям. Статья определяется по названию расхода; поменять её можно в раскрытом дне ниже.</p>
-        <RowCards columns={ord(catCols, "tot")} rows={cats} rowKey={(c) => c} dense
+        <RowCards columns={ord(catCols, "tot")} rows={cats} rowKey={(c) => c} dense rowClass={TAPROW}
           footer={<div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 font-semibold"><span>Итого списано</span>
             <span className="num flex flex-wrap gap-x-4">{ms.map((x) => <span key={x}><span className="font-normal text-muted-foreground">{mn(x)} </span>{fmt(BM.rows[x].out)}</span>)}<span><span className="font-normal text-muted-foreground">Итого </span>{fmt(totOut)}</span></span></div>} />
-        <div className="mt-2"><RowCards columns={ord(monCols, "e")} rows={ms} rowKey={(x) => x} dense /></div>
+        <div className="mt-2"><RowCards columns={ord(monCols, "e")} rows={ms} rowKey={(x) => x} dense rowClass={TAPROW} /></div>
       </Card>
 
       <Card i={nx()} title={"Расходы по дням" + per} note="нажмите день">

@@ -57,6 +57,9 @@
 }
 
 :root {
+    /* тайминги и кривые — должны совпадать с DUR/EASE в lib/motion.ts */
+    --dur-fast: .2s; --dur-base: .36s; --dur-slow: .55s;
+    --ease-out: cubic-bezier(.215,.61,.355,1); --ease-in-out: cubic-bezier(.645,.045,.355,1);
     /* палитра Кассы: iOS-синий акцент, зелёный «оплачено», красный «просрочено» */
     --background: #f2f2f7;
     --foreground: #1c1c1e;

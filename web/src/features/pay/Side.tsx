@@ -18,7 +18,7 @@ export function Soon({ rows, T, onOpen, i }: { rows: MonthRow[]; T: string; onOp
         <div className="flex flex-col gap-0.5">{L.map((r) => (
           <button key={r.it.id} type="button" onClick={() => onOpen(r.it.id)} className="grid grid-cols-[10px_minmax(0,1fr)_auto] items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition hover:bg-muted">
             <span className={cn("size-2 rounded-full", r.st === "late" ? "bg-minus" : r.st === "today" || r.st === "part" ? "bg-warn" : "bg-muted-foreground")} />
-            <span className="flex min-w-0 flex-col leading-tight"><b className="truncate text-[13.5px] font-semibold">{r.it.name}</b><small className="text-xs text-muted-foreground">{dLong(r.due)}{r.st === "late" ? " · просрочено" : ""}</small></span>
+            <span className="flex min-w-0 flex-col leading-tight"><b className="line-clamp-2 text-[13.5px] font-semibold">{r.it.name}</b><small className="text-xs text-muted-foreground">{dLong(r.due)}{r.st === "late" ? " · просрочено" : ""}</small></span>
             <b className="num text-[13.5px]">{fmt(r.left)}</b>
           </button>))}</div>
         <div className="mt-2.5 flex justify-between border-t border-border pt-2.5 text-[13.5px]"><span>Нужно</span><b className="num">{fmt(L.reduce((s, r) => s + r.left, 0))} сум</b></div>

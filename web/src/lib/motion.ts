@@ -8,11 +8,11 @@ export const DUR = { fast: 0.2, base: 0.36, slow: 0.55, land: 0.8 } as const;
 export const EASE = { out: [0.215, 0.61, 0.355, 1], inOut: [0.645, 0.045, 0.355, 1], expo: [0.16, 1, 0.3, 1] } as const;
 export const STAGGER = 0.06;
 
-// появление с посадкой: i — номер в ряду, delay — общая задержка
+// появление с посадкой: i — номер в ряду (потолок 8 — задержка не больше 0,48 с), delay — общая задержка
 export const land = (i = 0, delay = 0) => ({
   initial: { opacity: 0, y: 26, scale: 0.985 },
   animate: { opacity: 1, y: 0, scale: 1 },
-  transition: { duration: DUR.land, ease: EASE.expo, delay: delay + i * STAGGER },
+  transition: { duration: DUR.land, ease: EASE.expo, delay: delay + Math.min(i, 8) * STAGGER },
 });
 
 export const fade = { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: DUR.fast } };

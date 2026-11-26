@@ -15,12 +15,12 @@ function Row({ s, editingId, onEdit, onDelete, canEdit }: { canEdit: boolean; s:
   const del = () => { if (!ask) { setAsk(true); setTimeout(() => setAsk(false), 3000); return; } onDelete(s.id); };
   return (
     <div className={cn("grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-2 rounded-lg px-2 py-1.5", s.id === editingId && "bg-accent")}>
-      <span className="min-w-0 truncate text-[13.5px]" title={`${s.cat || ""} · ${s.product || ""}${(s.qty || 0) > 1 ? ` · ${s.qty} шт` : ""}${d ? ` · скидка ${fmt(d)}` : ""}`}>
+      <span className="min-w-0 line-clamp-2 text-[13.5px] leading-snug break-words" title={`${s.cat || ""} · ${s.product || ""}${(s.qty || 0) > 1 ? ` · ${s.qty} шт` : ""}${d ? ` · скидка ${fmt(d)}` : ""}`}>
         {s.product}
         {(s.qty || 0) > 1 && <small className="ml-1 text-muted-foreground">{s.qty}×{fmt(s.price || 0)}</small>}{d ? <small className="ml-1 text-muted-foreground">−{fmt(d)}</small> : null}
         {s.debt ? <small className="ml-1 font-semibold text-minus">долг {fmt(s.debt)}</small> : null}</span>
-      <span className="flex gap-1">{Object.keys(p).filter((k) => p[k]).map((k) => <span key={k} title={`${k}: ${fmt(p[k])}`} className="rounded px-1.5 py-px text-[10.5px] font-semibold" style={{ color: PAYCOL[k] || "var(--muted-foreground)", background: `color-mix(in oklab, ${PAYCOL[k] || "var(--muted-foreground)"} 16%, transparent)` }}>{PAYSHORT[k] || k}</span>)}</span>
-      <span className="flex items-center justify-end gap-0.5"><b className="num mr-1 text-[13.5px]">{fmt(s.sum)}</b>
+      <span className="flex shrink-0 gap-1">{Object.keys(p).filter((k) => p[k]).map((k) => <span key={k} title={`${k}: ${fmt(p[k])}`} className="rounded px-1.5 py-px text-[10.5px] font-semibold" style={{ color: PAYCOL[k] || "var(--muted-foreground)", background: `color-mix(in oklab, ${PAYCOL[k] || "var(--muted-foreground)"} 16%, transparent)` }}>{PAYSHORT[k] || k}</span>)}</span>
+      <span className="flex shrink-0 items-center justify-end gap-0.5 whitespace-nowrap"><b className="num mr-1 text-[13.5px]">{fmt(s.sum)}</b>
         {canEdit && <><Button type="button" variant="ghost" size="icon-xs" data-se={s.id} aria-label="Изменить" title="Изменить" onClick={() => onEdit(s)}><Pencil /></Button>
         <Button type="button" variant="ghost" size="icon-xs" data-sd={s.id} aria-label="Удалить" title="Удалить" onClick={del} className={cn(ask && "bg-minus-soft px-1 text-minus")}>{ask ? <span className="text-[11px] font-semibold">удалить?</span> : <Trash2 />}</Button></>}</span>
     </div>

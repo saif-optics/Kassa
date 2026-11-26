@@ -5,6 +5,9 @@ import type { Data } from "@/lib/types";
 import { useMutations } from "@/lib/useData";
 import { canPerm, useAccess } from "@/lib/access";
 import { PageHead } from "@/components/PageHead";
+import { Segments } from "@/components/Segments";
+import { useIsPhone } from "@/lib/useMedia";
+import { cn } from "@/lib/utils";
 import { Chip, Tile, TileLabel, TileSub, TileValue } from "@/components/Tile";
 import { SalesFilter, useSalesFilter } from "./filter";
 import { Calendar } from "./Calendar";
@@ -26,7 +29,15 @@ function Cmp({ cur, prev }: { cur: number; prev: number | null | undefined }) {
   return <span>{t.text || " "}</span>;
 }
 
+type Tab = "overview" | "sale" | "journal";
+const TABS = [{ key: "overview", label: "Обзор" }, { key: "sale", label: "Продажа" }, { key: "journal", label: "Журнал" }];
+
 export function SalesPage({ d }: { d: Data }) {
+  const phone = useIsPhone();
+  // на телефоне раздел разбит на три вкладки; остальные остаются в DOM (скрыты), чтобы не терять состояние форм
+  const [tab, setTabS] = useState<Tab>(() => { try { const v = sessionStorage.getItem("kassa-web.sales.tab"); return v === "sale" || v === "journal" ? v : "overview"; } catch { return "overview"; } });
+  const setTab = (t: string) => { setTabS(t as Tab); try { sessionStorage.setItem("kassa-web.sales.tab", t); } catch { /* без хранилища */ } };
+  const sec = (t: Tab) => cn("flex flex-col gap-3.5", phone && tab !== t && "hidden");
   const mu = useMutations(), { F } = useSalesFilter(), access = useAccess();
   const c = useMemo(() => ctxOf(d), [d]);
   // ограниченная роль (кассир, продавец, гость): права по переключателям, только своя точка, даты сегодня/вчера — как проверяет сервер
@@ -77,6 +88,8 @@ export function SalesPage({ d }: { d: Data }) {
     <div className="flex flex-col gap-3.5">
       <PageHead eyebrow="Saif-Optics · Премиум · Яшнабад · Сергели · C1" title="Продажи" sub="Выручка, чеки и касса по дням и точкам"
         actions={<Chip tone="info" className="self-center">Сохраняется автоматически</Chip>} />
+      {phone && <Segments aria-label="Раздел продаж" items={TABS} value={tab} onChange={setTab} className="w-full [&>button]:flex-1" />}
+      <div className={sec("overview")}>
       <SalesFilter d={d} i={nx()} />
       <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
         <Tile i={nx()} hero><TileLabel>Выручка</TileLabel><TileValue count={a.rev} suffix=" сум" /><TileSub><Cmp cur={a.rev} prev={pa && pa.rev} /></TileSub></Tile>
@@ -84,17 +97,22 @@ export function SalesPage({ d }: { d: Data }) {
         <Tile i={nx()}><TileLabel>Средний чек</TileLabel><TileValue count={a.avg} suffix=" сум" /><TileSub><Cmp cur={a.avg} prev={pa && pa.avg} /></TileSub></Tile>
         <Tile i={nx()}><TileLabel>Б/Ч − расходы дня</TileLabel><TileValue count={a.cash - expSum} suffix=" сум" /><TileSub>наличные {fmt(a.cash)} · расходы {fmt(expSum)}</TileSub></Tile>
       </div>
-      <Calendar c={c} F={F} jDay={jDay} onOpenDay={openDay} i={nx()} />
+      </div>
+      <div className={sec("journal")}><Calendar c={c} F={F} jDay={jDay} onOpenDay={openDay} i={nx()} /></div>
+      <div className={sec("overview")}>
       <DayCash rows={rows} points={c.settings.points} F={F} i={nx()} />
       <Debts sales={c.sales} F={F} i={nx()} />
-      <div className="grid gap-3.5 xl:grid-cols-2">
+      </div>
+      <div className={cn("grid gap-3.5 xl:grid-cols-2", phone && tab !== "sale" && "hidden")}>
         {(!lim || canWrite || (editing && canEditAny)) && <SaleForm sales={c.sales} settings={formSettings} editing={editing} onSave={save} onCancel={() => setEditing(null)} dates={lim ? { min: yest, max: today } : undefined} i={nx()} />}
         {expMode && <ExpenseBox exp={ex} settings={formSettings} mode={expMode} onAdd={addExp} onAddSimple={addExpSimple} onDelete={(id) => mu.delEntry(id)} canDelete={canDeleteExp} dates={lim ? { min: expMode === "simple" ? addD(today, -2) : yest, max: today } : undefined} i={nx()} />}
       </div>
-      <Stats c={c} F={F} list={list} resetKey={resetKey} i={nx()} />
+      <Stats c={c} F={F} list={list} resetKey={resetKey} tab={phone ? tab : undefined} i={nx()} />
+      <div className={sec("journal")}>
       <div ref={jRef} className="scroll-mt-4"><Journal c={c} F={F} list={list} jDay={jDay} setJDay={setJDay} editingId={editing?.id || null} onEdit={setEditing} onDelete={remove} onCsv={csv} onXlsx={xlsx} msg={xmsg} canEdit={canEditSale} i={nx()} /></div>
       {!lim && <Photos rows={d.rows.photos || {}} sales={c.sales} i={nx()} />}
       {!lim && <SettingsBox key={c.settings.points.join() + c.settings.cats.join() + c.settings.plan} settings={c.settings} onSave={saveSettings} i={nx()} />}
+      </div>
     </div>
   );
 }

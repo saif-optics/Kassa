@@ -1,5 +1,6 @@
 // Раздел «Аналитика»: одна страница со всеми показателями (59 плиток и графиков) за выбранный период, включение и выключение показателей.
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { ChevronDown, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,8 @@ import { cn } from "@/lib/utils";
 import type { Data } from "@/lib/types";
 import { useMutations } from "@/lib/useData";
 import { useAccess } from "@/lib/access";
+import { useIsPhone } from "@/lib/useMedia";
+import { DUR, EASE, land } from "@/lib/motion";
 import { pointColor, type Card as MCard } from "./base";
 import { makeCtx } from "./cost";
 import { buildAnalytics, type Widget } from "./logic";
@@ -32,6 +35,8 @@ const readSel = (): number[] | null => { try { const v = JSON.parse(localStorage
 const readHints = () => { try { return localStorage.getItem(OFFKEY) !== "0"; } catch { return true; } };
 const WDN = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
+const TAPROW = () => "max-sm:[&>[role=button]]:min-h-10 max-sm:[&>[role=button]]:justify-center";
+
 export function AnalyticsPage({ d }: { d: Data }) {
   const c = useMemo(() => makeCtx(d), [d]);
   const mu = useMutations();
@@ -40,6 +45,11 @@ export function AnalyticsPage({ d }: { d: Data }) {
   const [hintsOn, setHints] = useState(readHints);
   const [pickOpen, setPickOpen] = useState(false);
   const adm = useAccess().isAdmin;
+  const phone = useIsPhone();
+  const [openG, setOpenG] = useState<Set<string>>(new Set()); // раскрытые группы на телефоне (пусто = первая)
+  // ключи уже показанных плиток: при смене набора показателей они заново не садятся
+  const seen = useRef<Set<string>>(new Set()), cur: string[] = [];
+  useEffect(() => { cur.forEach((x) => seen.current.add(x)); });
   const [loc, setLoc] = useState<number[] | null>(null), [own, setOwn] = useState<number[] | null>(readSel);
   const off = loc ?? (adm ? c.analyticsOff : own) ?? [];
   const sel = useMemo(() => new Set(ALL_IDS.filter((i) => !off.includes(i))), [off]);
@@ -57,7 +67,8 @@ export function AnalyticsPage({ d }: { d: Data }) {
     try { await saveXlsx(sh, fname(c, F, "analitika", "xlsx")); toast.success("Файл скачан"); } catch (e) { toast.error("Не удалось выгрузить: " + String(e)); }
   };
 
-  let k = 0; const nx = () => Math.min(k++, 14); // сквозной номер посадки сверху вниз (после 14-го — без задержки)
+  let k = 0; const nx = () => Math.min(k++, 8); // сквозной номер посадки сверху вниз (после 8-го — без задержки)
+  const ni = (key: string) => { cur.push(key); return seen.current.has(key) ? 0 : nx(); }; // номер посадки: у уже показанных — без задержки
   const head = (
     <PageHead eyebrow="Saif-Optics · статистика продаж в графиках" title="Аналитика продаж" sub={m.period || undefined}
       actions={<>
@@ -69,7 +80,7 @@ export function AnalyticsPage({ d }: { d: Data }) {
 
   const pick = (
     <Card title="Показатели" note={`включено ${sel.size} из ${ALL_IDS.length}`} i={nx()}>
-      <button type="button" className="flex w-full items-center justify-between gap-3 text-left text-[14px] font-medium" onClick={() => setPickOpen((x) => !x)} aria-expanded={pickOpen}>
+      <button type="button" className="flex w-full items-center justify-between gap-3 text-left text-[14px] font-medium max-sm:min-h-9" onClick={() => setPickOpen((x) => !x)} aria-expanded={pickOpen}>
         <span>Включить или выключить показатели</span>
         <ChevronDown className={cn("size-5 shrink-0 text-muted-foreground transition", pickOpen && "rotate-180")} />
       </button>
@@ -110,8 +121,8 @@ export function AnalyticsPage({ d }: { d: Data }) {
     const w = wd[i];
     if (w.group === "trio") {
       const grp: Widget[] = []; while (i < wd.length && wd[i].group === "trio") grp.push(wd[i++]); i--;
-      out.push(<div key={"trio" + w.ids[0]} className="grid gap-3.5 md:col-span-2 md:grid-cols-3 xl:col-span-3 min-[1920px]:col-span-4">{grp.map((g) => <Panel key={g.ids[0]} i={nx()} title={g.title} note={g.note} hintsOn={hintsOn}>{renderW(g, c.points, setPgCat)}</Panel>)}</div>);
-    } else out.push(<Panel key={w.ids[0] + w.title} i={nx()} title={w.title} note={w.kind === "owner" && !w.o ? undefined : w.note} hintsOn={hintsOn} className={w.wide ? "md:col-span-2 xl:col-span-3 min-[1920px]:col-span-4" : undefined}>{renderW(w, c.points, setPgCat)}</Panel>);
+      out.push(<div key={"trio" + w.ids[0]} className="grid gap-2 sm:gap-3.5 md:col-span-2 md:grid-cols-3 xl:col-span-3 min-[1920px]:col-span-4">{grp.map((g) => <Panel key={g.ids[0]} i={ni("w" + g.ids[0])} title={g.title} note={g.note} sum={wsum(g)} hintsOn={hintsOn}>{renderW(g, c.points, setPgCat)}</Panel>)}</div>);
+    } else out.push(<Panel key={w.ids[0] + w.title} i={ni("w" + w.ids[0] + w.title)} title={w.title} sum={wsum(w)} note={w.kind === "owner" && !w.o ? undefined : w.note} hintsOn={hintsOn} className={w.wide ? "md:col-span-2 xl:col-span-3 min-[1920px]:col-span-4" : undefined}>{renderW(w, c.points, setPgCat)}</Panel>);
   }
   return out;
   };
@@ -125,17 +136,47 @@ export function AnalyticsPage({ d }: { d: Data }) {
         : !sel.size ? <Empty>Все показатели выключены. Включите нужные в списке выше.</Empty>
         : (
           <>
-            {big.length > 0 && <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">{big.map((cd) => <MetricTile key={cd.id + cd.label} c={cd} i={nx()} hintsOn={hintsOn} />)}</div>}
-            {groups.map(([g, list]) => (
-              <Card key={g} title={g} note={`${list.length} ${pl(list.length, "показатель", "показателя", "показателей")}`} i={nx()}>
-                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-4">{list.map((cd) => <MiniTile key={cd.id + cd.label} c={cd} hintsOn={hintsOn} />)}</div>
-              </Card>
-            ))}
-            <div className="grid grid-flow-row-dense gap-3.5 md:grid-cols-2 xl:grid-cols-3 min-[1920px]:grid-cols-4">{buildOut()}</div>
+            {big.length > 0 && <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">{big.map((cd) => <MetricTile key={cd.id + cd.label} c={cd} i={ni("big" + cd.id)} hintsOn={hintsOn} />)}</div>}
+            {groups.map(([g, list], gi) => {
+              const note = `${list.length} ${pl(list.length, "показатель", "показателя", "показателей")}`;
+              const tiles = <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-4">{list.map((cd) => <MiniTile key={cd.id + cd.label} c={cd} hintsOn={hintsOn} />)}</div>;
+              if (!phone) return <Card key={g} title={g} note={note} i={ni("g" + g)}>{tiles}</Card>;
+              const open = openG.size ? openG.has(g) : gi === 0;
+              const flip = () => setOpenG((o) => { const n = new Set(o.size ? o : [groups[0][0]]); if (n.has(g)) n.delete(g); else n.add(g); return n; });
+              return (
+                <motion.section key={g} {...land(ni("g" + g))} className="glass flex min-w-0 flex-col rounded-[24px] p-4">
+                  <button type="button" onClick={flip} aria-expanded={open} className="flex min-h-9 w-full items-center justify-between gap-3 text-left">
+                    <h2 className="min-w-0 text-base font-semibold">{g}</h2>
+                    <span className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground">{note}<ChevronDown className={cn("size-5 transition-transform", open && "rotate-180")} /></span>
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {open && <motion.div key="b" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: DUR.base, ease: EASE.out }} className="overflow-hidden"><div className="pt-3">{tiles}</div></motion.div>}
+                  </AnimatePresence>
+                </motion.section>
+              );
+            })}
+            <div className="grid grid-flow-row-dense gap-2 sm:gap-3.5 md:grid-cols-2 xl:grid-cols-3 min-[1920px]:grid-cols-4">{buildOut()}</div>
           </>
         )}
     </div>
   );
+}
+
+// краткий итог блока для свёрнутого заголовка на телефоне
+function wsum(w: Widget): string {
+  const n = (x: number) => `${x} ${pl(x, "строка", "строки", "строк")}`;
+  switch (w.kind) {
+    case "top": return fmt(w.tot) + (w.by === "r" ? " сум" : " шт");
+    case "hbars": return n(w.items.length);
+    case "ranges": return n(w.rows.length);
+    case "pg": return n(w.bands.length);
+    case "lost": return n(w.rows.length);
+    case "marginPts": return n(w.rows.length);
+    case "heat": return n(w.pts.length);
+    case "expenses": return n(w.byPoint.length + w.byArt.length);
+    case "pareto": return n(w.items.length);
+    default: return "график";
+  }
 }
 
 // ---------- содержимое виджетов ----------
@@ -187,7 +228,7 @@ function renderW(w: Widget, points: string[], setPgCat: (c: string) => void): Re
         { key: "p", title: "Ср. цена", align: "right", sub: true, cell: (o) => "ср. " + fmt(o.u ? o.r / o.u : 0) },
         { key: "sh", title: "Доля", align: "right", sub: true, cell: (o) => pctF(w.tot ? o[w.by] / w.tot : 0) },
       ];
-      return <RowCards columns={cols} rows={w.rows} rowKey={(o) => o.k} dense footer={<span className="text-muted-foreground">Всего за период: <b className="num text-foreground">{fmt(w.tot)}{byR ? " сум" : " шт"}</b></span>} />;
+      return <RowCards columns={cols} rows={w.rows} rowKey={(o) => o.k} dense rowClass={TAPROW} footer={<span className="text-muted-foreground">Всего за период: <b className="num text-foreground">{fmt(w.tot)}{byR ? " сум" : " шт"}</b></span>} />;
     }
     case "pg": {
       const mxu = Math.max(1, ...w.bands.map((o) => o.u)), best = w.bands[w.best];
@@ -205,7 +246,7 @@ function renderW(w: Widget, points: string[], setPgCat: (c: string) => void): Re
           <Segments aria-label="Категория" className="mb-3" value={w.cat} onChange={setPgCat} items={[["all", "Все"], ...w.cats.map((x) => [x, x])].map(([key, label]) => ({ key, label }))} />
           {w.U ? <>
             <p className="mb-3 text-[13px] text-muted-foreground">Больше всего покупают в группе <b className="text-foreground">{best.lbl}</b>: {fmt(best.u)} шт ({pctF(best.u / w.U)}) на {fmt(best.r)} сум. Цена — за одну единицу после скидки.</p>
-            <RowCards columns={cols} rows={w.bands} rowKey={(o) => o.lbl} dense />
+            <RowCards columns={cols} rows={w.bands} rowKey={(o) => o.lbl} dense rowClass={TAPROW} />
           </> : <None />}
         </>
       );
@@ -220,7 +261,7 @@ function renderW(w: Widget, points: string[], setPgCat: (c: string) => void): Re
         { key: "d", title: "Последняя продажа", align: "right", sub: true, cell: (o) => "посл. " + dShort(o.last) },
       ];
       return w.rows.length
-        ? <RowCards columns={cols} rows={w.rows} rowKey={(o) => o.k} dense />
+        ? <RowCards columns={cols} rows={w.rows} rowKey={(o) => o.k} dense rowClass={TAPROW} />
         : <p className="text-[13px] text-muted-foreground">Таких товаров нет{w.hist ? "" : ": нужна история продаж до периода"}.</p>;
     }
     case "marginPts": {
@@ -255,7 +296,7 @@ function renderW(w: Widget, points: string[], setPgCat: (c: string) => void): Re
             <tbody>{w.pts.map((p, pi) => (
               <tr key={p}><Td>{p}</Td>{w.avg[pi].map((v, i) => {
                 const o = v ? 0.12 + 0.78 * (v / w.hmax) : 0, b = w.best && w.best[pi] === i && v;
-                return <td key={i} title={`${p}: в среднем ${fmt(v)} сум`} className="num border-b border-border/60 px-2 py-2 text-center text-[12px]" style={{ background: `color-mix(in srgb, var(--primary) ${Math.round(o * 100)}%, transparent)`, color: o > 0.55 ? "#fff" : undefined, outline: b ? "2px solid var(--warn)" : undefined, outlineOffset: -2 }}>{v ? fmtM(v) : "—"}</td>;
+                return <td key={i} title={`${p}: в среднем ${fmt(v)} сум`} className="num border-b border-border/60 px-2 py-2 text-center text-[12px]" style={{ background: `color-mix(in srgb, var(--primary) ${Math.round(o * 100)}%, transparent)`, color: o > 0.55 ? "var(--primary-foreground)" : undefined, outline: b ? "2px solid var(--warn)" : undefined, outlineOffset: -2 }}>{v ? fmtM(v) : "—"}</td>;
               })}</tr>))}</tbody>
           </Tbl>
           {w.showBest && w.best && <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[13px]">{w.pts.map((p, pi) => <span key={p}><Sw color={pointColor(points, p)} />{p}: <b>{WDN[w.best![pi]]}</b> · {fmtM(w.avg[pi][w.best![pi]])} в среднем</span>)}</div>}
