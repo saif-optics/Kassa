@@ -55,7 +55,7 @@ export function FmRecon({ d, F }: { d: Data; F: Filters }) {
     <>
       {!fmAnyOn(d) && <Banner title="Раздел в подготовке">Фискальные модули пока не подключены, цифры не считаются. Когда подключим выгрузку из Rahmat, модуль точки включается в карточке → «Данные модуля» → «Модуль работает».</Banner>}
       <Controls F={F} points={d.points} />
-      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3.5">
         <Tile i={nx()} hero><TileLabel>Нал · Касса</TileLabel><TileValue count={A.kc} suffix=" сум" /><TileSub>{"ФМ " + fmt(A.fc)}{dch(dc)}</TileSub></Tile>
         <Tile i={nx()}><TileLabel>Безнал · Касса</TileLabel><TileValue count={A.kn} suffix=" сум" /><TileSub>{"ФМ " + fmt(A.fn)}{dch(dn)}</TileSub></Tile>
         <Tile i={nx()}><TileLabel>Не пробито через ФМ</TileLabel><TileValue count={Math.max(0, -dc) + Math.max(0, -dn)} suffix=" сум" /><TileSub>{`нал ${fmt(Math.max(0, -dc))} · безнал ${fmt(Math.max(0, -dn))}`}</TileSub></Tile>
@@ -77,7 +77,7 @@ function Det({ d, o }: { d: Data; o: FmRow }) {
   o.k.rows.forEach((s) => { const parts: [string, number][] = s.pay === "Смешанная" && s.pays ? Object.entries(s.pays) : [[s.pay, +s.sum || 0]]; parts.forEach(([pay, v]) => { (by[pay] ||= []).push({ s, v: +v || 0 }); }); });
   const m = fmMod(d, o.p), x = o.x;
   return (
-    <div className="grid min-w-0 gap-5 md:grid-cols-2">
+    <div className="grid min-w-0 items-start gap-5 md:grid-cols-2">
       <div><h3 className="mb-2 text-[14.5px] font-semibold">Касса · {o.p} · {dL(o.d)}</h3>
         {Object.entries(by).map(([pay, L]) => (
           <div key={pay} className="mb-2"><h4 className="text-[13px] font-semibold">{pay} <span className="font-normal text-muted-foreground">{L.length} {pl(L.length, "запись", "записи", "записей")} · {fmt(L.reduce((a, b) => a + b.v, 0))}</span></h4>

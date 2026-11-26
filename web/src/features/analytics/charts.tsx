@@ -1,5 +1,7 @@
 // Графики Аналитики, Линз и Склада на Recharts: линия, столбцы, группы столбцов, кольцо, водопад, Парето, мини-линия и полосы.
 import { Area, Bar, BarChart, CartesianGrid, Cell, ComposedChart, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { useState } from "react";
+import { DUR } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { useIsPhone } from "@/lib/useMedia";
 import type { Bar as HBar } from "./base";
@@ -64,12 +66,13 @@ export function BarsC({ labels, vals, colors, color = "var(--chart-2)", hl, fmtV
   const best = vals.indexOf(Math.max(...vals));
   const data = labels.map((l, i) => ({ l, v: vals[i] }));
   const small = labels.length <= 8;
+  const dup = labels.some((l, i) => i > 0 && labels[i - 1] === l); // подряд идущие записи одного дня — подпись только у первой
   return (
     <div style={{ height: h }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 18, right: 6, bottom: 0, left: 0 }}>
           <CartesianGrid stroke={GRID} vertical={false} />
-          <XAxis dataKey="l" tick={TICK} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={phone ? 28 : 10} />
+          <XAxis dataKey="l" tick={TICK} tickLine={false} axisLine={false} interval={dup && labels.length <= 24 ? 0 : "preserveStartEnd"} minTickGap={phone ? 28 : 10} tickFormatter={(v: string, i: number) => (dup && i > 0 && labels[i - 1] === v ? "" : v)} />
           <YAxis tick={TICK} tickLine={false} axisLine={false} width={phone ? 46 : 60} tickFormatter={(v: number) => (lblV ? lblV(v) : fmtM(v))} />
           <Tooltip {...TT} cursor={{ fill: "var(--muted)" }} formatter={(v: unknown) => [fmtV(+(v as number)), ""]} separator="" />
           <Bar dataKey="v" radius={[5, 5, 0, 0]} maxBarSize={44} isAnimationActive={false} label={small ? { position: "top", fontSize: 10, fill: "var(--foreground)", formatter: (v: unknown) => (+(v as number) ? (lblV || fmtM)(+(v as number)) : "") } : undefined}>
@@ -106,18 +109,19 @@ export function GroupBarsC({ labels, series }: { labels: string[]; series: { nam
 export function DonutC({ items, center, sub }: { items: { label: string; value: number; color: string; valTxt?: string }[]; center: string; sub?: string }) {
   const it = items.filter((i) => i.value > 0); if (!it.length) return <None />;
   const tot = it.reduce((a, i) => a + i.value, 0);
+  const [hov, setHov] = useState(false);
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-      <div className="relative size-[132px] shrink-0">
+      <div className="relative size-[132px] shrink-0" onMouseLeave={() => setHov(false)}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
-            <Pie data={it} dataKey="value" nameKey="label" innerRadius={44} outerRadius={64} paddingAngle={it.length > 1 ? 1.5 : 0} stroke="none" isAnimationActive={false}>
+            <Pie data={it} dataKey="value" nameKey="label" innerRadius={44} outerRadius={64} paddingAngle={it.length > 1 ? 1.5 : 0} stroke="none" isAnimationActive={false} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
               {it.map((i, k) => <Cell key={k} fill={i.color} />)}
             </Pie>
-            <Tooltip {...TT} formatter={(v: unknown, n: unknown) => [`${fmt(+(v as number))} (${Math.round((+(v as number) / tot) * 100)}%)`, String(n)]} />
+            <Tooltip {...TT} position={{ x: 140, y: 0 }} formatter={(v: unknown, n: unknown) => [`${fmt(+(v as number))} (${Math.round((+(v as number) / tot) * 100)}%)`, String(n)]} />
           </PieChart>
         </ResponsiveContainer>
-        <div className="pointer-events-none absolute inset-0 grid place-content-center text-center leading-tight">
+        <div className={cn("pointer-events-none absolute inset-0 grid place-content-center text-center leading-tight transition-opacity", hov && "opacity-0")} style={{ transitionDuration: DUR.fast + "s" }}>
           <b className={cn("num font-semibold", center.length > 7 ? "text-[13px]" : "text-[16px]")}>{center}</b>{sub && <small className="text-[10px] text-muted-foreground">{sub}</small>}
         </div>
       </div>
@@ -128,11 +132,11 @@ export function DonutC({ items, center, sub }: { items: { label: string; value: 
   );
 }
 
-export function HBars({ items, rank, dot }: { items: HBar[]; rank?: boolean; dot?: boolean }) {
+export function HBars({ items, rank, dot, cols }: { items: HBar[]; rank?: boolean; dot?: boolean; cols?: boolean }) {
   if (!items.length) return <None />;
   const max = Math.max(1, ...items.map((i) => Math.abs(i.value)));
   return (
-    <div className="flex flex-col gap-3">
+    <div className={cols ? "grid gap-x-8 gap-y-3 sm:grid-cols-2 xl:grid-cols-3" : "flex flex-col gap-3"}>
       {items.map((i, k) => (
         <div key={i.label + k} className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1.5">
           <span className="flex min-w-0 flex-wrap items-baseline gap-x-2 text-[13.5px]">

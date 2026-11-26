@@ -137,7 +137,7 @@ export function StockFile({ c, pick }: { c: Ctx; pick: React.MutableRefObject<((
         <p className="text-[13px] leading-snug">Остатки взяты из файла как есть: {v.places.map((p, i) => <span key={p}>{i ? "; " : ""}<b>{p}</b>{v.src[p] ? ` — ${v.src[p]}` : ""}</span>)}. Продажи после этих дат в файле не вычтены, поэтому рядом показано, сколько продано с {dShort(v.from)}, и примерный остаток сейчас. После инвентаризации загрузите точные остатки.</p>
       </Card>
       <Segments aria-label="Место" items={[{ key: "all", label: "Все места" }, ...v.places.map((p) => ({ key: p, label: p }))]} value={pl0} onChange={(p) => { setPlace(p); setLim(SHOW); }} />
-      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3.5">
         {v.cards.map((cd, i) => <Tile key={cd.label} i={nx()} hero={i === 0}><TileLabel>{cd.label}</TileLabel><TileValue>{cd.v}</TileValue><TileSub>{cd.d}</TileSub></Tile>)}
       </div>
       <Card i={nx()} title="По местам" note="склад и точки">
@@ -158,7 +158,7 @@ export function StockFile({ c, pick }: { c: Ctx; pick: React.MutableRefObject<((
           <Field label="Поиск" className="sm:w-64"><input className={FIELD} placeholder="Модель, артикул, группа" value={q} onChange={(e) => { setQ(e.target.value); setLim(SHOW); }} /></Field>
         </FilterBar>
         <p className="text-[12.5px] text-muted-foreground">Сначала — те, что продавались с {dShort(v.from)}.</p>
-        <RowCards columns={phoneFirst(itCols, "now", phone)} rows={shown} rowKey={(r) => String(r.i)} empty="Ничего не найдено"
+        <RowCards className="max-w-[1400px]" columns={phoneFirst(itCols, "now", phone)} rows={shown} rowKey={(r) => String(r.i)} empty="Ничего не найдено"
           footer={list.length ? <div className="flex flex-wrap items-baseline justify-between gap-x-4 font-semibold"><span>Показано {fmt(shown.length)} из {fmt(list.length)}</span></div> : undefined} />
         {list.length > lim && <div className="text-center"><Button variant="secondary" onClick={() => setLim((x) => x + MORE)}>Показать ещё</Button></div>}
       </Card>

@@ -73,7 +73,7 @@ export function FiscalView({ d, F, setF }: { d: Data; F: FmState; setF: (f: Part
       </div>
       <DayChips days={md} value={day} onPick={(x) => setF({ d: x, m: x.slice(0, 7) })} label="День" stat={(x) => fmDayStat(d, x)} title={(x) => dLong(x)} />
 
-      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3.5">
         <Tile i={nx()} hero><TileLabel>{"Гросс нал · " + dShort(day)}</TileLabel><TileValue count={dayT.c} suffix=" сум" /><TileSub>{`по ${on} ${pl(on, "модулю", "модулям", "модулям")} за ${dLong(day)}`}</TileSub></Tile>
         <Tile i={nx()}><TileLabel>{"Гросс безнал · " + dShort(day)}</TileLabel><TileValue count={dayT.n} suffix=" сум" /><TileSub>карты и QR через фискальный модуль</TileSub></Tile>
         <Tile i={nx()}><TileLabel>Гросс нал · всё время</TileLabel><TileValue count={totT.c} suffix=" сум" /><TileSub>{"нарастающим итогом по " + dShort(day)}</TileSub></Tile>
@@ -82,7 +82,7 @@ export function FiscalView({ d, F, setF }: { d: Data; F: FmState; setF: (f: Part
 
       <Card i={nx()} title="Точки и фискальные модули" note={`${on} из ${P.length}`}>
         <p className="text-[12.5px] text-muted-foreground">Подключено {on} из {P.length}. Нажмите карточку, чтобы внести гросс за {dLong(day)} или изменить данные модуля.</p>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">{P.map((p) => <PointCard key={p} d={d} p={p} day={day} sel={F.open === p} onClick={() => setF({ open: F.open === p ? null : p, edit: null })} />)}</div>
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3">{P.map((p) => <PointCard key={p} d={d} p={p} day={day} sel={F.open === p} onClick={() => setF({ open: F.open === p ? null : p, edit: null })} />)}</div>
       </Card>
 
       {F.open && <div ref={edRef}><Editor i={nx()} key={F.open + day + (F.edit || "")} d={d} p={F.open} day={day} tab={F.edit || (fmIsOn(d, F.open) ? "day" : "mod")} setTab={(t) => setF({ edit: t })}

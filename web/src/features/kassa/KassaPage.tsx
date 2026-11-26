@@ -81,14 +81,14 @@ export function KassaPage({ d, focus }: { d: Data; focus?: "expense" | "cash" | 
           </SheetContent>
         </Sheet>
       </>}
-      <div className="grid gap-3.5 xl:grid-cols-2">
+      <div className="grid items-start gap-3.5 xl:grid-cols-2">
         <Card i={5} title="Расчёт по шагам">{hint("Нажмите шаг, чтобы увидеть записи.")}<Steps c={c} rsvBal={reserve(d, isLast ? null : M).bal} /></Card>
         <div className="flex min-w-0 flex-col gap-3.5">
           <Card i={6} title="Операционные и прочие"><Split c={c} /></Card>
           <Card i={7} title="Выводы"><Insights items={a.insights} /></Card>
         </div>
       </div>
-      <div className="grid gap-3.5 xl:grid-cols-[minmax(0,1fr)_380px] 2xl:grid-cols-[minmax(0,1fr)_420px]">
+      <div className="grid items-start gap-3.5 xl:grid-cols-[minmax(0,1fr)_380px] 2xl:grid-cols-[minmax(0,1fr)_420px]">
         <Card i={8} title="Б/Ч по дням">{hint("Наличные продаж Премиума и Яшнабада за каждый день месяца.")}<DayChart days={c.days} /></Card>
         <Card i={9} title="Расходы с Б/Ч по статьям"><Articles a={a} /></Card>
       </div>

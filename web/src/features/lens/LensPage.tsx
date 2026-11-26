@@ -55,13 +55,13 @@ export function LensPage({ d }: { d: Data }) {
 
       {v.empty ? <Empty>За выбранный период продаж очковых линз нет. Сюда попадают только продажи категории «Очковые линзы». Контактные линзы, растворы и капли сюда не входят.</Empty> : (
         <>
-          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">{big.map((cd) => <MetricTile key={cd.label} c={cd} i={nx()} hintsOn={false} />)}</div>
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3.5">{big.map((cd) => <MetricTile key={cd.label} c={cd} i={nx()} hintsOn={false} />)}</div>
           {rest.length > 0 && (
             <Card title="Ещё показатели" note={`${rest.length} ${pl(rest.length, "показатель", "показателя", "показателей")}`} i={nx()}>
-              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-4">{rest.map((cd) => <MiniTile key={cd.label} c={cd} hintsOn={false} />)}</div>
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-2.5">{rest.map((cd) => <MiniTile key={cd.label} c={cd} hintsOn={false} />)}</div>
             </Card>
           )}
-          <div className="grid gap-3.5 md:grid-cols-2">
+          <div className="grid items-start gap-3.5 md:grid-cols-2">
             <Panel title="Наши линзы по видам" note="ET, Блок, 4в1, Star, Essilor, Seiko и другие — по количеству" i={nx()} hintsOn={false} className="md:col-span-2"><HBars items={v.kindBars} /></Panel>
             <Panel title="Линзы по дням" note="Сколько штук продано каждый день" i={nx()} hintsOn={false} className="md:col-span-2">
               <BarsC labels={v.byDay.days.map((x) => x.slice(8, 10) + "." + x.slice(5, 7))} vals={v.byDay.vals} color="var(--chart-3)" fmtV={(x) => x + " шт"} lblV={String} h={260} />

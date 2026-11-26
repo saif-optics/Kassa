@@ -50,7 +50,7 @@ export function HomePage({ d }: { d: Data }) {
         {canTab(a, "kassa") && <Button size="lg" variant="secondary" onClick={GO("kassa", F_CASH)}><Calculator />Пересчитать кассу</Button>}
       </>} />
 
-      {seeSales && <div className={cn("grid grid-cols-1 gap-3.5 sm:grid-cols-2", adm && "xl:grid-cols-4")}>
+      {seeSales && <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3.5">
         <Tile i={nx()} hero>
           <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1"><TileLabel>Выручка {h.lbl}</TileLabel><Spark data={t.today.spark} color="#fff" w={64} h={24} /></div>
           <TileValue count={t.today.value} suffix=" сум" />
@@ -82,7 +82,7 @@ export function HomePage({ d }: { d: Data }) {
 
       {h.alerts.length > 0 && (
         <Card title="Требует внимания" note={`${h.alerts.length} ${h.alerts.length === 1 ? "пункт" : h.alerts.length < 5 ? "пункта" : "пунктов"}`} i={nx()}>
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))] gap-2">
             {h.alerts.map((a, j) => { const I = AL_ICON[a.icon]; return (
               <button key={j} type="button" onClick={GO(a.go.tab, a.go.field)} className="glass-inner flex min-w-0 items-center gap-3 rounded-2xl p-2.5 text-left transition-colors hover:bg-accent">
                 <span className={cn("grid size-9 shrink-0 place-items-center rounded-[10px]", AL_TONE[a.tone])}><I className="size-[18px]" strokeWidth={1.9} /></span>
@@ -93,7 +93,7 @@ export function HomePage({ d }: { d: Data }) {
         </Card>
       )}
 
-      {seeSales && <div className="grid gap-3.5 lg:grid-cols-2">
+      {seeSales && <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,380px),1fr))] items-start gap-3.5">
         <Card title="Точки сегодня" note={h.ptNote} i={nx()}>
           {h.pts.length ? (
             <div className="flex flex-col gap-3.5">
@@ -121,7 +121,7 @@ export function HomePage({ d }: { d: Data }) {
       </div>}
 
       <Card title="Разделы" note="по важности" i={nx()}>
-        <div className={cn("grid grid-cols-2 gap-2.5 lg:grid-cols-3", h.sections.length <= 9 ? "xl:grid-cols-3" : "xl:grid-cols-4")}>
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-2.5">
           {h.sections.filter((s) => canTab(a, s.id)).map((s) => { const n = nav[s.id], I = n.icon; return (
             <button key={s.id} type="button" onClick={GO(s.id)}
               className="glass-inner relative flex min-w-0 flex-col gap-2 rounded-2xl p-3 text-left transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-md active:scale-[.98] sm:flex-row sm:items-center sm:gap-3">

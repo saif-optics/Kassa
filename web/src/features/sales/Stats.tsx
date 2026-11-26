@@ -37,7 +37,7 @@ export function Stats({ c, F, list, resetKey, tab, i = 0 }: { c: Ctx; F: Filter;
   const toggleWd = (i: number) => setStF((x) => { const s = new Set(x.wd); s.has(i) ? s.delete(i) : s.add(i); return { ...x, wd: s.size === 7 ? [] : [...s] }; });
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+    <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
       <div className={cn("min-w-0", tab && tab !== "overview" && "hidden")}><Card title="Выручка по точкам" i={i}>
         <Note>Столбик — выручка периода, цвет — точка</Note>
         <Segments size="sm" aria-label="Группировка" items={GROUPS.map(([key, label]) => ({ key, label }))} value={g} onChange={(v) => setG(v as Group)} />

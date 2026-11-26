@@ -91,7 +91,7 @@ export function SalesPage({ d }: { d: Data }) {
       {phone && <Segments aria-label="Раздел продаж" items={TABS} value={tab} onChange={setTab} className="w-full [&>button]:flex-1" />}
       <div className={sec("overview")}>
       <SalesFilter d={d} i={nx()} />
-      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3.5">
         <Tile i={nx()} hero><TileLabel>Выручка</TileLabel><TileValue count={a.rev} suffix=" сум" /><TileSub><Cmp cur={a.rev} prev={pa && pa.rev} /></TileSub></Tile>
         <Tile i={nx()}><TileLabel>Чеков / позиций</TileLabel><TileValue>{fmt(a.checks)} / {fmt(a.n)}</TileValue><TileSub><Cmp cur={a.checks} prev={pa && pa.checks} /></TileSub></Tile>
         <Tile i={nx()}><TileLabel>Средний чек</TileLabel><TileValue count={a.avg} suffix=" сум" /><TileSub><Cmp cur={a.avg} prev={pa && pa.avg} /></TileSub></Tile>
@@ -103,7 +103,7 @@ export function SalesPage({ d }: { d: Data }) {
       <DayCash rows={rows} points={c.settings.points} F={F} i={nx()} />
       <Debts sales={c.sales} F={F} i={nx()} />
       </div>
-      <div className={cn("grid gap-3.5 xl:grid-cols-2", phone && tab !== "sale" && "hidden")}>
+      <div className={cn("grid items-start gap-3.5 xl:grid-cols-2", phone && tab !== "sale" && "hidden")}>
         {(!lim || canWrite || (editing && canEditAny)) && <SaleForm sales={c.sales} settings={formSettings} editing={editing} onSave={save} onCancel={() => setEditing(null)} dates={lim ? { min: yest, max: today } : undefined} i={nx()} />}
         {expMode && <ExpenseBox exp={ex} settings={formSettings} mode={expMode} onAdd={addExp} onAddSimple={addExpSimple} onDelete={(id) => mu.delEntry(id)} canDelete={canDeleteExp} dates={lim ? { min: expMode === "simple" ? addD(today, -2) : yest, max: today } : undefined} i={nx()} />}
       </div>

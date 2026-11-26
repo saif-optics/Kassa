@@ -43,7 +43,7 @@ export function UserForm({ mode, init, points, me, limited, busy, submitLabel, o
   };
   return (
     <form onSubmit={submit} autoComplete="off" className="flex min-w-0 flex-col gap-3.5">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3">
         {mode === "create" && <>
           <Field label="Логин (почта)"><Input type="email" value={v.email} onChange={(e) => set("email", e.target.value)} autoComplete="off" required /></Field>
           <Field label="Пароль">

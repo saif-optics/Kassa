@@ -107,7 +107,7 @@ export function RsView({ d }: { d: Data }) {
   return (
     <div className="flex flex-col gap-3.5">
       <Segments aria-label="Месяц" items={[...ms.map((x) => ({ key: x, label: mn(x) })), ...(ms.length > 1 ? [{ key: "all", label: "Все месяцы" }] : [])]} value={m} onChange={pick} />
-      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3.5">
         <Tile i={nx()} hero><TileLabel>{"Остаток на " + (C.startD ? dShort(C.startD) : "начало")}</TileLabel>{C.start != null ? <TileValue count={C.start} suffix=" сум" /> : <TileValue>—</TileValue>}<TileSub>утро первого дня с выпиской</TileSub></Tile>
         <Tile i={nx()}><TileLabel>{"Поступило " + lbl}</TileLabel><TileValue className="text-plus">{"+" + fmt(C.in) + " сум"}</TileValue><TileSub>терминал, Payme, перечисления</TileSub></Tile>
         <Tile i={nx()}><TileLabel>{"Списано " + lbl}</TileLabel><TileValue>{"−" + fmt(C.out) + " сум"}</TileValue><TileSub>{`${C.outDays} ${pl(C.outDays, "день", "дня", "дней")} со списаниями`}</TileSub></Tile>

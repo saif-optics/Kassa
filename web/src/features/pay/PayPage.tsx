@@ -76,7 +76,7 @@ export function PayPage({ d }: { d: Data }) {
 
       <Segments aria-label="Месяц" items={months.map((x) => ({ key: x, label: mName(x) }))} value={M} onChange={go} />
 
-      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3.5">
         <Tile i={0} hero>
           <TileLabel>Платежи за {mi}</TileLabel>
           <TileValue count={t.tot} suffix=" сум" />

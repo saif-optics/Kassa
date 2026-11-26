@@ -86,7 +86,7 @@ function BzRecon({ d, F }: { d: Data; F: Filters }) {
   return (
     <>
       {ctl}
-      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3.5">
         <Tile i={nx()} hero><TileLabel>Billz · продано</TileLabel><TileValue count={B.s} suffix=" сум" /><TileSub>{`${B.n} ${pl(B.n, "чек", "чека", "чеков")} · ${fq(B.q)} шт`}</TileSub></Tile>
         <Tile i={nx()}><TileLabel>Касса · записано</TileLabel><TileValue count={K.s} suffix=" сум" /><TileSub>{`${fq(K.q)} шт${K.nodet ? " · есть дни без детализации" : ""}`}</TileSub></Tile>
         <Tile i={nx()}><TileLabel>Разница</TileLabel><TileValue>{sgn(diff) + " сум"}</TileValue><TileSub><Chip tone={same ? "plus" : "minus"}>{same ? "сходится" : "расхождение"}</Chip>Касса минус Billz</TileSub></Tile>
@@ -119,7 +119,7 @@ function DaysTable({ i, list, ch, ks, only, reset }: { i: number; list: DayRow[]
   return (
     <Card i={i} title="По дням и точкам" note="нажмите строку">
       <p className="text-[12.5px] text-muted-foreground">Красная точка — суммы не совпали, оранжевая — продажи есть только в одной системе. Нажмите строку, чтобы увидеть чеки Billz и записи Кассы за этот день. В Кассе продажи считаются вместе с отмеченными долгами, погашения долгов не входят. Линзы считаются парами.</p>
-      <RowCards columns={ord(cols, "ds", phone)} rows={list.slice(pg.from, pg.to)} rowKey={(o) => o.d + "|" + o.p} rowClass={(o) => (o.ok ? undefined : "bg-minus-soft/40")} empty={only ? "Расхождений нет" : "Продаж за период нет"}
+      <RowCards className="max-w-[1400px]" columns={ord(cols, "ds", phone)} rows={list.slice(pg.from, pg.to)} rowKey={(o) => o.d + "|" + o.p} rowClass={(o) => (o.ok ? undefined : "bg-minus-soft/40")} empty={only ? "Расхождений нет" : "Продаж за период нет"}
         expand={(o) => <Detail ch={ch.filter((c) => c.d === o.d && c.point === o.p)} ks={ks.filter((s) => s.date === o.d && s.point === o.p)} d={o.d} p={o.p} />}
         footer={list.length ? <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 font-semibold"><span>Итого за период</span>
           <span className="num flex flex-wrap gap-x-4"><span><span className="font-normal text-muted-foreground">Billz </span>{fmt(T.bs)}</span><span><span className="font-normal text-muted-foreground">Касса </span>{fmt(T.ks)}</span><span><span className="font-normal text-muted-foreground">Разница </span>{sgn(T.ds)}</span></span></div> : undefined} />

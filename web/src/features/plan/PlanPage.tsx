@@ -58,7 +58,7 @@ export function PlanPage({ d }: { d: Data }) {
         <Card i={0} title="План не задан"><p className="text-[13.5px] text-muted-foreground">План на {monthTitle(month).split(" ")[0]} не задан — откройте «Настроить план» внизу и впишите сумму.</p></Card>
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3.5">
             <Tile i={0} className="sm:col-span-2">
               <div className="flex items-center gap-4">
                 <BigRing p={S.pct} color={fcol} />

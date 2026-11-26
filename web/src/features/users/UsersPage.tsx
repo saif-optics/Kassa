@@ -90,7 +90,7 @@ export function UsersPage() {
 
       {once && <PassOnce email={once.email} pw={once.pw} onClose={() => setOnce(null)} />}
 
-      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3.5">
         <Tile i={nx()} hero><TileLabel>Всего пользователей</TileLabel><TileValue count={rows.length} /><TileSub>{points.length ? `точек: ${points.length}` : " "}</TileSub></Tile>
         <Tile i={nx()}><TileLabel>Включено</TileLabel><TileValue count={on} /><TileSub>{rows.length - on > 0 ? `выключено: ${rows.length - on}` : "выключенных нет"}</TileSub></Tile>
         <Tile i={nx()}><TileLabel>По ролям</TileLabel><TileValue>{rows.length}</TileValue><TileSub>{roleTxt || "—"}</TileSub></Tile>
@@ -112,7 +112,7 @@ export function UsersPage() {
       {!q.isLoading && !q.isError && !rows.length && <p className="glass-inner rounded-2xl p-5 text-[13.5px] text-muted-foreground">Пока никого нет.</p>}
       {groups(rows, points).map((g) => (
         <Card key={g.key} i={nx()} title={g.title} note={`${g.rows.length} ${pl(g.rows.length, "пользователь", "пользователя", "пользователей")}`}>
-          <RowCards columns={cols()} rows={g.rows} rowKey={(u) => u.email} dense
+          <RowCards className="max-w-[1400px]" columns={cols()} rows={g.rows} rowKey={(u) => u.email} dense
             expand={(u) => <UserEdit key={u.email + String(u.active)} u={u} me={me} points={points} busy={busy} run={run} onPass={(pw) => setOnce({ email: u.email, pw })} />} />
         </Card>
       ))}

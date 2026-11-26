@@ -20,7 +20,7 @@ export function Tiles({ c, M, isLast, rec, st, lastRecNote, rsv, onCash, onReser
   const kind = diff == null ? (isLast ? "Пересчитайте кассу" : "Не пересчитывали") : diff > 0 ? "Недостача" : diff < 0 ? "Излишек" : "Касса сходится";
   const tone = (diff == null ? "muted" : diff > 0 ? "minus" : diff < 0 ? "warn" : "plus") as "muted" | "minus" | "warn" | "plus";
   return (
-    <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3.5">
       <Tile i={i0} hero>
         <TileLabel>{isLast ? "Должно быть на руках" : `Должно быть на конец месяца · ${monthName(M).toLowerCase()}`}</TileLabel>
         <TileValue count={c.expected} suffix=" сум" />

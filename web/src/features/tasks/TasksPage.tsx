@@ -50,7 +50,7 @@ export function TasksPage({ d }: { d: Data }) {
         ? <Button size="lg" onClick={() => setForm((x) => !x)}><Plus />Новое задание</Button>
         : <Button size="lg" onClick={() => setForm((x) => !x)}><TriangleAlert />Сообщить о проблеме</Button>} />
 
-      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3.5">
         <Tile i={nx()} hero>
           <TileLabel>Открыто</TileLabel>
           <TileValue count={st.open} format="sum" />

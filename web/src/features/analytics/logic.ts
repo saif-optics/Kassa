@@ -162,7 +162,7 @@ export function buildAnalytics(c: Ctx, F: Flt, on: (id: number) => boolean, pgCa
       const pm = r.to.slice(0, 7), x = compute(c.d, pm);
       C({ id: 26, label: "Касса за " + MN[+pm.slice(5, 7) - 1], v: "сдана ✓", d: `Б/Ч ${fmt(x.bcT)} − расходы ${fmt(x.sOp + x.sOth)} = ${fmt(x.expected)} сум` });
     } else {
-      const km = k.month ? MONTHS[+k.month.slice(5, 7) - 1] : "";
+      const km = k.month ? MN[+k.month.slice(5, 7) - 1] : "";
       C(k.actual != null ? { id: 26, label: k.diff! >= 0 ? "Излишек в кассе" : "Недостача в кассе", v: fmt(Math.abs(k.diff!)) + " сум", d: `за ${km}, на сегодня · должно ${fmt(k.expected)} · факт ${fmt(k.actual)}`, warn: k.diff! < 0 }
         : { id: 26, label: "Должно быть на руках", v: fmt(k.expected) + " сум", d: `касса за ${km}, на сегодня · пересчитайте кассу на вкладке «Касса»` });
     }
@@ -238,7 +238,7 @@ export function buildAnalytics(c: Ctx, F: Flt, on: (id: number) => boolean, pgCa
   }
   if (on(38)) {
     const rows: Bar[] = gc.map((o, i) => { const m = c.marginOf(list.filter((s) => (s.cat || "—") === o.k)); return { label: o.k, value: m.m != null ? m.m * 100 : 0, valTxt: m.m != null ? pctF(m.m) : "—", color: CATCOL[i % CATCOL.length], sub: m.rev ? `прибыль ${fmtM(m.gross)}` : "нет цен покупки" }; });
-    W([38], "Маржа по категориям", "Там, где известна цена покупки", mg.rev ? { kind: "hbars", items: rows } : { kind: "text", text: "Нет цен покупки. Пришлите список «Все товары» с ценами покупки." });
+    W([38], "Маржа по категориям", "Там, где известна цена покупки", mg.rev ? { kind: "hbars", items: rows } : { kind: "text", text: "Нет цен покупки. Пришлите список «Все товары» с ценами покупки." }, true);
   }
   if (on(39)) {
     const rows = ptItems.map((o) => {

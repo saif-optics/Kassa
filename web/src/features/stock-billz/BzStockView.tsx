@@ -92,7 +92,7 @@ export function BzStock({ reg }: { reg: Reg }) {
           <label className="flex h-9 items-center gap-2 text-[13.5px]"><Switch checked={only} onCheckedChange={setOnly} aria-label="Только с движением или расхождением" />Только с движением или расхождением</label>
         </FilterBar>
       </div>
-      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3.5">
         <Tile i={nx()} hero><TileLabel>{pt === "all" ? "Всего на остатке" : "Остаток · " + pt}</TileLabel><TileValue count={Q} suffix=" шт" /><TileSub>{`${L.filter((l) => l.now).length} позиций · ${dL(D.cur.d)} ${hm(D.cur.at)}`}</TileSub></Tile>
         <Tile i={nx()}><TileLabel>В розничных ценах</TileLabel><TileValue count={V} suffix=" сум" /><TileSub>{C ? `закупка ≈ ${fmt(C)} сум` : "закупочные цены Billz не отдаёт"}</TileSub></Tile>
         <Tile i={nx()}><TileLabel>{"Изменение " + cmpTxt}</TileLabel><TileValue className={D.cmp && dl >= 0 ? "text-plus" : undefined}>{D.cmp ? sgn(dl) + " шт" : "—"}</TileValue>
@@ -107,7 +107,7 @@ export function BzStock({ reg }: { reg: Reg }) {
         </Card>)}
       <Card i={nx()} title="Товары" note={`${fmt(items.length)} ${pl(items.length, "строка", "строки", "строк")}`}>
         <p className="text-[12.5px] text-muted-foreground">Сначала — с расхождением, затем с движением. Нажмите строку на телефоне, чтобы увидеть детали.</p>
-        <RowCards columns={phoneFirst(lineCols, "now", phone)} rows={items.slice(pg.from, pg.to)} rowKey={(l) => l.p + l.s} empty="Нет позиций под фильтр"
+        <RowCards className="max-w-[1400px]" columns={phoneFirst(lineCols, "now", phone)} rows={items.slice(pg.from, pg.to)} rowKey={(l) => l.p + l.s} empty="Нет позиций под фильтр"
           footer={items.length ? <div className="flex flex-wrap items-baseline justify-between gap-x-4 font-semibold"><span>Итого по фильтру</span><span className="num">{fmt(Q)} шт · {fmt(V)} сум</span></div> : undefined} />
         {pg.bar}
       </Card>
@@ -157,7 +157,7 @@ export function BzTransfers({ reg }: { reg: Reg }) {
         </FilterBar>
       </div>
       {q.isLoading ? note("Загружаю перемещения…") : q.error ? note("Не удалось загрузить перемещения: " + String((q.error as Error).message || q.error), true) : <>
-        <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3.5">
           <Tile i={nx()} hero><TileLabel>Перемещений</TileLabel><TileValue count={L.length} /><TileSub>{`${dS(f)} — ${dS(t)}`}</TileSub></Tile>
           <Tile i={nx()}><TileLabel>Отправлено</TileLabel><TileValue count={sent} suffix=" шт" /><TileSub>{`принято ${fmt(arr)} шт`}</TileSub></Tile>
           <Tile i={nx()}><TileLabel>В пути</TileLabel><TileValue count={way.length} /><TileSub>{way.length ? "ещё не приняты на точке" : "всё принято"}</TileSub></Tile>

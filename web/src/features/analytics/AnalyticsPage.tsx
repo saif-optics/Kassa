@@ -121,7 +121,7 @@ export function AnalyticsPage({ d }: { d: Data }) {
     const w = wd[i];
     if (w.group === "trio") {
       const grp: Widget[] = []; while (i < wd.length && wd[i].group === "trio") grp.push(wd[i++]); i--;
-      out.push(<div key={"trio" + w.ids[0]} className="grid gap-2 sm:gap-3.5 md:col-span-2 md:grid-cols-3 xl:col-span-3 min-[1920px]:col-span-4">{grp.map((g) => <Panel key={g.ids[0]} i={ni("w" + g.ids[0])} title={g.title} note={g.note} sum={wsum(g)} hintsOn={hintsOn}>{renderW(g, c.points, setPgCat)}</Panel>)}</div>);
+      out.push(<div key={"trio" + w.ids[0]} className="grid items-start gap-2 sm:gap-3.5 md:col-span-2 md:grid-cols-3 xl:col-span-3 min-[1920px]:col-span-4">{grp.map((g) => <Panel key={g.ids[0]} i={ni("w" + g.ids[0])} title={g.title} note={g.note} sum={wsum(g)} hintsOn={hintsOn}>{renderW(g, c.points, setPgCat)}</Panel>)}</div>);
     } else out.push(<Panel key={w.ids[0] + w.title} i={ni("w" + w.ids[0] + w.title)} title={w.title} sum={wsum(w)} note={w.kind === "owner" && !w.o ? undefined : w.note} hintsOn={hintsOn} className={w.wide ? "md:col-span-2 xl:col-span-3 min-[1920px]:col-span-4" : undefined}>{renderW(w, c.points, setPgCat)}</Panel>);
   }
   return out;
@@ -136,10 +136,10 @@ export function AnalyticsPage({ d }: { d: Data }) {
         : !sel.size ? <Empty>Все показатели выключены. Включите нужные в списке выше.</Empty>
         : (
           <>
-            {big.length > 0 && <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">{big.map((cd) => <MetricTile key={cd.id + cd.label} c={cd} i={ni("big" + cd.id)} hintsOn={hintsOn} />)}</div>}
+            {big.length > 0 && <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,230px),1fr))] gap-3.5">{big.map((cd) => <MetricTile key={cd.id + cd.label} c={cd} i={ni("big" + cd.id)} hintsOn={hintsOn} />)}</div>}
             {groups.map(([g, list], gi) => {
               const note = `${list.length} ${pl(list.length, "показатель", "показателя", "показателей")}`;
-              const tiles = <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-4">{list.map((cd) => <MiniTile key={cd.id + cd.label} c={cd} hintsOn={hintsOn} />)}</div>;
+              const tiles = <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,230px),1fr))] gap-2.5">{list.map((cd) => <MiniTile key={cd.id + cd.label} c={cd} hintsOn={hintsOn} />)}</div>;
               if (!phone) return <Card key={g} title={g} note={note} i={ni("g" + g)}>{tiles}</Card>;
               const open = openG.size ? openG.has(g) : gi === 0;
               const flip = () => setOpenG((o) => { const n = new Set(o.size ? o : [groups[0][0]]); if (n.has(g)) n.delete(g); else n.add(g); return n; });
@@ -155,7 +155,7 @@ export function AnalyticsPage({ d }: { d: Data }) {
                 </motion.section>
               );
             })}
-            <div className="grid grid-flow-row-dense gap-2 sm:gap-3.5 md:grid-cols-2 xl:grid-cols-3 min-[1920px]:grid-cols-4">{buildOut()}</div>
+            <div className="grid grid-flow-row-dense items-start gap-2 sm:gap-3.5 md:grid-cols-2 xl:grid-cols-3 min-[1920px]:grid-cols-4">{buildOut()}</div>
           </>
         )}
     </div>
@@ -185,7 +185,7 @@ function renderW(w: Widget, points: string[], setPgCat: (c: string) => void): Re
     case "line": return <LineC labels={w.labels} series={w.series} />;
     case "donut": return <DonutC items={w.items} center={w.center} sub={w.sub} />;
     case "groupBars": return <GroupBarsC labels={w.labels} series={w.series} />;
-    case "hbars": return <HBars items={w.items} rank={w.rank} dot={w.dot} />;
+    case "hbars": return <HBars items={w.items} rank={w.rank} dot={w.dot} cols={w.ids[0] === 38} />;
     case "expenses": return <><Sub>По точкам</Sub><HBars items={w.byPoint} /><Sub>По статьям</Sub><HBars items={w.byArt} /></>;
     case "waterfall": return w.steps ? <WaterfallC steps={w.steps} /> : <None />;
     case "bars": {
@@ -219,10 +219,10 @@ function renderW(w: Widget, points: string[], setPgCat: (c: string) => void): Re
       const cols: RowColumn<R>[] = [
         { key: "k", title: "Товар", main: true, cell: (o) => (
           <div className="flex min-w-0 flex-col gap-1.5">
-            <span className="flex min-w-0 items-center gap-2"><span className={cn("num grid size-5 shrink-0 place-items-center rounded-full text-[11px] font-semibold", w.rows.indexOf(o) < 3 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>{w.rows.indexOf(o) + 1}</span><span className="min-w-0 break-words">{o.k}</span></span>
+            <span className="flex min-w-0 items-center gap-2"><span className={cn("num grid size-5 shrink-0 place-items-center rounded-full text-[11px] font-semibold", w.rows.indexOf(o) < 3 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>{w.rows.indexOf(o) + 1}</span><span className="line-clamp-2 min-w-0 break-words">{o.k}</span></span>
             <span className="block h-1.5 overflow-hidden rounded-full bg-muted"><span className="block h-full rounded-full" style={{ width: o[w.by] / mx * 100 + "%", background: byR ? "var(--primary)" : "var(--chart-3)" }} /></span>
           </div>) },
-        { key: "cat", title: "Категория", cell: (o) => <span className="text-muted-foreground">{o.cat || "—"}</span> },
+        { key: "cat", title: "Категория", hideMobile: true, cell: (o) => <span className="text-muted-foreground">{o.cat || "—"}</span> },
         { key: "v", title: byR ? "Выручка" : "Штук", align: "right", cell: (o) => (byR ? fmt(o.r) : fmt(o.u) + " шт") },
         { key: "a", title: byR ? "Штук" : "Выручка", align: "right", sub: true, cell: (o) => (byR ? fmt(o.u) + " шт" : fmt(o.r)) },
         { key: "p", title: "Ср. цена", align: "right", sub: true, cell: (o) => "ср. " + fmt(o.u ? o.r / o.u : 0) },

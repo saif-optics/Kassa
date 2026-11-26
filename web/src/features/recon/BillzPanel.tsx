@@ -55,7 +55,7 @@ export function BillzPanel({ d, i = 0 }: { d: Data; i?: number }) {
       </div>
       <div><Chip tone={stTone} className="max-w-full whitespace-normal py-1 text-[12.5px]">{st.t}</Chip></div>
       {last && (
-        <div className="grid min-w-0 gap-5 lg:grid-cols-[1fr_1.4fr]">
+        <div className="grid min-w-0 items-start gap-5 lg:grid-cols-[1fr_1.4fr]">
           <div className="min-w-0">
             <b>Продажи</b>
             <p className="text-[13px] text-muted-foreground">{sl && sl.checks ? `добавлено ${sl.checks} ${pl(sl.checks, "чек", "чека", "чеков")}, оплачено ${fmt(sl.sum)} сум` : "новых чеков не было"}{sl?.debts?.length ? ` · долги: ${sl.debts.map((x) => dS(x.d) + " " + fmt(x.debt)).join(", ")}` : ""}</p>

@@ -7,14 +7,14 @@ const PCOL = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart
 export const pointColor = (points: string[], p: string) => { const i = points.indexOf(p); return PCOL[(i < 0 ? points.length : i) % PCOL.length]; };
 
 const Cell = ({ k, v, color }: { k: string; v: string; color?: string }) => (
-  <div className="glass-inner min-w-0 rounded-2xl px-3 py-2"><span className="block truncate text-[11px] text-muted-foreground">{k}</span><b className="num block truncate text-[14.5px]" style={color ? { color } : undefined}>{v}</b></div>
+  <div className="glass-inner min-w-0 rounded-2xl px-3 py-2"><span className="block text-[11px] leading-tight text-muted-foreground">{k}</span><b className="num block whitespace-nowrap text-[14.5px]" style={color ? { color } : undefined}>{v}</b></div>
 );
 
 export function Points({ rows, K, points, i0 = 0 }: { rows: PointRow[]; K: PlanCalc; points: string[]; i0?: number }) {
   if (!rows.length) return <div className="glass rounded-3xl p-6 text-center text-muted-foreground">Нет точек с планом</div>;
   const ranked = rows.filter((r) => r.pt).length;
   return (
-    <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2 xl:grid-cols-3">
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-3.5">
       {rows.map((r, i) => {
         const fc = r.pt ? plColor(K.past ? r.st.pct : r.st.fpct) : "var(--primary)", col = pointColor(points, r.p);
         return (

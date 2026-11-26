@@ -38,8 +38,6 @@ import type { Data } from "@/lib/types";
 // витрина общих компонентов — только в демо-режиме: ?demo#kit
 const KIT = () => isDemo && location.hash === "#kit";
 const PAGES: Record<string, (p: { d: Data }) => React.ReactNode> = { home: HomePage, kassa: KassaPage, report: ReportPage, pay: PayPage, sales: SalesPage, recon: ReconPage, analytics: AnalyticsPage, plan: PlanPage, lens: LensPage, batch: StockPage, tasks: TasksPage, users: UsersPage };
-// ширина страницы: true — «данные», не шире 2000px; false — «сводка», не шире 1600px; всё по центру
-const WIDE: Record<string, boolean> = { home: false, pay: false, plan: false, kassa: false, tasks: false, users: false, sales: true, report: true, recon: true, analytics: true, lens: true, batch: true };
 
 const qc = new QueryClient({ defaultOptions: { queries: { refetchOnWindowFocus: false, retry: 1 } } });
 
@@ -147,7 +145,7 @@ function Shell({ email }: { email: string }) {
         </div>
       </aside>
       <div className={cn("transition-[padding] duration-(--dur-base) ease-(--ease-out)", sb.min ? "sm:pl-16" : "sm:pl-64")}>
-      <div className={cn("mx-auto px-4 @container/main pt-5 pb-[calc(7rem+env(safe-area-inset-bottom))] sm:px-6 sm:pb-10 xl:px-9", WIDE[tab] ? "max-w-[2000px]" : "max-w-[1600px]")}>
+      <div className="px-4 @container/main pt-5 pb-[calc(7rem+env(safe-area-inset-bottom))] sm:px-6 sm:pb-10 xl:px-8">
         <div className="mb-6 flex min-h-11 items-center gap-2.5">
           <span className="glass flex items-center rounded-full px-4 py-2 sm:hidden"><Brand sub={false} /></span>
           <span className="glass hidden items-center gap-2 rounded-full px-4 py-2.5 text-[13.5px] sm:flex"><b>Saif-Optics</b><span className="text-muted-foreground">›</span><span className="text-muted-foreground">{NAV.find((n) => n.id === tab)?.label}</span></span>
@@ -176,7 +174,7 @@ function Shell({ email }: { email: string }) {
 }
 
 const Loading = () => (
-  <div className="mx-auto grid max-w-[1600px] gap-4 px-4 pt-5 sm:px-6 xl:px-9"><Skeleton className="h-24 rounded-3xl" /><div className="grid gap-4 sm:grid-cols-4">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-24 rounded-3xl" />)}</div><Skeleton className="h-96 rounded-3xl" /></div>
+  <div className="grid gap-4 px-4 pt-5 sm:px-6 xl:px-8"><Skeleton className="h-24 rounded-3xl" /><div className="grid gap-4 sm:grid-cols-4">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-24 rounded-3xl" />)}</div><Skeleton className="h-96 rounded-3xl" /></div>
 );
 
 // после входа: узнаём права; нет доступа — экран с кнопкой «Выйти»
