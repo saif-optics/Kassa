@@ -7,8 +7,8 @@ import { Shades, useScrollShade } from "@/components/ScrollShade";
 
 export type SegmentItem = { key: string; label: ReactNode; badge?: number };
 
-export function Segments({ items, value, onChange, size = "md", className, "aria-label": aria }: {
-  items: SegmentItem[]; value: string; onChange: (key: string) => void; size?: "sm" | "md"; className?: string; "aria-label"?: string;
+export function Segments({ items, value, onChange, size = "md", dense, className, "aria-label": aria }: {
+  items: SegmentItem[]; value: string; onChange: (key: string) => void; size?: "sm" | "md"; dense?: boolean; className?: string; "aria-label"?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion(), prev = useRef(value), sh = useScrollShade(ref);
@@ -39,7 +39,7 @@ export function Segments({ items, value, onChange, size = "md", className, "aria
         const on = it.key === value;
         return (
           <button key={it.key} type="button" role="tab" data-key={it.key} aria-selected={on} aria-current={on ? "true" : undefined} tabIndex={on ? 0 : -1} onClick={() => onChange(it.key)}
-            className={cn("relative z-10 inline-flex shrink-0 items-center gap-1.5 rounded-full bg-transparent px-3.5 text-[13.5px] font-medium whitespace-nowrap text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/40 aria-[current]:text-foreground", size === "sm" ? "h-8" : "h-9")}>
+            className={cn("relative z-10 inline-flex shrink-0 items-center gap-1.5 rounded-full bg-transparent text-[13.5px] font-medium whitespace-nowrap text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/40 aria-[current]:text-foreground", dense ? "px-2.5" : "px-3.5", size === "sm" ? "h-8" : "h-9")}>
             {it.label}
             {it.badge != null && it.badge > 0 && <span className="num rounded-full bg-primary/15 px-1.5 text-[11px] leading-[18px] font-semibold text-primary">{it.badge}</span>}
           </button>

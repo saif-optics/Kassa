@@ -35,14 +35,16 @@ export function MiniRing({ p, color = "var(--primary)", light }: { p: number; co
   );
 }
 
-export function LineC({ labels, series, h = 280 }: { labels: string[]; series: { name: string; color: string; vals: (number | null)[]; area?: boolean; dash?: boolean }[]; h?: number }) {
+const box = (h: number | "fill") => (h === "fill" ? { flex: "1 1 0", minHeight: 120 } : { height: h });
+
+export function LineC({ labels, series, h = 280 }: { labels: string[]; series: { name: string; color: string; vals: (number | null)[]; area?: boolean; dash?: boolean }[]; h?: number | "fill" }) {
   const phone = useIsPhone();
   if (!labels.length) return <None />;
   const data = labels.map((l, i) => { const o: Record<string, unknown> = { l }; series.forEach((s, k) => (o["s" + k] = s.vals[i])); return o; });
   const mx = Math.max(1, ...series.flatMap((s) => s.vals.filter((v): v is number => v != null && !isNaN(v)))), T = top(mx);
   return (
     <>
-      <div style={{ height: h }}>
+      <div style={box(h)}>
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={data} margin={{ top: 10, right: 12, bottom: 0, left: 0 }}>
             <CartesianGrid stroke={GRID} vertical={false} />
@@ -60,7 +62,7 @@ export function LineC({ labels, series, h = 280 }: { labels: string[]; series: {
   );
 }
 
-export function BarsC({ labels, vals, colors, color = "var(--chart-2)", hl, fmtV = fmt, lblV, h = 200 }: { labels: string[]; vals: number[]; colors?: string[]; color?: string; hl?: boolean; fmtV?: (v: number) => string; lblV?: (v: number) => string; h?: number }) {
+export function BarsC({ labels, vals, colors, color = "var(--chart-2)", hl, fmtV = fmt, lblV, h = 200 }: { labels: string[]; vals: number[]; colors?: string[]; color?: string; hl?: boolean; fmtV?: (v: number) => string; lblV?: (v: number) => string; h?: number | "fill" }) {
   const phone = useIsPhone();
   if (!labels.length) return <None />;
   const best = vals.indexOf(Math.max(...vals));
@@ -68,7 +70,7 @@ export function BarsC({ labels, vals, colors, color = "var(--chart-2)", hl, fmtV
   const small = labels.length <= 8;
   const dup = labels.some((l, i) => i > 0 && labels[i - 1] === l); // подряд идущие записи одного дня — подпись только у первой
   return (
-    <div style={{ height: h }}>
+    <div style={box(h)}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 18, right: 6, bottom: 0, left: 0 }}>
           <CartesianGrid stroke={GRID} vertical={false} />
@@ -84,13 +86,13 @@ export function BarsC({ labels, vals, colors, color = "var(--chart-2)", hl, fmtV
   );
 }
 
-export function GroupBarsC({ labels, series }: { labels: string[]; series: { name: string; color: string; vals: number[]; dash?: boolean }[] }) {
+export function GroupBarsC({ labels, series, h }: { labels: string[]; series: { name: string; color: string; vals: number[]; dash?: boolean }[]; h?: "fill" }) {
   const phone = useIsPhone();
   if (!labels.length) return <None />;
   const data = labels.map((l, i) => { const o: Record<string, unknown> = { l }; series.forEach((s, k) => (o["s" + k] = s.vals[i] || 0)); return o; });
   return (
     <>
-      <div className="h-[260px]">
+      <div className={h ? undefined : "h-[260px]"} style={h ? box(h) : undefined}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 16, right: 6, bottom: 0, left: 0 }}>
             <CartesianGrid stroke={GRID} vertical={false} />
@@ -152,7 +154,7 @@ export function HBars({ items, rank, dot, cols }: { items: HBar[]; rank?: boolea
   );
 }
 
-export function WaterfallC({ steps }: { steps: { label: string; value: number; type: "start" | "minus" | "total" }[] }) {
+export function WaterfallC({ steps, h }: { steps: { label: string; value: number; type: "start" | "minus" | "total" }[]; h?: "fill" }) {
   const phone = useIsPhone();
   let run = 0;
   const data = steps.map((s) => {
@@ -162,7 +164,8 @@ export function WaterfallC({ steps }: { steps: { label: string; value: number; t
     return { l: s.label, base: lo, d: hi - lo, v: s.value, col };
   });
   return (
-    <div className="h-[260px]">
+    <div className={h ? "flex min-h-0 flex-1 flex-col" : "h-[260px]"} style={h ? { minHeight: 150 } : undefined}>
+      <div className={h ? "min-h-0 flex-1" : "h-[calc(100%-1.25rem)]"}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 22, right: 6, bottom: 0, left: 0 }}>
           <CartesianGrid stroke={GRID} vertical={false} />
@@ -175,6 +178,7 @@ export function WaterfallC({ steps }: { steps: { label: string; value: number; t
           </Bar>
         </BarChart>
       </ResponsiveContainer>
+      </div>
       <div className="-mt-1 flex justify-around text-[12px] font-semibold num">{steps.map((s) => <span key={s.label}>{s.value < 0 ? "−" : ""}{fmtM(Math.abs(s.value))}</span>)}</div>
     </div>
   );
