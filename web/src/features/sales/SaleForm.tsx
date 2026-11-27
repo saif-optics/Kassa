@@ -6,15 +6,15 @@ import { Card } from "@/components/Card";
 import { Segments } from "@/components/Segments";
 import { useIsPhone } from "@/lib/useMedia";
 import { cn } from "@/lib/utils";
-import { Field, Note, Sel, digits, fmtIn } from "./parts";
+import { Field, Sel, digits, fmtIn } from "./parts";
 import { PAYS, fmt, normPay, normS, payOf, pointColor, todayTash, type SaleX, type Settings } from "./logic";
 
 export type SaleRec = Record<string, unknown>;
-type St = { date: string; point: string; check: string; cat: string; product: string; qty: string; price: string; sum: string; pay: string; mx: string[]; debt: string };
-const empty = (s: Settings, date = todayTash(), point = s.points[0]): St => ({ date, point, check: "", cat: s.cats[0], product: "", qty: "1", price: "", sum: "", pay: PAYS[0], mx: ["", "", "", ""], debt: "" });
+type St = { date: string; point: string; check: string; cat: string; product: string; qty: string; price: string; sum: string; pay: string; mx: string[]; debt: string; note: string };
+const empty = (s: Settings, date = todayTash(), point = s.points[0]): St => ({ date, point, check: "", cat: s.cats[0], product: "", qty: "1", price: "", sum: "", pay: PAYS[0], mx: ["", "", "", ""], debt: "", note: "" });
 const MIXED = "Смешанная";
 
-export function SaleForm({ sales, settings, editing, onSave, onCancel, dates, i = 0 }: { i?: number; dates?: { min: string; max: string }; sales: SaleX[]; settings: Settings; editing: SaleX | null; onSave: (id: string | null, rec: SaleRec) => Promise<void>; onCancel: () => void }) {
+export function SaleForm({ sales, settings, editing, onSave, onCancel, dates, extra, onTall, i = 0 }: { i?: number; extra?: React.ReactNode; onTall?: (tall: boolean) => void; dates?: { min: string; max: string }; sales: SaleX[]; settings: Settings; editing: SaleX | null; onSave: (id: string | null, rec: SaleRec) => Promise<void>; onCancel: () => void }) {
   const phone = useIsPhone();
   const [f, setF] = useState<St>(() => empty(settings)), [touched, setTouched] = useState(false);
   const [msg, setMsg] = useState<{ t: string; bad?: boolean } | null>(null), [busy, setBusy] = useState(false);
@@ -26,7 +26,7 @@ export function SaleForm({ sales, settings, editing, onSave, onCancel, dates, i 
   useEffect(() => {
     if (!editing) return;
     const s = editing, mixed = !!(s.pays && Object.keys(s.pays).length > 1), o = payOf(s);
-    setF({ date: s.date, point: s.point, check: s.check || "", cat: s.cat || settings.cats[0], product: s.product || "", qty: String(s.qty ?? 1), price: fmt(s.price || 0), sum: fmt(s.sum), pay: mixed ? MIXED : normPay(s.pay), mx: PAYS.map((p) => (mixed && o[p] ? fmt(o[p]) : "")), debt: s.debt ? fmt(s.debt) : "" });
+    setF({ date: s.date, point: s.point, check: s.check || "", cat: s.cat || settings.cats[0], product: s.product || "", qty: String(s.qty ?? 1), price: fmt(s.price || 0), sum: fmt(s.sum), pay: mixed ? MIXED : normPay(s.pay), mx: PAYS.map((p) => (mixed && o[p] ? fmt(o[p]) : "")), debt: s.debt ? fmt(s.debt) : "", note: s.note || "" });
     setTouched(true); root.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [editing, settings.cats]);
   // точка могла исчезнуть из настроек
@@ -61,6 +61,7 @@ export function SaleForm({ sales, settings, editing, onSave, onCancel, dates, i 
       if (tot !== sum) return note(`Сумма частей (${fmt(tot)}) не равна оплаченному (${fmt(sum)}).`, true);
       rec.pays = pays; rec.pay = MIXED;
     } else { rec.pay = f.pay; rec.pays = null; }
+    const nt = f.note.trim(); if (nt || editing?.note) rec.note = nt;
     const debt = digits(f.debt); rec.debt = !isNaN(debt) && debt > 0 ? debt : undefined;
     setBusy(true);
     try {
@@ -71,38 +72,42 @@ export function SaleForm({ sales, settings, editing, onSave, onCancel, dates, i 
   };
   const mixed = f.pay === MIXED;
   const mxTot = f.mx.reduce((a, v) => a + (digits(v) || 0), 0);
+  // смешанная оплата добавляет строку: блок мозаики на странице становится на ряд выше
+  useEffect(() => { onTall?.(mixed); return () => onTall?.(false); }, [mixed]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const IN = "h-9 text-[15px]";
   return (
-    <div ref={root}><Card title={editing ? "Изменить продажу" : "Новая продажа"} i={i}>
-      <Note>Одна строка — одна позиция. Сумма = кол-во × цена; если заплатили меньше, впишите фактическую сумму, разница считается скидкой.</Note>
-      <form onSubmit={submit} autoComplete="off" className="grid gap-3">
-        <div className="grid gap-1.5"><span className="text-[12px] text-muted-foreground">Точка</span>
-          {settings.points.length < 2 ? <span className="inline-flex w-fit items-center gap-2 text-[13.5px] font-medium"><i className="size-2.5 rounded-full" style={{ background: pointColor(settings.points[0], settings.points) }} />{settings.points[0]}</span>
-          : phone
-            ? <Segments size="sm" aria-label="Точка" value={f.point} onChange={(v) => set("point", v)} items={settings.points.map((p) => ({ key: p, label: <><i className="size-2.5 rounded-full" style={{ background: pointColor(p, settings.points) }} />{p}</> }))} />
-            : <div role="radiogroup" aria-label="Точка" className="flex flex-wrap gap-1.5">{settings.points.map((p) => (
-            <button key={p} type="button" role="radio" aria-checked={f.point === p} onClick={() => set("point", p)}
-              className={cn("inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[13.5px] font-medium transition outline-none focus-visible:ring-3 focus-visible:ring-primary/30", f.point === p ? "border-primary bg-accent text-accent-foreground" : "border-border hover:bg-muted")}>
-              <i className="size-2.5 rounded-full" style={{ background: pointColor(p, settings.points) }} />{p}</button>))}</div>}</div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="Дата"><Input type="date" value={f.date} min={dates?.min} max={dates?.max} onChange={(e) => set("date", e.target.value)} aria-label="Дата" className="num" /></Field>
-          <Field label="Чек №"><Input value={f.check} onChange={(e) => set("check", e.target.value)} placeholder="необязательно" aria-label="Чек №" /></Field>
-          <Field label="Категория" className="sm:col-span-2"><Sel label="Категория" value={f.cat} onChange={(v) => set("cat", v)} options={settings.cats.includes(f.cat) ? settings.cats : [f.cat, ...settings.cats]} /></Field>
-          <Field label="Товар" className="sm:col-span-2"><Input ref={productRef} list="sales-products" value={f.product} onChange={(e) => set("product", e.target.value)} onBlur={pickProduct} onInput={(e) => { if (!(e.nativeEvent as InputEvent).inputType) pickProduct(); }} placeholder="Например: Оправа 5802 или Линзы 1.61 блю-блок" aria-label="Товар" /></Field>
+    <div ref={root} className="h-full"><Card title={editing ? "Изменить продажу" : "Новая продажа"} i={i}
+      action={<span role="status" className={cn("text-[13px] font-normal", msg ? (msg.bad ? "text-minus" : "text-plus") : "text-muted-foreground")}>{msg ? msg.t : "чек можно дополнить позже"}</span>}>
+      <form onSubmit={submit} autoComplete="off" className="flex min-h-0 flex-1 flex-col gap-2.5">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 @min-[640px]/main:grid-cols-3">
+          <Field label="Дата" className="col-span-2 @min-[640px]/main:col-span-1"><Input type="date" value={f.date} min={dates?.min} max={dates?.max} onChange={(e) => set("date", e.target.value)} aria-label="Дата" className={cn("num", IN)} /></Field>
+          <div className="col-span-2 grid content-start gap-1.5"><span className="text-[13px] text-muted-foreground">Точка</span>
+            {settings.points.length < 2 ? <span className="inline-flex h-10 w-fit items-center gap-2 text-[15px] font-medium"><i className="size-2.5 rounded-full" style={{ background: pointColor(settings.points[0], settings.points) }} />{settings.points[0]}</span>
+            : phone
+              ? <Segments size="sm" aria-label="Точка" value={f.point} onChange={(v) => set("point", v)} items={settings.points.map((p) => ({ key: p, label: <><i className="size-2.5 rounded-full" style={{ background: pointColor(p, settings.points) }} />{p}</> }))} />
+              : <div role="radiogroup" aria-label="Точка" className="flex flex-wrap gap-1">{settings.points.map((p) => (
+              <button key={p} type="button" role="radio" aria-checked={f.point === p} onClick={() => set("point", p)}
+                className={cn("inline-flex h-9 items-center gap-1.5 rounded-full border px-2 text-[13px] @min-[1600px]/main:gap-2 @min-[1600px]/main:px-3 @min-[1600px]/main:text-[14px] font-medium transition outline-none focus-visible:ring-3 focus-visible:ring-primary/30", f.point === p ? "border-primary bg-accent text-accent-foreground" : "border-border hover:bg-muted")}>
+                <i className="size-2.5 rounded-full" style={{ background: pointColor(p, settings.points) }} />{p}</button>))}</div>}</div>
+          <Field label="Товар" className="col-span-2"><Input ref={productRef} list="sales-products" value={f.product} onChange={(e) => set("product", e.target.value)} onBlur={pickProduct} onInput={(e) => { if (!(e.nativeEvent as InputEvent).inputType) pickProduct(); }} placeholder="Например: Оправа 5802 или Линзы 1.61 блок" aria-label="Товар" className={IN} /></Field>
           <datalist id="sales-products">{names.map((n) => <option key={n} value={n} />)}</datalist>
-          <Field label="Кол-во"><Input ref={qtyRef} inputMode="numeric" value={f.qty} onChange={(e) => setQty(e.target.value)} aria-label="Количество" className="num" /></Field>
-          <Field label="Цена, сум"><Input ref={priceRef} inputMode="numeric" value={f.price} onChange={(e) => setPrice(e.target.value)} placeholder="450 000" aria-label="Цена" className="num" /></Field>
-          <Field label="Оплачено, сум"><Input inputMode="numeric" value={f.sum} onChange={(e) => setSum(e.target.value)} placeholder="авто" aria-label="Оплачено" className="num" /></Field>
-          <Field label="Оплата"><Sel label="Оплата" value={f.pay} onChange={(v) => set("pay", v)} options={[...PAYS, MIXED]} /></Field>
+          <Field label="Чек №"><Input value={f.check} onChange={(e) => set("check", e.target.value)} placeholder="необязательно" aria-label="Чек №" className={IN} /></Field>
+          <Field label="Категория"><Sel label="Категория" value={f.cat} onChange={(v) => set("cat", v)} options={settings.cats.includes(f.cat) ? settings.cats : [f.cat, ...settings.cats]} className="data-[size=default]:h-9 text-[15px]" /></Field>
+          <Field label="Кол-во"><Input ref={qtyRef} inputMode="numeric" value={f.qty} onChange={(e) => setQty(e.target.value)} aria-label="Количество" className={cn("num", IN)} /></Field>
+          <Field label="Цена, сум"><Input ref={priceRef} inputMode="numeric" value={f.price} onChange={(e) => setPrice(e.target.value)} placeholder="450 000" aria-label="Цена" className={cn("num", IN)} /></Field>
+          <Field label="Оплачено, сум"><Input inputMode="numeric" value={f.sum} onChange={(e) => setSum(e.target.value)} placeholder="авто" aria-label="Оплачено" className={cn("num", IN)} /></Field>
+          <Field label="Оплата"><Sel label="Оплата" value={f.pay} onChange={(v) => set("pay", v)} options={[...PAYS, MIXED]} className="data-[size=default]:h-9 text-[15px]" /></Field>
+          <Field label="Долг, сум" className="max-sm:col-span-2"><Input inputMode="numeric" value={f.debt} onChange={(e) => set("debt", fmtIn(e.target.value, fmt))} placeholder="если ещё должен" aria-label="Долг" className={cn("num", IN)} /></Field>
         </div>
-        {mixed && <div className="glass-inner grid gap-3 rounded-2xl p-3 sm:grid-cols-2">
-          {PAYS.map((p, i) => <Field key={p} label={p === "Наличные" ? "Наличные" : p === "Терминал" ? "Терминал" : p}><Input inputMode="numeric" value={f.mx[i]} aria-label={"Оплачено: " + p} className="num" onChange={(e) => setF((x) => ({ ...x, mx: x.mx.map((v, j) => (j === i ? fmtIn(e.target.value, fmt) : v)) }))} /></Field>)}
-          <p className={cn("text-[12.5px] sm:col-span-2", mxTot && mxTot === (digits(f.sum) || 0) ? "text-plus" : "text-muted-foreground")}>Сумма частей: <b className="num">{fmt(mxTot)}</b> из <b className="num">{fmt(digits(f.sum) || 0)}</b></p></div>}
-        <Field label="Долг, сум (необязательно)"><Input inputMode="numeric" value={f.debt} onChange={(e) => set("debt", fmtIn(e.target.value, fmt))} placeholder="если покупатель ещё должен" aria-label="Долг" className="num" /></Field>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button type="submit" disabled={busy} className="max-sm:h-11 max-sm:w-full">{editing ? "Сохранить изменения" : "Добавить продажу"}</Button>
-          {editing && <Button type="button" variant="secondary" onClick={cancel} className="max-sm:h-11 max-sm:w-full">Отменить правку</Button>}
-          <span role="status" className={cn("text-[13px]", msg?.bad ? "text-minus" : "text-plus")}>{msg?.t}</span>
+        {mixed && <div className="glass-inner grid grid-cols-2 gap-x-4 gap-y-2 rounded-2xl p-3 @min-[640px]/main:grid-cols-4">
+          {PAYS.map((p, k) => <Field key={p} label={p}><Input inputMode="numeric" value={f.mx[k]} aria-label={"Оплачено: " + p} className={cn("num", IN)} onChange={(e) => setF((x) => ({ ...x, mx: x.mx.map((v, j) => (j === k ? fmtIn(e.target.value, fmt) : v)) }))} /></Field>)}
+          <p className={cn("col-span-2 text-[13px] @min-[640px]/main:col-span-4", mxTot && mxTot === (digits(f.sum) || 0) ? "text-plus" : "text-muted-foreground")}>Сумма частей: <b className="num">{fmt(mxTot)}</b> из <b className="num">{fmt(digits(f.sum) || 0)}</b></p></div>}
+        <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-2.5">
+          <Button type="submit" disabled={busy} className="h-9 rounded-full px-5 text-[15px] max-sm:h-11 max-sm:w-full">{editing ? "Сохранить изменения" : "Добавить продажу"}</Button>
+          {editing && <Button type="button" variant="secondary" onClick={cancel} className="h-9 rounded-full px-5 text-[15px] max-sm:h-11 max-sm:w-full">Отменить правку</Button>}
+          {extra}
+          <div className="min-w-[10rem] flex-1 max-sm:min-w-full"><Input value={f.note} onChange={(e) => set("note", e.target.value)} placeholder="скидка, долг, задаток" aria-label="Пометка" className={IN} /></div>
         </div>
       </form>
     </Card></div>

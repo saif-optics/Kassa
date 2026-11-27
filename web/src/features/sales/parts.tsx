@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 
 export const Field = ({ label, children, className }: { label: React.ReactNode; children: React.ReactNode; className?: string }) => (
-  <div className={cn("grid min-w-0 content-start gap-1.5", className)}><Label className="text-[12px] text-muted-foreground">{label}</Label>{children}</div>
+  <div className={cn("grid min-w-0 content-start gap-1.5", className)}><Label className="text-[13px] text-muted-foreground">{label}</Label>{children}</div>
 );
 
 const E = "__empty";

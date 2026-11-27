@@ -2,7 +2,10 @@
 // Состояние общее для всех разделов, где он подключён (Продажи, Аналитика, Линзы), как на рабочем сайте.
 // Использование: const { F, pick } = useSalesFilter(); <SalesFilter d={d} />  (в «Линзах» — <SalesFilter d={d} lens />)
 import { useSyncExternalStore } from "react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
+import { useIsPhone } from "@/lib/useMedia";
 import { Card } from "@/components/Card";
 import { FilterBar } from "@/components/FilterSheet";
 import { Segments } from "@/components/Segments";
@@ -36,11 +39,44 @@ export function useSalesFilter() {
   };
 }
 
-export function SalesFilter({ d, lens, className, i = 0 }: { d: Data; lens?: boolean; className?: string; i?: number }) {
+/** поля фильтра: даты, месяц, точка, категория (или вид линзы) */
+function Fields({ d, lens }: { d: Data; lens?: boolean }) {
   const f = useSalesFilter(), { F } = f, c = ctxOf(d), months = monthsOf(c.sales), cm = curMonth(F, c.today);
+  const lk = lens ? lensKindsIn(c, F) : [];
+  return (
+    <>
+      <div className="grid grid-cols-2 gap-2 sm:flex sm:items-end">
+        <Field label="С"><Input type="date" value={F.from} onChange={(e) => f.setRange(e.target.value, F.to)} aria-label="С" className="num w-full sm:w-[9.5rem]" /></Field>
+        <Field label="По"><Input type="date" value={F.to} onChange={(e) => f.setRange(F.from, e.target.value)} aria-label="По" className="num w-full sm:w-[9.5rem]" /></Field>
+      </div>
+      <Field label="Месяц" className="sm:w-44"><Sel label="Месяц" value={cm} onChange={f.setMonth} options={[{ v: "", l: "Свой период" }, ...months.map((m) => ({ v: m, l: MONTHS_F[+m.slice(5, 7) - 1] + " " + m.slice(0, 4) }))]} /></Field>
+      <Field label="Точка" className="sm:w-44"><Sel label="Точка" value={F.point} onChange={f.setPoint} options={[{ v: "all", l: "Все точки" }, ...c.settings.points]} /></Field>
+      {lens
+        ? <Field label="Вид линзы" className="sm:w-52"><Sel label="Вид линзы" value={F.lk} onChange={f.setLens} options={[{ v: "all", l: "Все виды линз" }, ...lk]} /></Field>
+        : <Field label="Категория" className="sm:w-52"><Sel label="Категория" value={F.cat} onChange={f.setCat} options={[{ v: "all", l: "Все категории" }, ...c.settings.cats]} /></Field>}
+    </>
+  );
+}
+
+/** лист фильтров раздела «Продажи»: открывается ссылкой «фильтры» в шапке; на телефоне снизу, на компьютере справа */
+export function SalesFilterSheet({ d, open, onOpenChange }: { d: Data; open: boolean; onOpenChange: (o: boolean) => void }) {
+  const phone = useIsPhone();
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side={phone ? "bottom" : "right"} showCloseButton={!phone} className="gap-0 p-5 max-sm:max-h-[85dvh] max-sm:rounded-t-[28px] max-sm:p-4">
+        <SheetTitle className="mb-1 text-lg font-bold">Фильтры</SheetTitle>
+        <SheetDescription className="mb-4 text-[13px]">Период, точка и категория для всего раздела</SheetDescription>
+        <div className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto pb-1 [&>*]:w-full"><Fields d={d} /></div>
+        <Button type="button" className="mt-4 h-11 w-full rounded-full" onClick={() => onOpenChange(false)}>Готово</Button>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+export function SalesFilter({ d, lens, className, i = 0 }: { d: Data; lens?: boolean; className?: string; i?: number }) {
+  const f = useSalesFilter(), { F } = f, c = ctxOf(d);
   const r = rangeOf(F, filtered(c, F), c.today);
   const info = F.from || F.to ? `Показано: ${dLong(F.from || r.from)} — ${dLong(F.to || r.to)}` + (F.point !== "all" ? ` · ${F.point}` : "") + (F.cat !== "all" ? ` · ${F.cat}` : "") : "Показаны все продажи";
-  const lk = lens ? lensKindsIn(c, F) : [];
   // для телефона: «01.11 — 24.11 · Все точки · Все категории»
   const summary = `${dShort(F.from || r.from)} — ${dShort(F.to || r.to)} · ${F.point === "all" ? "Все точки" : F.point} · ${lens ? (F.lk === "all" ? "Все виды линз" : F.lk) : (F.cat === "all" ? "Все категории" : F.cat)}`;
   const count = (F.preset === "custom" ? 1 : 0) + (F.point !== "all" ? 1 : 0) + (lens ? (F.lk !== "all" ? 1 : 0) : (F.cat !== "all" ? 1 : 0));
@@ -48,15 +84,7 @@ export function SalesFilter({ d, lens, className, i = 0 }: { d: Data; lens?: boo
     <Card title="Период" i={i} className={className}>
       <Segments aria-label="Период" items={PRESETS.map(([key, label]) => ({ key, label }))} value={F.preset === "custom" ? "" : F.preset} onChange={f.setPreset} />
       <FilterBar summary={summary} count={count}>
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:items-end">
-          <Field label="С"><Input type="date" value={F.from} onChange={(e) => f.setRange(e.target.value, F.to)} aria-label="С" className="num w-full sm:w-[9.5rem]" /></Field>
-          <Field label="По"><Input type="date" value={F.to} onChange={(e) => f.setRange(F.from, e.target.value)} aria-label="По" className="num w-full sm:w-[9.5rem]" /></Field>
-        </div>
-        <Field label="Месяц" className="sm:w-44"><Sel label="Месяц" value={cm} onChange={f.setMonth} options={[{ v: "", l: "Свой период" }, ...months.map((m) => ({ v: m, l: MONTHS_F[+m.slice(5, 7) - 1] + " " + m.slice(0, 4) }))]} /></Field>
-        <Field label="Точка" className="sm:w-44"><Sel label="Точка" value={F.point} onChange={f.setPoint} options={[{ v: "all", l: "Все точки" }, ...c.settings.points]} /></Field>
-        {lens
-          ? <Field label="Вид линзы" className="sm:w-52"><Sel label="Вид линзы" value={F.lk} onChange={f.setLens} options={[{ v: "all", l: "Все виды линз" }, ...lk]} /></Field>
-          : <Field label="Категория" className="sm:w-52"><Sel label="Категория" value={F.cat} onChange={f.setCat} options={[{ v: "all", l: "Все категории" }, ...c.settings.cats]} /></Field>}
+        <Fields d={d} lens={lens} />
       </FilterBar>
       <p className="text-[13px] text-muted-foreground max-sm:hidden">{info}</p>
     </Card>

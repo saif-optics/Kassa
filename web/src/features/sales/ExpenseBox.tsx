@@ -15,7 +15,7 @@ const LIST = ["Такси", "Доставка", "Доставка линз", "М
 /** full — обычная форма и удаление; simple — продавец (название, сумма, дата; своя точка); view — только список */
 export type ExpMode = "full" | "simple" | "view";
 
-export function ExpenseBox({ exp, settings, onAdd, onDelete, mode = "full", onAddSimple, canDelete = () => true, dates, i = 0 }: { i?: number; exp: DayExp[]; settings: Settings; onAdd: (v: { date: string; point: string; name: string; amount: number }) => Promise<void>; onDelete: (id: string) => Promise<void>;
+export function ExpenseBox({ exp, settings, onAdd, onDelete, mode = "full", onAddSimple, canDelete = () => true, dates, bare, i = 0 }: { i?: number; bare?: boolean; exp: DayExp[]; settings: Settings; onAdd: (v: { date: string; point: string; name: string; amount: number }) => Promise<void>; onDelete: (id: string) => Promise<void>;
   mode?: ExpMode; onAddSimple?: (v: { date: string; name: string; amount: number }) => Promise<void>; canDelete?: (e: DayExp) => boolean; dates?: { min: string; max: string } }) {
   const phone = useIsPhone();
   const [date, setDate] = useState(todayTash()), [point, setPoint] = useState(settings.points[0]), [name, setName] = useState(""), [amount, setAmount] = useState("");
@@ -54,7 +54,7 @@ export function ExpenseBox({ exp, settings, onAdd, onDelete, mode = "full", onAd
     ...(canDel ? [{ key: "del", title: "", hideMobile: true, width: "3rem", cell: (e) => <span className="flex justify-end">{delBtn(e)}</span> } as RowColumn<DayExp>] : []),
   ];
   return (
-    <Card title="Расход дня" i={i}>
+    <Wrap bare={bare} i={i}>
       {mode !== "view" && <><Note>Такси, доставка, мастер, вода и т.п. Расходы Премиума и Яшнабада сразу попадают в кассу.</Note>
       <form onSubmit={submit} autoComplete="off" className="grid gap-3 sm:grid-cols-2">
         <Field label="Дата"><Input type="date" value={date} min={dates?.min} max={dates?.max} onChange={(e) => setDate(e.target.value)} aria-label="Дата расхода" className="num" /></Field>
@@ -76,6 +76,9 @@ export function ExpenseBox({ exp, settings, onAdd, onDelete, mode = "full", onAd
         {all.length ? <><ChevronRight className={cn("transition-transform", openList && "rotate-90")} />{openList ? "Свернуть список расходов" : `Показать расходы за период (${all.length}) · −${fmt(sum)} сум`}</> : "Расходов дня за период нет"}</Button>
       {openList && all.length > 0 && <div>
         <RowCards rows={pg.slice(all)} rowKey={(e) => e.id} columns={cols} expand={phone && canDel ? (e) => delBtn(e, true) : undefined} />        <Pager pg={pg} /></div>}
-    </Card>
+    </Wrap>
   );
 }
+
+/** карточка «Расход дня»; bare — без карточки (внутри листа) */
+const Wrap = ({ bare, i, children }: { bare?: boolean; i: number; children: React.ReactNode }) => bare ? <div className="grid gap-2.5">{children}</div> : <Card title="Расход дня" i={i}>{children}</Card>;

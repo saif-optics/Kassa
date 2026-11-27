@@ -1,5 +1,5 @@
 // Шапка страницы: надпись над заголовком, заголовок, дата или пояснение, кнопки справа.
-export function PageHead({ eyebrow, title, sub, actions }: { eyebrow?: string; title: string; sub?: string; actions?: React.ReactNode }) {
+export function PageHead({ eyebrow, title, sub, actions }: { eyebrow?: string; title: string; sub?: React.ReactNode; actions?: React.ReactNode }) {
   return (
     <header className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-4">
       <div className="min-w-0">
