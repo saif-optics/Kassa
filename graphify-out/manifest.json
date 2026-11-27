@@ -24,9 +24,9 @@
     "semantic_hash": ""
   },
   "dev/graph-src/base.html.js": {
-    "mtime": 1795591491.935189,
-    "seen": 1795591505.8980424,
-    "ast_hash": "5c0be872eadbe0145f6a581a8accb0a3",
+    "mtime": 1795800411.3415604,
+    "seen": 1795800425.990969,
+    "ast_hash": "e67f64e25a2057a501b25eb1a40332da",
     "semantic_hash": ""
   },
   "dev/graph_src.py": {
@@ -132,9 +132,9 @@
     "semantic_hash": ""
   },
   "dev/base.html": {
-    "mtime": 1795011097.239198,
-    "seen": 1795591505.8980424,
-    "ast_hash": "4ecd2e5c52c8958c7676f5f542221b7c",
+    "mtime": 1795800144.452591,
+    "seen": 1795800166.1305127,
+    "ast_hash": "4da8a4aec71bbe48a6f3d90a7bd91a51",
     "semantic_hash": ""
   },
   "dev/shim.html": {
@@ -552,9 +552,9 @@
     "semantic_hash": ""
   },
   "web/src/features/analytics/cost.ts": {
-    "mtime": 1794230979.9893432,
-    "seen": 1795591505.8980424,
-    "ast_hash": "cb7cb0fae66215478da78c26e8b5e273",
+    "mtime": 1795800136.48206,
+    "seen": 1795800166.1141806,
+    "ast_hash": "26e0e5ab87b8050172682946f75eed42",
     "semantic_hash": ""
   },
   "web/src/features/analytics/demo.ts": {
@@ -576,9 +576,9 @@
     "semantic_hash": ""
   },
   "web/src/features/analytics/logic.ts": {
-    "mtime": 1795717744.6320627,
-    "seen": 1795718462.1341963,
-    "ast_hash": "e4575f7f4ec42492ac9d6c53f63d54c5",
+    "mtime": 1795800136.484059,
+    "seen": 1795800166.1152484,
+    "ast_hash": "b8ab7ee0161dc9faf19e78836c474d5d",
     "semantic_hash": ""
   },
   "web/src/features/analytics/parts.tsx": {
@@ -588,9 +588,9 @@
     "semantic_hash": ""
   },
   "web/src/features/analytics/texts.ts": {
-    "mtime": 1794752477.1171746,
-    "seen": 1795591505.8980424,
-    "ast_hash": "f6e5df9642f7be20fed6fdd8370870be",
+    "mtime": 1795800334.1848714,
+    "seen": 1795800426.0053487,
+    "ast_hash": "8740f1fa7d37157327882ee49231d09d",
     "semantic_hash": ""
   },
   "web/src/features/analytics/util.ts": {
@@ -636,9 +636,9 @@
     "semantic_hash": ""
   },
   "web/src/features/home/logic.ts": {
-    "mtime": 1795615338.417912,
-    "seen": 1795615418.1560924,
-    "ast_hash": "b1dd08f2a6631bde13bd113482694a41",
+    "mtime": 1795800136.4850588,
+    "seen": 1795800166.1167533,
+    "ast_hash": "8635e9afaafa0b8848b40302612b1d51",
     "semantic_hash": ""
   },
   "web/src/features/kassa/AddForm.tsx": {
@@ -648,9 +648,9 @@
     "semantic_hash": ""
   },
   "web/src/features/kassa/Analysis.tsx": {
-    "mtime": 1795726294.5930445,
-    "seen": 1795726346.4215827,
-    "ast_hash": "caf291b5bf284a882388bde7ea008f50",
+    "mtime": 1795800136.4870625,
+    "seen": 1795800166.1167533,
+    "ast_hash": "678ebeb696c19801a8228af9c85be071",
     "semantic_hash": ""
   },
   "web/src/features/kassa/Journal.tsx": {
@@ -660,14 +660,14 @@
     "semantic_hash": ""
   },
   "web/src/features/kassa/KassaPage.tsx": {
-    "mtime": 1795726197.7497134,
-    "seen": 1795726346.4215827,
-    "ast_hash": "f0eca517cf716c1b57627ef7093a980d",
+    "mtime": 1795800136.4860604,
+    "seen": 1795800166.1167533,
+    "ast_hash": "130888c78a869c358466f4c60f48ce75",
     "semantic_hash": ""
   },
   "web/src/features/kassa/Steps.tsx": {
-    "mtime": 1795726170.7553368,
-    "seen": 1795726346.4215827,
+    "mtime": 1795800125.3327053,
+    "seen": 1795800166.1167533,
     "ast_hash": "ef16dd20746bb15471189d63698654ba",
     "semantic_hash": ""
   },
@@ -678,9 +678,9 @@
     "semantic_hash": ""
   },
   "web/src/features/kassa/logic.ts": {
-    "mtime": 1795011097.239198,
-    "seen": 1795591505.8980424,
-    "ast_hash": "0907a57c5bba76ee97f2e3d490caf9e3",
+    "mtime": 1795800136.484059,
+    "seen": 1795800166.1167533,
+    "ast_hash": "643b1919fc2435098167650c4f8545a8",
     "semantic_hash": ""
   },
   "web/src/features/lens/LensFilter.tsx": {
@@ -888,9 +888,9 @@
     "semantic_hash": ""
   },
   "web/src/features/sales/Calendar.tsx": {
-    "mtime": 1795761148.9543378,
-    "seen": 1795799510.268579,
-    "ast_hash": "ef7ca7a3d63427fa6c0f2633d39b0412",
+    "mtime": 1795800243.8738089,
+    "seen": 1795800426.013528,
+    "ast_hash": "0f0bd7acc4965a17c10e25a9f53aa904",
     "semantic_hash": ""
   },
   "web/src/features/sales/DayCash.tsx": {
@@ -906,9 +906,9 @@
     "semantic_hash": ""
   },
   "web/src/features/sales/ExpenseBox.tsx": {
-    "mtime": 1795760950.9052513,
-    "seen": 1795799510.268579,
-    "ast_hash": "b5531b463a6b93e43476f38bdb06c260",
+    "mtime": 1795800125.0794435,
+    "seen": 1795800166.1227584,
+    "ast_hash": "7ecf781df1569677a64941b09df4efa6",
     "semantic_hash": ""
   },
   "web/src/features/sales/Extras.tsx": {
@@ -930,15 +930,15 @@
     "semantic_hash": ""
   },
   "web/src/features/sales/SalesPage.tsx": {
-    "mtime": 1795761215.3503077,
-    "seen": 1795799510.268579,
-    "ast_hash": "dec62678342626966b228034a85ac2e1",
+    "mtime": 1795800125.0914457,
+    "seen": 1795800166.1237578,
+    "ast_hash": "673a1709fedcd1c643d21d59016411d0",
     "semantic_hash": ""
   },
   "web/src/features/sales/Stats.tsx": {
-    "mtime": 1795761148.956341,
-    "seen": 1795799510.268579,
-    "ast_hash": "d21550b7425b4bbb6a420ddc7c8538fd",
+    "mtime": 1795800196.2496774,
+    "seen": 1795800426.0145252,
+    "ast_hash": "102af86e6fbf17cdf8a4f1c058bf4c2c",
     "semantic_hash": ""
   },
   "web/src/features/sales/debts.ts": {
@@ -966,9 +966,9 @@
     "semantic_hash": ""
   },
   "web/src/features/sales/logic.ts": {
-    "mtime": 1795615363.8768735,
-    "seen": 1795615418.164598,
-    "ast_hash": "d1efee2f08c1eb48fd81882b6c24fcf7",
+    "mtime": 1795800136.4830577,
+    "seen": 1795800166.124878,
+    "ast_hash": "3eae8e129bb656702a254a0ad496b9b8",
     "semantic_hash": ""
   },
   "web/src/features/sales/parts.tsx": {

@@ -66,7 +66,7 @@ export function Insights({ items }: { items: string[] }) {
 export function DayChart({ days, fill }: { days: BcDay[]; fill?: boolean }) {
   const data = days.map((d) => ({ d: dShort(d.d), Премиум: d.p, Яшнабад: d.y, C1: d.c || 0 }));
   if (!data.length) return <p className="py-6 text-center text-muted-foreground">В этом месяце продаж наличными ещё нет.</p>;
-  const hasC = days.some((d) => d.c); // C1 в кассе выключена, серию показываем только если есть данные
+  const hasC = days.some((d) => d.c); // серия C1 — только если есть данные
   return (
     <div className={fill ? "min-h-0 flex-1" : "h-[340px]"}>
       <ResponsiveContainer width="100%" height="100%">

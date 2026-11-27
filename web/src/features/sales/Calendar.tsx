@@ -49,6 +49,8 @@ export function CalendarBlock({ c, cal, i = 0 }: { c: Ctx; cal: Cal; i?: number 
     const days = wk.filter(Boolean) as string[], s = days.reduce((a, d) => a + (byD[d]?.rev || 0), 0);
     return `Неделя ${+days[0].slice(8)}–${+days[days.length - 1].slice(8)}: ${s ? calShort(s) : "—"}`;
   };
+  // шесть недель в месяце: клетка ниже — отклонение встаёт в строку с числом дня
+  const tight = weeks.length > 5;
   const legend = [...new Set(o.list.map((s) => s.point))];
   const pct = P ? Math.round((P.fact / P.tot) * 100) : 0;
   const nav = (
@@ -61,21 +63,22 @@ export function CalendarBlock({ c, cal, i = 0 }: { c: Ctx; cal: Cal; i?: number 
       <p className="-mt-1 text-sm text-muted-foreground">{total ? `за месяц ${calShort(total)}` : "продаж за месяц нет"}{P ? ` · план ${pct}%` : ""}{best ? ` · лучший день ${+best[0].slice(8)} ${monthGen(M)}` : ""}</p>
       <div className="grid grid-cols-7 gap-1.5 text-center text-xs font-semibold text-muted-foreground @min-[1600px]/main:gap-2">
         {WD.map((x, k) => <span key={x} className={k === 6 ? "text-minus" : ""}>{x.toLowerCase()}</span>)}</div>
-      <div className="grid min-h-0 flex-1 grid-cols-7 gap-1.5 @min-[1600px]/main:gap-2" style={{ gridTemplateRows: `repeat(${weeks.length}, minmax(0, 1fr))` }}>
+      <div className={cn("grid min-h-0 flex-1 grid-cols-7 gap-1.5 @min-[1600px]/main:gap-2", tight && "gap-1 @min-[1600px]/main:gap-1")} style={{ gridTemplateRows: `repeat(${weeks.length}, minmax(0, 1fr))` }}>
         {weeks.flatMap((wk, wi) => wk.map((d, di) => {
           if (!d) return <div key={"e" + wi + di} aria-hidden />;
           const x = byD[d], v = x ? x.rev : 0, sun = pd(d).getDay() === 0, fut = d > today, top = best && best[0] === d, on = d === calSel, ok = !!tgt && v >= tgt;
           const pl = planOf(c, cal, d);
+          const dev = sun ? <span className="text-muted-foreground">{x ? "воскресенье" : "выходной"}</span> : pl ? <span className={pl.cls}>{pl.text}</span> : null;
           return (
             <button key={d} type="button" data-cd={d} aria-pressed={on} disabled={fut} onClick={() => cal.setSel(d)} title={dLong(d) + (x ? ": " + fmt(v) + " сум" : "") + "\n" + weekTip(wk)}
-              className={cn("relative flex h-full min-h-0 w-full min-w-0 flex-col justify-between overflow-hidden rounded-2xl p-1.5 text-left outline-none transition focus-visible:ring-3 focus-visible:ring-primary/40 @min-[1600px]/main:p-2",
+              className={cn("relative flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden rounded-2xl px-2 text-left outline-none transition focus-visible:ring-3 focus-visible:ring-primary/40 @min-[1600px]/main:px-2.5", tight ? "px-1.5 py-1 @min-[1600px]/main:px-2" : "py-2",
                 fut ? "border border-dashed border-foreground/20" : top ? "bg-primary/25" : ok ? "bg-primary/14" : "bg-foreground/6",
                 on ? "ring-2 ring-primary" : d === today && "ring-1 ring-foreground/50", sun && !fut && (x ? "opacity-70" : "opacity-45"), !fut && "hover:brightness-110")}>
-              <span className="flex items-center gap-1 text-[13px] leading-none font-semibold"><span className={cn("num", sun && "text-minus", on && "text-primary")}>{+d.slice(8)}</span>
+              <span className="flex items-center gap-1.5 text-[13px] leading-[1.1] font-semibold"><span className={cn("num", sun && "text-minus", on && "text-primary")}>{+d.slice(8)}</span>
                 {ok && <i title="План дня выполнен" className="size-1.5 rounded-full bg-plus" />}{top && <span className="text-[11px] font-bold text-primary">топ</span>}</span>
-              {x ? <b className="num truncate text-sm leading-none font-extrabold @min-[1600px]/main:text-base">{calShort(v)}</b> : !fut && !sun ? <b className="num text-base leading-none font-extrabold text-muted-foreground">—</b> : <span />}
-              <span className="num truncate text-xs leading-none">{sun ? <span className="text-muted-foreground">{x ? "воскресенье" : "выходной"}</span> : pl ? <span className={pl.cls}>{pl.text}</span> : null}</span>
-              {x ? <span className="flex h-1 overflow-hidden rounded-full">{Object.entries(x.pts).sort((a, b) => b[1] - a[1]).map(([p, y]) => <i key={p} style={{ width: (y / v * 100).toFixed(1) + "%", background: pointColor(p, c.settings.points) }} />)}</span> : <span className="h-1" />}
+              {x ? <b className={cn("num truncate leading-[1.15] font-extrabold", tight ? "text-sm @min-[1600px]/main:text-[15px]" : "text-[15px] @min-[1600px]/main:text-[17px]")}>{calShort(v)}</b> : !fut && !sun ? <b className={cn("num leading-[1.15] font-extrabold text-muted-foreground", tight ? "text-sm @min-[1600px]/main:text-[15px]" : "text-[15px] @min-[1600px]/main:text-[17px]")}>—</b> : null}
+              <span className={cn("num truncate", tight ? "text-xs leading-[1.1]" : "min-h-[14px] text-[12.5px] leading-[1.15]")}>{dev}</span>
+              <span className={cn("mt-auto block", tight ? "pt-1" : "pt-1.5")}>{x ? <span className={cn("flex overflow-hidden rounded-full", tight ? "h-[3px]" : "h-1")}>{Object.entries(x.pts).sort((a, b) => b[1] - a[1]).map(([p, y]) => <i key={p} style={{ width: (y / v * 100).toFixed(1) + "%", background: pointColor(p, c.settings.points) }} />)}</span> : <span className={cn("block", tight ? "h-[3px]" : "h-1")} />}</span>
             </button>);
         }))}
       </div>

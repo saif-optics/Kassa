@@ -203,7 +203,7 @@ export function SalesPage({ d }: { d: Data }) {
       </div></div>
 
       <SalesFilterSheet d={d} open={fOpen} onOpenChange={setFOpen} />
-      <Panel open={eOpen && !phone} onClose={() => setEOpen(false)} title="Расход дня" desc="Такси, доставка, мастер, вода и т.п. Расходы Премиума и Яшнабада сразу попадают в кассу."><ExpenseBox {...expProps} bare i={0} /></Panel>
+      <Panel open={eOpen && !phone} onClose={() => setEOpen(false)} title="Расход дня" desc="Такси, доставка, мастер, вода и т.п. Расходы Премиума, Яшнабада и C1 сразу попадают в кассу."><ExpenseBox {...expProps} bare i={0} /></Panel>
       <Panel open={dOpen} onClose={() => setDOpen(false)} title="Долги" desc="Возникшие в периоде и все ещё открытые старые долги" wide><DebtsTable r={dr} /></Panel>
       <Panel open={!!openPt} onClose={() => setPt(null)} title={openPt ? `Касса: ${openPt.pt}` : ""} desc="Оплаты, расходы дня и наличные после расходов по дням" wide>
         {openPt && <><div className="mb-3"><KassaChip kassa={openPt.kassa} /></div><PointTable b={openPt} /></>}</Panel>

@@ -1,6 +1,5 @@
 // «Статистика»: блок мозаики — столбики выручки по точкам (дни / недели) и таблица по периодам (дни / недели / месяцы) ниже сетки.
 import { useEffect, useState } from "react";
-import { Bar, BarChart, Tooltip, XAxis } from "recharts";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/Card";
@@ -8,7 +7,7 @@ import { RowCards, type RowColumn } from "@/components/RowCards";
 import { Segments } from "@/components/Segments";
 import { useIsPhone } from "@/lib/useMedia";
 import { cn } from "@/lib/utils";
-import { WD, fmt, periodLabel, pointColor, statsOf, wdIdx, type Ctx, type Filter, type Group, type SaleX, type StF } from "./logic";
+import { WD, dLong, fmt, periodLabel, pointColor, statsOf, wdIdx, type Ctx, type Filter, type Group, type SaleX, type StF } from "./logic";
 import { Field, Note, Pager, usePager } from "./parts";
 import { useSize } from "./useWidth";
 
@@ -16,25 +15,58 @@ const NOFILT: StF = { from: "", to: "", wd: [] };
 const Dash = () => <span className="text-muted-foreground">—</span>;
 const GROUPS: [Group, string][] = [["day", "Дни"], ["week", "Недели"], ["month", "Месяцы"]];
 
-/** блок «Выручка по точкам»: столбики по дням или неделям занимают всё место блока */
+/** шаг сетки оси Y: «круглое» число так, чтобы делений было не больше четырёх */
+function niceStep(max: number) {
+  const raw = max / 4, e = Math.pow(10, Math.floor(Math.log10(raw || 1)));
+  return [1, 2, 2.5, 5, 10].map((m) => m * e).find((v) => v >= raw) || 10 * e;
+}
+const mlnY = (v: number) => (v / 1e6).toFixed(v % 1e6 ? 1 : 0).replace(".", ",");
+
+/** блок «Выручка по точкам»: стопки по дням или неделям на фоновых дорожках, слева ось в млн */
 export function RevenueChart({ c, F, list, i = 0 }: { c: Ctx; F: Filter; list: SaleX[]; i?: number }) {
-  const [g, setG] = useState<Group>("day");
+  const [g, setG] = useState<Group>("day"), [hv, setHv] = useState<number | null>(null);
   const S = statsOf(c, F, list, g, NOFILT), [ref, { w, h }] = useSize<HTMLDivElement>(), n = S.asc.length;
-  const data = S.asc.map((r) => ({ k: r.k, label: periodLabel(r.k, g), tot: r.tot, ...Object.fromEntries(S.pts.map((p) => [p, r.by[p] || 0])) }));
-  const lw = g === "week" ? 84 : 40;
-  const toggle = <Segments size="sm" aria-label="Группировка" items={GROUPS.slice(0, 2).map(([key, label]) => ({ key, label }))} value={g} onChange={(v) => setG(v as Group)} />;
+  const toggle = <Segments size="sm" aria-label="Группировка" items={GROUPS.slice(0, 2).map(([key, label]) => ({ key, label }))} value={g} onChange={(v) => { setG(v as Group); setHv(null); }} />;
+  const LBL = 22, AX = 44, H = Math.max(0, h - LBL), pw = Math.max(0, w - AX);
+  const max = Math.max(1, ...S.asc.map((r) => r.tot)), step = niceStep(max), top = Math.ceil(max / step) * step;
+  const ticks: number[] = []; for (let v = 0; v <= top + 1e-6; v += step) ticks.push(v);
+  const colW = n ? pw / n : 0, lw = g === "week" ? 84 : 40;
+  const every = Math.max(g === "day" ? 3 : 1, Math.ceil(lw / Math.max(1, colW)));
+  const ti = g === "day" ? S.asc.findIndex((r) => r.k === c.today) : -1;
+  const showLbl = (k: number) => k === ti || (k % every === 0 && (ti < 0 || Math.abs(k - ti) >= every));
+  const hr = hv != null ? S.asc[hv] : null;
   return (
     <Card title="Выручка по точкам" action={toggle} i={i} className="gap-2">
-      <div ref={ref} className="min-h-0 flex-1" role="img" aria-label="Выручка по периодам">
-        {!n ? <p className="py-10 text-center text-[13px] text-muted-foreground">Нет продаж за период</p> : w > 0 && h > 0 && (
-          <BarChart width={w} height={h} data={data} margin={{ top: 6, right: 0, left: 0, bottom: 0 }} barCategoryGap="14%">
-            <XAxis dataKey="label" padding={{ left: 10, right: 10 }} tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} interval={Math.max(0, Math.ceil(n / Math.max(2, Math.floor(w / lw))) - 1)} />
-            <Tooltip cursor={{ fill: "var(--muted)" }} content={({ active, payload, label }) => !active || !payload?.length ? null : (
-              <div className="glass rounded-xl px-3 py-2 text-[12.5px]"><b>{label}</b>
-                {[...payload].reverse().filter((p) => +(p.value as number) > 0).map((p) => <div key={String(p.dataKey)} className="flex items-center justify-between gap-4"><span className="flex items-center gap-1.5"><i className="size-2 rounded-full" style={{ background: p.color }} />{p.name}</span><b className="num">{fmt(+(p.value as number))}</b></div>)}
-                <div className="mt-1 flex justify-between gap-4 border-t border-border pt-1"><span>Итого</span><b className="num">{fmt(payload.reduce((a, p) => a + (+(p.value as number) || 0), 0))}</b></div></div>)} />
-            {S.pts.map((p, k) => <Bar key={p} dataKey={p} name={p} stackId="a" fill={pointColor(p, c.settings.points)} radius={k === S.pts.length - 1 ? [5, 5, 2, 2] : 2} isAnimationActive={false} />)}
-          </BarChart>)}
+      <div ref={ref} className="relative min-h-0 flex-1" role="img" aria-label="Выручка по периодам">
+        {!n ? <p className="py-10 text-center text-[13px] text-muted-foreground">Нет продаж за период</p> : w > 0 && h > 0 && <>
+          <div className="absolute top-0 left-0" style={{ width: AX, height: H }}>
+            {ticks.map((v) => <span key={v} className="num absolute right-2 -translate-y-1/2 text-xs leading-none text-muted-foreground" style={{ top: H - (v / top) * H }}>{v ? mlnY(v) : "0"}</span>)}
+          </div>
+          <div className="absolute top-0" style={{ left: AX, width: pw, height: H }}>
+            {ticks.map((v) => <i key={v} className="absolute inset-x-0 h-px bg-foreground/10" style={{ top: Math.min(H - 1, H - (v / top) * H) }} />)}
+            <div className="absolute inset-0 flex" onMouseLeave={() => setHv(null)}>
+              {S.asc.map((r, k) => {
+                const sun = g === "day" && wdIdx(r.k) === 6, segs = S.pts.filter((p) => (r.by[p] || 0) > 0), gap = Math.max(1, Math.min(4, colW * 0.12));
+                return (
+                  <div key={r.k} className="relative h-full min-w-0 flex-1" style={{ padding: `0 ${gap / 2}px` }} onMouseEnter={() => setHv(k)} onClick={() => setHv(k)}>
+                    <div className={cn("relative h-full w-full overflow-hidden rounded-[6px] bg-foreground/5", hv === k && "bg-foreground/10")}>
+                      {sun && !r.tot && <span className="absolute inset-x-0 top-1.5 text-center text-[11px] leading-none text-muted-foreground">вс</span>}
+                      {r.tot > 0 && <div className="absolute inset-x-0 bottom-0 flex flex-col-reverse overflow-hidden rounded-t-[6px]">
+                        {segs.map((p) => <i key={p} className="block w-full" style={{ height: Math.max(3, ((r.by[p] || 0) / top) * H), background: pointColor(p, c.settings.points) }} />)}
+                      </div>}
+                    </div>
+                  </div>);
+              })}
+            </div>
+            {hr && hv != null && <div className="glass pointer-events-none absolute z-10 rounded-xl px-3 py-2 text-[12.5px]" style={{ top: 4, ...(hv < n / 2 ? { left: Math.max(0, (hv + 1) * colW + 4) } : { right: Math.max(0, (n - hv) * colW + 4) }) }}>
+              <b>{g === "day" ? dLong(hr.k) : periodLabel(hr.k, g)}</b>
+              <div className="flex justify-between gap-4"><span>Итого</span><b className="num">{fmt(hr.tot)}</b></div>
+              {[...S.pts].reverse().filter((p) => (hr.by[p] || 0) > 0).map((p) => <div key={p} className="flex items-center justify-between gap-4"><span className="flex items-center gap-1.5"><i className="size-2 rounded-full" style={{ background: pointColor(p, c.settings.points) }} />{p}</span><b className="num">{fmt(hr.by[p])}</b></div>)}
+            </div>}
+          </div>
+          <div className="absolute" style={{ left: AX, top: H, width: pw, height: LBL }}>
+            {S.asc.map((r, k) => showLbl(k) && <span key={r.k} className={cn("absolute top-1.5 -translate-x-1/2 text-xs leading-none whitespace-nowrap text-muted-foreground", k === ti && "font-semibold text-foreground")} style={{ left: (k + 0.5) * colW }}>{periodLabel(r.k, g)}</span>)}
+          </div></>}
       </div>
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-muted-foreground">{S.pts.map((p) => <span key={p} className="inline-flex items-center gap-1.5"><i className="size-2.5 rounded-full" style={{ background: pointColor(p, c.settings.points) }} />{p}</span>)}</div>
     </Card>

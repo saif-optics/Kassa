@@ -86,7 +86,7 @@ export function KassaPage({ d, focus }: { d: Data; focus?: "expense" | "cash" | 
   const reserveBal = reserve(d).bal;
   return (
     <div className="flex flex-col gap-4">
-      <PageHead title="Касса" sub={`Наличные Премиума и Яшнабада · ${monthName(M).toLowerCase()}`}
+      <PageHead title="Касса" sub={`Наличные Премиума, Яшнабада и C1 · ${monthName(M).toLowerCase()}`}
         actions={<>
           {ms.length > 1 && <Segments aria-label="Месяц" items={ms.map((m) => ({ key: m, label: monthName(m).split(" ")[0] }))} value={M} onChange={setSel} />}
           <Button variant="secondary" size="lg" onClick={xlsx}><FileSpreadsheet />Выгрузить Excel</Button></>} />
