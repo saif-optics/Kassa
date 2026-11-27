@@ -20,7 +20,7 @@ export interface Bridge { dir: "v" | "h"; d: string; p?: string }
 /** сетка вкладки: pf — на телефоне блоки идут потоком (высота по содержимому); auto — часть блоков выключена (авто-раскладка, без соединений); flow — обычный поток для вкладок без пазла; jd/jp — соединения на компьютере/телефоне */
 export function Puzzle({ auto, flow, pf, jd = true, jp = true, className, children }: { auto?: boolean; flow?: boolean; pf?: boolean; jd?: boolean; jp?: boolean; className?: string; children: ReactNode }) {
   const on = !auto && !flow, rh = useContext(RowHCtx);
-  return <div className={cn("pz", className)} style={rh ? ({ "--rh": rh + "px" } as CSSProperties) : undefined} data-auto={auto || flow ? "" : undefined} data-fp={flow ? "" : undefined} data-pf={pf ? "" : undefined} data-jd={on && jd ? "" : undefined} data-jp={on && jp ? "" : undefined}>{children}</div>;
+  return <div className={cn("pz", className)} style={rh ? ({ "--rh": rh + "px" } as CSSProperties) : undefined} data-auto={auto || flow ? "" : undefined} data-fp={flow ? "" : undefined} data-pf={pf ? "" : undefined} data-jd={on && jd ? "" : undefined} data-jp={on && jp && !pf ? "" : undefined}>{children}</div>;
 }
 
 export interface PieceProps {

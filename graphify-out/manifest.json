@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "web/src/features/analytics/AnFilter.tsx": {
-    "mtime": 1795808735.196069,
-    "seen": 1795808871.046974,
-    "ast_hash": "50d64339783dfaa59e88d540438bdcf6",
+    "mtime": 1795811070.6917343,
+    "seen": 1795811313.4986198,
+    "ast_hash": "bda6432328d00a296e2a25e15ec0b47b",
     "semantic_hash": ""
   },
   "web/src/features/analytics/AnParts.tsx": {
@@ -534,9 +534,9 @@
     "semantic_hash": ""
   },
   "web/src/features/analytics/AnalyticsPage.tsx": {
-    "mtime": 1795808598.1883368,
-    "seen": 1795808871.046974,
-    "ast_hash": "82f50fabe319ac1f09145c1e7078c9ba",
+    "mtime": 1795811070.6917343,
+    "seen": 1795811313.4996197,
+    "ast_hash": "6c36c2f8d9382f655cb5851d8fa29999",
     "semantic_hash": ""
   },
   "web/src/features/analytics/base.ts": {
@@ -1248,9 +1248,9 @@
     "semantic_hash": ""
   },
   "web/src/features/analytics/Puzzle.tsx": {
-    "mtime": 1795808683.003617,
-    "seen": 1795808871.046974,
-    "ast_hash": "517213637dfbab131f710512cd802f02",
+    "mtime": 1795810988.5669878,
+    "seen": 1795811313.4996197,
+    "ast_hash": "c0546d1b2ab38fe2e2760901f03a9530",
     "semantic_hash": ""
   },
   "web/src/features/analytics/Strip.tsx": {
@@ -1260,15 +1260,15 @@
     "semantic_hash": ""
   },
   "web/src/features/analytics/TabGoods.tsx": {
-    "mtime": 1795808226.5091765,
-    "seen": 1795808465.4940312,
-    "ast_hash": "04f555dbc90e60e788041d7926ea5b7a",
+    "mtime": 1795811006.0945964,
+    "seen": 1795811313.4996197,
+    "ast_hash": "573f6b5918f99e1f33e632617ea370c1",
     "semantic_hash": ""
   },
   "web/src/features/analytics/TabRevenue.tsx": {
-    "mtime": 1795809047.3961494,
-    "seen": 1795809077.7762537,
-    "ast_hash": "d08533c3064feade5f59ebf2ea68f7cd",
+    "mtime": 1795810988.5669878,
+    "seen": 1795811313.4996197,
+    "ast_hash": "c833558d019ab7c8c7bf96c146e7497b",
     "semantic_hash": ""
   },
   "web/src/features/analytics/pace.ts": {
@@ -1290,9 +1290,21 @@
     "semantic_hash": ""
   },
   "web/src/features/analytics/TabMore.tsx": {
-    "mtime": 1795808833.0246837,
-    "seen": 1795808871.046974,
-    "ast_hash": "3247678cc31c8a4ed4cf2496538bd85d",
+    "mtime": 1795811266.9017384,
+    "seen": 1795811313.4996197,
+    "ast_hash": "05eeba3002674e01c545be028d901c62",
+    "semantic_hash": ""
+  },
+  "web/scripts/layout-check.ts": {
+    "mtime": 1795811089.561416,
+    "seen": 1795811313.4926198,
+    "ast_hash": "43f40247398673d3a99b5fa53540d457",
+    "semantic_hash": ""
+  },
+  "web/src/features/analytics/layout.ts": {
+    "mtime": 1795811121.6610198,
+    "seen": 1795811313.5006201,
+    "ast_hash": "e119e52cf27323efe23fef79e15d68a9",
     "semantic_hash": ""
   }
 }

@@ -1,7 +1,8 @@
 // Вкладка «Выручка и темп»: пазл 12×4 — два уголка (график по дням + недели, дни недели + лучший день), коралловая пара с перемычкой.
 import { Empty } from "./parts";
 import { plOff } from "./logic";
-import { Bar, FitCols, Piece, Puzzle, Scroll } from "./Puzzle";
+import { layout } from "./layout";
+import { Bar, FitCols, Piece, Puzzle, Scroll, type Join } from "./Puzzle";
 import { BAR, BAR_BEST, BAR_LIVE, BAR_OFF, digits, wOf, type TabIn } from "./tabs";
 import { dayList } from "./base";
 import { mln, mn, needPerDay, planPath, unitOf, weekSpans } from "./pace";
@@ -16,32 +17,39 @@ const dayTxt = (d: string) => dShort(d) + " · " + WD[wdIdx(d)].toLowerCase();
 export function TabRevenue({ T }: { T: TabIn }) {
   const { c, F, m } = T;
   const chart = !!(T.wid(1) || T.wid(6)), c4 = T.card(4), c3 = T.card(3), c12 = T.card(12), c13 = T.card(13);
-  const flags = [chart, !!T.wid(44), !!T.wid(43), !!c12, !!c4, T.on(5), !!c3, !!c13, !!T.wid(45)];
-  if (!flags.some(Boolean)) return <Empty>Все показатели этой вкладки выключены. Включите нужные в «Показатели».</Empty>;
-  const auto = !flags.every(Boolean);
+  const need = T.on(5) ? needPerDay(c, F, m.r) : null;
+  const L = layout([
+    { id: "chart", r: [0, 0, 7, 3], on: chart }, { id: "weeks", r: [0, 3, 4, 1], on: !!T.wid(44) }, { id: "dow", r: [7, 0, 5, 2], on: !!T.wid(43) },
+    { id: "best", r: [9, 2, 3, 1], on: !!c12 }, { id: "fc", r: [7, 2, 2, 1], on: !!c4 }, { id: "need", r: [6, 3, 2, 1], on: !!need },
+    { id: "avg", r: [4, 3, 2, 1], on: !!c3 }, { id: "nos", r: [8, 3, 1, 1], rn: [8, 3, 2, 1], on: !!c13 }, { id: "months", r: [9, 3, 3, 1], rn: [10, 3, 2, 1], on: !!T.wid(45) },
+  ]);
+  const ids = ["chart", "weeks", "dow", "best", "fc", "need", "avg", "nos", "months"], some = ids.some((i) => L.on(i)), all = ids.every((i) => L.on(i));
+  const J = (a: string, b: string, j: Join) => (L.keep(a, b) ? j : undefined);
+  const D = (id: string) => ({ d: L.rect(id), dn: L.narrow(id) });
+  if (!some) return <Empty>Все показатели этой вкладки выключены. Включите нужные в «Показатели».</Empty>;
+  const auto = !L.ok;
   const days = dayList(m.r);
   const w1 = wOf(T, 1, "line"), w6 = wOf(T, 6, "line");
   const cumDiff = (a: number[]) => a.map((v, i) => v - (a[i - 1] || 0));
   const vals = w1 ? w1.series[0].vals : w6 ? cumDiff(w6.series[0].vals) : [];
-  const need = T.on(5) ? needPerDay(c, F, m.r) : null;
 
   // лучший и слабый день (слабый — среди дней с продажами, как в карточке)
   const pos = vals.map((v, i) => ({ v, d: days[i] })).filter((x) => x.v > 0).sort((a, b) => b.v - a.v);
   const best = pos[0], worst = pos[pos.length - 1];
 
   return (
-    <Puzzle auto={auto} jd jp>
-      {chart && <Piece d={[0, 0, 7, 3]} p={[0, 0, 2, 6]} m={[6, 340]} join="a-top" title="Выручка по дням"
+    <Puzzle auto={auto} pf={!all} jd jp>
+      {chart && <Piece {...D("chart")} p={[0, 0, 2, 6]} f={[2, 250]} m={[6, 340]} join={J("chart", "weeks", "a-top")} title="Выручка по дням"
         right={<ChartLegend plan={T.on(5) ? planPath(c, F, days) : null} hasCum={!!w6} hasPrev={!!w1?.series[1]} best={best} />}>
         <RevChart T={T} days={days} vals={vals} />
       </Piece>}
-      {T.wid(44) && <Piece d={[0, 3, 4, 1]} p={[0, 6, 1, 4]} m={[6, 190]} join="a-sleeve" title="По неделям" nh note={unitOf(Math.max(1, ...wOf(T, 44, "bars")!.vals)).note}>
+      {T.wid(44) && <Piece {...D("weeks")} p={[0, 6, 1, 4]} f={[1, 190]} m={[6, 190]} join={J("chart", "weeks", "a-sleeve")} title="По неделям" nh note={unitOf(Math.max(1, ...wOf(T, 44, "bars")!.vals)).note}>
         <Weeks T={T} />
       </Piece>}
-      {T.wid(43) && <Piece d={[7, 0, 5, 2]} p={[0, 10, 2, 4]} m={[6, 290]} join="b-top" title="По дням недели" note="средняя выручка дня">
+      {T.wid(43) && <Piece {...D("dow")} p={[0, 10, 2, 4]} f={[2, 200]} m={[6, 290]} join={J("dow", "best", "b-top")} title="По дням недели" note="средняя выручка дня">
         <DayOfWeek T={T} />
       </Piece>}
-      {c12 && <Piece d={[9, 2, 3, 1]} p={[1, 14, 1, 2]} m={[3, 150]} join="b-sleeve" label={<>Лучший<span className="@max-[639px]/main:hidden"> и слабый</span> день</>} hint={c12.label} spread>
+      {c12 && <Piece {...D("best")} p={[1, 14, 1, 2]} f={[1, 90]} m={[3, 150]} join={J("dow", "best", "b-sleeve")} label={<>Лучший<span className="@max-[639px]/main:hidden"> и слабый</span> день</>} hint={c12.label} spread>
         {best ? <>
           <div className="@min-[640px]/main:hidden">
             <div className="pz-v">{mln(best.v)}</div>
@@ -53,20 +61,20 @@ export function TabRevenue({ T }: { T: TabIn }) {
           </div>
         </> : c12 ? <div className="min-w-0" title={c12.d}><div className="pz-v">{digits(c12.v) ? mln(digits(c12.v)) : c12.v}</div><div className="pz-s mt-1.5 line-clamp-2">{c12.d}</div></div> : <span className="pz-v">—</span>}
       </Piece>}
-      {c4 && <Piece d={[7, 2, 2, 1]} p={[1, 6, 1, 2]} m={[3, 150]} tone={need?.done ? "g" : "c"} label={c4.label.startsWith("Прогноз") ? <>Прогноз<span className="@max-[639px]/main:hidden"> месяца</span></> : c4.label} hint={c4.label} spread
-        bridge={need && need.mode === "need" ? { dir: "v", d: "calc((100% - var(--pg)) / 4)", p: "50%" } : undefined}>
+      {c4 && <Piece {...D("fc")} p={[1, 6, 1, 2]} f={[1, 100]} m={[3, 150]} tone={need?.done ? "g" : "c"} label={c4.label.startsWith("Прогноз") ? <>Прогноз<span className="@max-[639px]/main:hidden"> месяца</span></> : c4.label} hint={c4.label} spread
+        bridge={need && need.mode === "need" && L.keep("fc", "need") ? { dir: "v", d: "calc((100% - var(--pg)) / 4)", p: "50%" } : undefined}>
         <Forecast T={T} plan={need?.plan || 0} />
       </Piece>}
-      {need && <Piece d={[6, 3, 2, 1]} p={[1, 8, 1, 2]} m={[3, 150]} tone={need.done ? "g" : need.mode === "need" ? "c" : "n"} label={need.done ? "План выполнен" : <>{need.mode === "need" ? "Нужно в " : "Выручка на "}<span className="@max-[639px]/main:hidden">рабочий</span><span className="@min-[640px]/main:hidden">раб.</span> день</>} hint={need.mode === "need" ? "Нужно в рабочий день" : need.label} spread>
+      {need && <Piece {...D("need")} p={[1, 8, 1, 2]} f={[1, 100]} m={[3, 150]} tone={need.done ? "g" : need.mode === "need" ? "c" : "n"} label={need.done ? "План выполнен" : <>{need.mode === "need" ? "Нужно в " : "Выручка на "}<span className="@max-[639px]/main:hidden">рабочий</span><span className="@min-[640px]/main:hidden">раб.</span> день</>} hint={need.mode === "need" ? "Нужно в рабочий день" : need.label} spread>
         <div className="min-w-0"><div className="pz-v">{need.v == null ? "—" : (need.done ? "+" : "") + mln(need.v)}</div><div className="pz-s mt-1.5 truncate" title={need.sub}>{need.sub}</div></div>
       </Piece>}
-      {c3 && <Piece d={[4, 3, 2, 1]} p={[0, 14, 1, 2]} m={[3, 150]} label={<>В среднем<span className="@max-[639px]/main:hidden"> за день</span></>} hint={c3.label} spread>
+      {c3 && <Piece {...D("avg")} p={[0, 14, 1, 2]} f={[1, 90]} m={[3, 150]} label={<>В среднем<span className="@max-[639px]/main:hidden"> за день</span></>} hint={c3.label} spread>
         <div className="min-w-0"><div className="pz-v">{mln(digits(c3.v))}</div><div className="pz-s mt-1.5 truncate" title={c3.d}>{c3.d}</div></div>
       </Piece>}
-      {c13 && <Piece d={[8, 3, 1, 1]} dn={[8, 2]} p={[0, 16, 1, 3]} m={[3, 150]} label="Без продаж" hint={c13.label} spread>
+      {c13 && <Piece {...D("nos")} p={[0, 16, 1, 3]} f={[1, 130]} m={[3, 150]} label="Без продаж" hint={c13.label} spread>
         <div className="min-w-0"><div className="pz-v">{c13.v}</div><div className="pz-s mt-1.5 line-clamp-2" title={c13.d}>{c13.v === "0" ? "каждый день были продажи" : c13.d.replace(/…$/, "")}</div></div>
       </Piece>}
-      {T.wid(45) && <Piece d={[9, 3, 3, 1]} dn={[10, 2]} p={[1, 16, 1, 3]} m={[6, 170]} title="По месяцам" nh note={unitOf(Math.max(1, ...wOf(T, 45, "bars")!.vals)).note}>
+      {T.wid(45) && <Piece {...D("months")} p={[1, 16, 1, 3]} f={[1, 130]} m={[6, 170]} title="По месяцам" nh note={unitOf(Math.max(1, ...wOf(T, 45, "bars")!.vals)).note}>
         <Months T={T} />
       </Piece>}
     </Puzzle>

@@ -277,3 +277,6 @@ body::before { content: ""; position: fixed; inset: -14px; z-index: -1; pointer-
   .pz-strip>.pz-i{grid-column:span var(--sd,2);height:116px;min-height:0}
 }
 .pz-i .snap-x > *{scroll-snap-align:start}
+
+.pz-vx{white-space:nowrap;font-size:28px;font-weight:800;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+@container main (min-width:640px){ .pz-vx{font-size:clamp(28px,2.4cqw,52px)} }

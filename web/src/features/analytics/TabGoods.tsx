@@ -4,7 +4,8 @@ import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/
 import { Sel } from "@/features/sales/parts";
 import { cn } from "@/lib/utils";
 import { Empty } from "./parts";
-import { Bar, FitCols, Piece, Puzzle, Scroll } from "./Puzzle";
+import { Bar, FitCols, Piece, Puzzle, Scroll, type Join } from "./Puzzle";
+import { layout } from "./layout";
 import { BAR_BEST, wOf, type TabIn } from "./tabs";
 import { lostCount, mln } from "./pace";
 import { renderW } from "./widgets";
@@ -16,22 +17,26 @@ const lbl = (s: string) => (s === "—" ? "Без категории" : s);
 export function TabGoods({ T }: { T: TabIn }) {
   const d28 = wOf(T, 28, "donut"), h29 = wOf(T, 29, "hbars"), rng = wOf(T, 30, "ranges"), tr = wOf(T, 31, "top"), tq = wOf(T, 32, "top"), abc = wOf(T, 33, "pareto"), lost = wOf(T, 34, "lost"), pg = wOf(T, 58, "pg");
   const nLost = lost ? lostCount(T.c, T.F, T.m.list, T.m.r) : 0;
-  const flags = [!!(d28 || h29), !!rng, !!tr, !!tq, !!abc, !!lost, !!pg];
-  if (!flags.some(Boolean)) return <Empty>Все показатели этой вкладки выключены. Включите нужные в «Показатели».</Empty>;
-  const auto = !flags.every(Boolean);
+  const L = layout([
+    { id: "cats", r: [0, 0, 4, 3], on: !!(d28 || h29) }, { id: "avg", r: [0, 3, 6, 1], on: !!rng && rng.rows.length > 0 }, { id: "toprev", r: [4, 0, 4, 3], on: !!tr },
+    { id: "topqty", r: [8, 0, 4, 2], on: !!tq }, { id: "abc", r: [8, 2, 2, 1], on: !!abc }, { id: "lost", r: [10, 2, 2, 1], on: !!lost }, { id: "pg", r: [6, 3, 6, 1], on: !!pg },
+  ]);
+  const ids = ["cats", "avg", "toprev", "topqty", "abc", "lost", "pg"], J = (a: string, b: string, j: Join) => (L.keep(a, b) ? j : undefined);
+  if (!ids.some((i) => L.on(i))) return <Empty>Все показатели этой вкладки выключены. Включите нужные в «Показатели».</Empty>;
+  const auto = !L.ok;
   const cats = d28 ? d28.items.map((i) => ({ label: i.label, value: i.value, color: i.color })) : h29 ? h29.items.map((i) => ({ label: i.label, value: i.value, color: i.color || "var(--chart-1)" })) : [];
   return (
     <Puzzle auto={auto} pf jd jp={false}>
-      {(d28 || h29) && <Piece d={[0, 0, 4, 3]} m={[3, 560]} f={[2, 0]} join="c-top" title="Категории" note="выручка · доля" hint={d28 ? "Выручка по категориям" : "Доля категорий"}>
+      {(d28 || h29) && <Piece d={L.rect("cats")} m={[3, 560]} f={[2, 0]} join={J("cats", "avg", "c-top")} title="Категории" note="выручка · доля" hint={d28 ? "Выручка по категориям" : "Доля категорий"}>
         <Cats items={cats} center={d28?.center} sub={d28?.sub} />
       </Piece>}
-      {rng && <Piece d={[0, 3, 6, 1]} m={[6, 190]} f={[2, 0]} join="c-sleeve" title="Средняя цена по категориям" note="за единицу"><AvgPrice w={rng} /></Piece>}
-      {tr && <Piece d={[4, 0, 4, 3]} m={[3, 560]} f={[2, 0]} title="Топ-10 по выручке" hint="Топ-10 товаров по выручке" note={"всего " + mln(tr.tot)}
-        bridge={tq ? { dir: "h", d: "calc(var(--rh) + var(--pg) / 2)" } : undefined}><Top w={tr} /></Piece>}
-      {tq && <Piece d={[8, 0, 4, 2]} m={[3, 560]} f={[2, 0]} title="Топ-10 по количеству" hint="Топ-10 товаров по количеству" note={<span className="@max-[1499px]/main:hidden">{"всего " + fmt(tq.tot) + " шт"}</span>}><Top w={tq} two /></Piece>}
-      {abc && <Piece d={[8, 2, 2, 1]} m={[3, 170]} f={[1, 170]} title="ABC-анализ" hint="ABC-анализ товаров" note={<span className="@max-[1499px]/main:hidden">{`${abc.items.length} ${pl(abc.items.length, "товар", "товара", "товаров")}`}</span>} spread><Abc w={abc} /></Piece>}
-      {lost && <Piece d={[10, 2, 2, 1]} m={[3, 170]} f={[1, 170]} tone={nLost ? "c" : "n"} label="Перестали продаваться" hint="Перестали продаваться" spread><Lost T={T} w={lost} n={nLost} /></Piece>}
-      {pg && <Piece d={[6, 3, 6, 1]} m={[6, 230]} f={[2, 0]} title="Ценовые группы" hint="Самые продаваемые по ценовым группам"
+      {L.on("avg") && rng && <Piece d={L.rect("avg")} m={[6, 190]} f={[2, 0]} join={J("cats", "avg", "c-sleeve")} title="Средняя цена по категориям" note="за единицу"><AvgPrice w={rng} /></Piece>}
+      {tr && <Piece d={L.rect("toprev")} m={[3, 560]} f={[2, 0]} title="Топ-10 по выручке" hint="Топ-10 товаров по выручке" note={"всего " + mln(tr.tot)}
+        bridge={tq && L.keep("toprev", "topqty") ? { dir: "h", d: "calc(var(--rh) + var(--pg) / 2)" } : undefined}><Top w={tr} /></Piece>}
+      {tq && <Piece d={L.rect("topqty")} m={[3, 560]} f={[2, 0]} title="Топ-10 по количеству" hint="Топ-10 товаров по количеству" note={<span className="@max-[1499px]/main:hidden">{"всего " + fmt(tq.tot) + " шт"}</span>}><Top w={tq} two /></Piece>}
+      {abc && <Piece d={L.rect("abc")} m={[3, 170]} f={[1, 170]} title="ABC-анализ" hint="ABC-анализ товаров" note={<span className="@max-[1499px]/main:hidden">{`${abc.items.length} ${pl(abc.items.length, "товар", "товара", "товаров")}`}</span>} spread><Abc w={abc} /></Piece>}
+      {lost && <Piece d={L.rect("lost")} m={[3, 170]} f={[1, 170]} tone={nLost ? "c" : "n"} label="Перестали продаваться" hint="Перестали продаваться" spread><Lost T={T} w={lost} n={nLost} /></Piece>}
+      {pg && <Piece d={L.rect("pg")} m={[6, 230]} f={[2, 0]} title="Ценовые группы" hint="Самые продаваемые по ценовым группам"
         right={<Sel label="Категория" value={pg.cat} onChange={T.setPgCat} className="h-7 w-auto min-w-28 gap-2 rounded-full px-3 text-[12.5px]" options={[{ v: "all", l: "Все категории" }, ...pg.cats]} />}><Bands w={pg} /></Piece>}
     </Puzzle>
   );
@@ -87,7 +92,7 @@ function Top({ w, two }: { w: NonNullable<ReturnType<typeof wOf<"top">>>; two?: 
   const byR = w.by === "r", mx = Math.max(1, ...w.rows.map((o) => o[w.by]));
   const row = (o: (typeof w.rows)[number], i: number) => (
     <div key={o.k} title={`${o.k}${o.cat ? " · " + o.cat : ""}: ${fmt(o.r)} сум, ${fmt(o.u)} шт, ср. цена ${fmt(o.u ? o.r / o.u : 0)}, доля ${pctF(w.tot ? o[w.by] / w.tot : 0)}`}
-      className={cn("grid min-h-9 flex-1 grid-cols-[26px_minmax(0,1fr)_auto] items-center gap-3 border-t border-border text-[14.5px] first:border-t-0", !two && "min-h-10")}>
+      className={cn("grid min-h-9 max-h-[52px] flex-1 grid-cols-[26px_minmax(0,1fr)_auto] items-center gap-3 border-t border-border text-[14.5px] first:border-t-0", !two && "min-h-10")}>
       <span className="num grid size-[26px] place-items-center rounded-full bg-muted text-[12.5px] font-bold" style={i === 0 && !two ? { background: "var(--chart-4)", color: "#2a2000" } : undefined}>{i + 1}</span>
       <span className="min-w-0"><span className="block truncate">{o.k}</span>{byR && <Bar v={o[w.by] / mx} h={4} className="mt-1" color="var(--piece-blue)" />}</span>
       <b className="num text-[15.5px]">{byR ? mln(o.r) : fmt(o.u)}</b>
@@ -147,11 +152,11 @@ function Bands({ w }: { w: NonNullable<ReturnType<typeof wOf<"pg">>> }) {
   if (!w.U) return <p className="pz-s">Нет продаж в этой категории за период</p>;
   const mx = Math.max(1, ...w.bands.map((o) => o.u)), best = w.bands[w.best];
   return (
-    <FitCols count={w.bands.length} min={130} gap={22} className="items-end">
+    <FitCols count={w.bands.length} min={130} gap={22} className="items-center">
         {w.bands.map((o) => (
           <div key={o.lbl} className="min-w-0" title={o.top.length ? "Чаще всего покупают: " + o.top.map(([k, v]) => `${k} ×${v}`).join(", ") : undefined}>
             <div className="pz-s flex items-center gap-1.5 truncate">{o.lbl}{o === best && <span className="rounded-full bg-primary/15 px-1.5 text-[10.5px] font-semibold text-primary">чаще</span>}</div>
-            <div className="num my-1 text-[clamp(20px,1.7cqw,28px)] leading-none font-extrabold">{o.r ? mln(o.r) : "—"}</div>
+            <div className="num my-1.5 text-[clamp(24px,1.9cqw,30px)] leading-none font-extrabold">{o.r ? mln(o.r) : "—"}</div>
             <div className="pz-s mb-1.5">{o.u ? `${fmt(o.u)} шт · ${pctF(o.u / w.U)}` : "нет продаж"}</div>
             <Bar v={o.u / mx} color={PURPLE} />
           </div>

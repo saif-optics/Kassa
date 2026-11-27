@@ -60,7 +60,7 @@ export function AnalyticsPage({ d }: { d: Data }) {
     const calc = () => {
       const el = bodyRef.current; if (!el) return;
       const top = el.getBoundingClientRect().top + window.scrollY;
-      setRh(Math.round(Math.max(150, Math.min(200, (window.innerHeight - top - 40 - 3 * 14) / 4))));
+      setRh(Math.round(Math.max(150, Math.min(184, (window.innerHeight - top - 40 - 3 * 14) / 4))));
     };
     calc();
     window.addEventListener("resize", calc);
@@ -81,7 +81,7 @@ export function AnalyticsPage({ d }: { d: Data }) {
   };
 
   const pv = prevList(c, F);
-  const sub = m.empty ? undefined : `${dShort(m.r.from)} — ${dShort(m.r.to)} · ${m.r.days} ${pl(m.r.days, "день", "дня", "дней")}` + (pv ? ` · сравнение с ${dShort(pv.from)} — ${dShort(pv.to)}` : " · сравнение появится, когда выбраны даты");
+  const sub = m.empty ? undefined : `${dShort(m.r.from)}–${dShort(m.r.to)} · ${m.r.days} дн. · ` + (pv ? `к ${dShort(pv.from)}–${dShort(pv.to)}` : "без сравнения");
   const tip = (label: string, node: ReactNode) => <Tooltip><TooltipTrigger asChild>{node}</TooltipTrigger><TooltipContent>{label}</TooltipContent></Tooltip>;
   const actions = (
     <>

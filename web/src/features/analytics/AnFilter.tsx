@@ -30,9 +30,9 @@ export function AnHead({ c, F, set, sub, actions }: { c: Ctx; F: Flt; set: (p: P
   const cat = <Sel label="Категория" value={F.cat} onChange={(cat) => set({ cat })} options={[{ v: "all", l: "Все категории" }, ...c.cats]} />;
   return (
     <header className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-3">
-      <div className="min-w-0 sm:max-w-[19rem] sm:shrink-0">
+      <div className="min-w-0 sm:shrink-0">
         <h1 className="text-[30px] leading-[1.1] font-extrabold tracking-[-0.02em]">Аналитика продаж</h1>
-        {sub && <p className="mt-1.5 text-sm text-muted-foreground">{sub}</p>}
+        {sub && <p className="mt-1.5 text-sm whitespace-nowrap text-muted-foreground">{sub}</p>}
       </div>
       <div className="flex min-w-0 flex-wrap items-center gap-2 sm:flex-1 sm:justify-center">
         <Segments dense aria-label="Период" items={PRESETS.map(([key, label]) => ({ key, label }))} value={PRESETS.some(([k]) => k === F.preset) ? F.preset : ""} onChange={(p) => set({ ...presetRange(p), preset: p })} />
