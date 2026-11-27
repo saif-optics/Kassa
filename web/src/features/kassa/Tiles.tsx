@@ -25,7 +25,7 @@ export function CashHero({ c, M, isLast, rec, st, lastRecNote, onCash, i = 0, ch
   const tone = (diff == null ? "muted" : diff > 0 ? "minus" : diff < 0 ? "warn" : "plus") as "muted" | "minus" | "warn" | "plus";
   const chip = <Chip tone={tone}>{diff ? `${kind.toLowerCase()} ${fmt(Math.abs(diff))}` : kind}</Chip>;
   return (
-    <Tile i={i} className="justify-start gap-0 bg-[linear-gradient(160deg,color-mix(in_srgb,var(--brand)_26%,transparent),transparent_62%)]">
+    <Tile i={i} glow={tone === "muted" ? null : tone} className="justify-start gap-0 bg-[linear-gradient(160deg,color-mix(in_srgb,var(--brand)_26%,transparent),transparent_62%)]">
       <div className="grid flex-1 content-between gap-y-3 @min-[640px]/main:flex-none @min-[640px]/main:grid-cols-2 @min-[640px]/main:content-start @min-[640px]/main:gap-x-6">
         <div className="flex min-w-0 flex-col gap-1.5 @min-[640px]/main:gap-1.5">
           <TileLabel>{isLast ? "Должно быть на руках" : "Должно быть на конец месяца"}</TileLabel>

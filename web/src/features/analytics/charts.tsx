@@ -113,9 +113,9 @@ export function GroupBarsC({ labels, series, h }: { labels: string[]; series: { 
 /** pay — подписи это способы оплаты: строка ведёт в «Продажи» за период (фильтра по оплате в Продажах нет) */
 export function DonutC({ items, center, sub, pay }: { items: { label: string; value: number; color: string; valTxt?: string }[]; center: string; sub?: string; pay?: boolean }) {
   const dest = useSalesDest(), to = pay ? dest() : null;
+  const [hov, setHov] = useState(false); // хуки — до раннего return
   const it = items.filter((i) => i.value > 0); if (!it.length) return <None />;
   const tot = it.reduce((a, i) => a + i.value, 0);
-  const [hov, setHov] = useState(false);
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
       <div className="relative size-[132px] shrink-0" onMouseLeave={() => setHov(false)}>

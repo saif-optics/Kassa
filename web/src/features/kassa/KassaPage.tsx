@@ -1,6 +1,6 @@
 // Раздел «Касса»: бенто-мозаика — большой блок (на руках, факт, пересчёт, шаги), статьи, журнал, график, форма, резерв, доли.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { FileSpreadsheet, Plus } from "lucide-react";
+import { FileSpreadsheet, Plus, Receipt } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/Card";
@@ -127,7 +127,7 @@ export function KassaPage({ d, focus }: { d: Data; focus?: "expense" | "cash" | 
         <Item c={C.split}><Tile i={6}><Split c={c} /></Tile></Item>
 
         <Item c={C.spend}>
-          <Tile i={5} to={{ tab: "sales", params: { sec: "exp" } }} label="расходы дня в продажах"><TileLabel>Расходы с Б/Ч</TileLabel><div className="min-w-0"><TileValue count={a.sSmall} format="mln" /><TileSub><span>прочие {fmtM(c.sOth)}</span></TileSub></div></Tile>
+          <Tile i={5} to={{ tab: "sales", params: { sec: "exp" } }} label="расходы дня в продажах" icon={Receipt} tone="warn"><TileLabel>Расходы с Б/Ч</TileLabel><div className="min-w-0"><TileValue count={a.sSmall} format="mln" /><TileSub><span>прочие {fmtM(c.sOth)}</span></TileSub></div></Tile>
         </Item>
         <Item c={C.steps}>
           <Card title="Расчёт по шагам" note="нажмите шаг" i={6}><Steps c={c} rsvBal={reserve(d, isLast ? null : M).bal} /></Card>

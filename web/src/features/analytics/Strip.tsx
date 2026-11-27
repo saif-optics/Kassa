@@ -2,6 +2,8 @@
 import { useContext, useMemo, type CSSProperties, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { goProps, type Dest } from "@/lib/go";
+import { Calculator, Target, TrendingUp, Wallet, type LucideIcon } from "lucide-react";
+import { Glow, IconBox, TONE_VAR, type Tone } from "@/components/TileDeco";
 import { monthOf } from "./base";
 import { kassaNow } from "./logic";
 import { Bar, Chip, HintCtx } from "./Puzzle";
@@ -14,12 +16,12 @@ import { MONTHS_FULL } from "./util";
 const growth = (v: string) => (v.startsWith("+") ? "▲ " + v.slice(1) : v.startsWith("−") ? "▼ " + v.slice(1) : v);
 const growthTone = (t: string) => (t.startsWith("▲") ? "up" : t.startsWith("▼") ? "down" : "warn") as "up" | "down" | "warn";
 
-interface Tile { key: string; def: number; node: (hint: string) => ReactNode; tone?: "b" | "c" | "g"; hint: string; to?: Dest; label?: string }
+interface Tile { key: string; def: number; node: (hint: string) => ReactNode; tone?: "b" | "c" | "g"; hint: string; to?: Dest; label?: string; icon?: LucideIcon; accent?: Tone }
 
 function Frame({ t, hint, sp, sm, sd }: { t: Tile; hint: string; sp: number; sm: number; sd: number }) {
   return (
     <section {...(t.to ? goProps(t.to, t.label || "раздел") : {})} className={cn("pz-i", t.key !== "rev" && "pz-t", t.to && "cursor-pointer outline-none transition-[translate,box-shadow] hover:-translate-y-0.5 hover:shadow-lg focus-visible:ring-2 focus-visible:ring-primary/50")} data-tone={t.tone} style={{ "--sp": sp, "--sm": sm, "--sd": sd } as CSSProperties}>
-      <div className={cn("pz-in", t.key === "rev" && "justify-center")} title={hint || undefined}>{t.node(hint)}</div>
+      <div className={cn("pz-in isolate", t.key === "rev" && "justify-center")} title={hint || undefined}>{t.accent && <Glow tone={t.accent} />}{t.icon && t.accent && <span className="absolute top-3 right-3 @max-[1499px]/main:hidden"><IconBox icon={t.icon} tone={t.accent} /></span>}{t.node(hint)}</div>
     </section>
   );
 }
@@ -48,32 +50,32 @@ export function Strip({ T }: { T: TabIn }) {
   }
   if (c9) {
     const ch = /(▲ \d+%|▼ \d+%|≈ 0%)/.exec(c9.d)?.[1];
-    tiles.push({ key: "avg", def: 2, hint: H(c9.label), to: { tab: "analytics", params: { tab: "chk" } }, label: "чеки", node: () => (
+    tiles.push({ key: "avg", def: 2, icon: Calculator, accent: "brand", hint: H(c9.label), to: { tab: "analytics", params: { tab: "chk" } }, label: "чеки", node: () => (
       <><span className="pz-lbl">Средний чек</span>
         <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1"><span className="pz-v" title={c9.v}>{c9.v.replace(/ сум$/, "")}</span>{ch && <Chip tone={growthTone(ch)} title={c9.d}>{ch.replace(" ", "")}</Chip>}</div></>
     ) });
   }
   if (c36) {
-    tiles.push({ key: "gp", def: 2, tone: "g", hint: H(c36.label), to: { tab: "analytics", params: { tab: "profit" } }, label: "прибыль и скидки", node: () => (
-      <><span className="pz-lbl !text-white/90">Валовая прибыль</span>
-        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1"><span className="pz-v" title={c36.d}>{digits(c36.v) ? mln(digits(c36.v)) : c36.v}</span>{c37 && c37.v !== "—" && <Chip title="Маржа">{c37.v}</Chip>}</div></>
+    tiles.push({ key: "gp", def: 2, icon: TrendingUp, accent: "plus", hint: H(c36.label), to: { tab: "analytics", params: { tab: "profit" } }, label: "прибыль и скидки", node: () => (
+      <><span className="pz-lbl">Валовая прибыль</span>
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1"><span className="pz-v" title={c36.d}>{digits(c36.v) ? mln(digits(c36.v)) : c36.v}</span>{c37 && c37.v !== "—" && <Chip tone="up" title="Маржа">{c37.v}</Chip>}</div></>
     ) });
   }
   if (c5) {
     const none = c5.v === "не задан", pf = digits(c5.v), pp = digits(/из ([\d ]+) по плану/.exec(c5.d)?.[1] || ""), pct = pp ? pf / pp : 0;
-    tiles.push({ key: "plan", def: 2, tone: "c", hint: H(c5.label), to: { tab: "plan" }, label: "план", node: () => (
-      <><span className="pz-lbl !text-white/90">План</span>
+    tiles.push({ key: "plan", def: 2, icon: Target, accent: pct >= 1 ? "plus" : pct >= 0.85 ? "warn" : "minus", hint: H(c5.label), to: { tab: "plan" }, label: "план", node: () => (
+      <><span className="pz-lbl">План</span>
         {none ? <span className="pz-v" style={{ fontSize: "clamp(16px,1.4cqw,22px)" }}>План не задан</span> : (
           <div className="min-w-0" title={c5.d}>
             <div className="flex items-baseline justify-between gap-2"><span className="pz-v">{Math.round(pct * 100)}%</span><span className="pz-s truncate">{pp ? <><span className="@max-[1499px]/main:hidden">{mln(pf).replace(" млн", "")} </span>из {mln(pp)}</> : ""}</span></div>
-            <Bar v={pct} color="#fff" h={7} className="mt-2 !bg-white/30 max-sm:!h-1.5" />
+            <Bar v={pct} color={TONE_VAR[pct >= 1 ? "plus" : pct >= 0.85 ? "warn" : "minus"]} h={7} className="mt-2 max-sm:!h-1.5" />
           </div>
         )}</>
     ) });
   }
   if (c26 && k) {
     const closed = c26.v === "сдана ✓", has = k.actual != null, diff = k.diff;
-    tiles.push({ key: "cash", def: 2, hint: H(c26.label), to: { tab: "kassa" }, label: "кассу", node: () => (
+    tiles.push({ key: "cash", def: 2, icon: Wallet, accent: !closed && has && diff != null && Math.abs(diff) >= 1 ? (diff > 0 ? "warn" : "minus") : "plus", hint: H(c26.label), to: { tab: "kassa" }, label: "кассу", node: () => (
       <><span className="pz-lbl">{closed ? c26.label : has ? "Касса сейчас" : "Должно быть на руках"}</span>
         <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1"><span className="pz-v" title={c26.d}>{closed ? c26.v : mln(has ? k.actual! : k.expected)}</span>
           {!closed && has && diff != null && (Math.abs(diff) < 1 ? <Chip tone="up">сходится</Chip> : <Chip tone={diff > 0 ? "warn" : "bad"} title={c26.d}>{diff > 0 ? "+" : "−"}{mln(Math.abs(diff))}{diff < 0 ? " недостача" : ""}</Chip>)}</div></>

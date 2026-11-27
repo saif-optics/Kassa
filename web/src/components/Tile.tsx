@@ -6,25 +6,32 @@ import { land, useCountUp } from "@/lib/motion";
 import { fmt } from "@/features/pay/logic";
 import { fmtM } from "@/features/plan/logic";
 import { goProps, type Dest } from "@/lib/go";
+import { Glow, IconBox, SparkArea, type Tone } from "./TileDeco";
+import type { LucideIcon } from "lucide-react";
 
 const OnHero = createContext(false);
+const HasIcon = createContext(false);
 
 /** to + label — плитка-ссылка: курсор, подъём при наведении, Enter, подпись «Открыть …» */
-export function Tile({ i = 0, hero, warn, className, children, to, label }: { i?: number; hero?: boolean; warn?: boolean; className?: string; children: React.ReactNode; to?: Dest | (() => void); label?: string }) {
+/** icon + tone — цветная иконка в квадрате справа вверху; glow — свечение цвета смысла (статусные плитки); spark — мини-график под числом */
+export function Tile({ i = 0, hero, warn, className, children, to, label, icon, tone = "brand", glow, spark }: { i?: number; hero?: boolean; warn?: boolean; className?: string; children: React.ReactNode; to?: Dest | (() => void); label?: string; icon?: LucideIcon; tone?: Tone; glow?: Tone | null; spark?: number[] }) {
   return (
-    <OnHero.Provider value={!!hero}>
+    <OnHero.Provider value={!!hero}><HasIcon.Provider value={!!icon && !hero}>
       <motion.div {...land(i)} {...(to ? { ...goProps(to, label || "раздел"), whileHover: { y: -2 } } : {})}
-        className={cn("flex h-full relative min-h-[118px] min-w-0 flex-col justify-between overflow-hidden rounded-3xl p-4 @min-[640px]/main:rounded-[28px] @min-[640px]/main:px-6 @min-[640px]/main:py-4 @min-[1600px]/main:py-[22px]",
+        className={cn("isolate flex h-full relative min-h-[118px] min-w-0 flex-col justify-between overflow-hidden rounded-3xl p-4 @min-[640px]/main:rounded-[28px] @min-[640px]/main:px-6 @min-[640px]/main:py-4 @min-[1600px]/main:py-[22px]",
           hero ? "border border-white/25 bg-[linear-gradient(135deg,var(--brand),#0a4f7a_60%,var(--brand-navy))] text-white shadow-[0_14px_36px_rgb(2_110_166/0.32)]" : "glass",
           to && "cursor-pointer outline-none transition-shadow hover:shadow-lg focus-visible:ring-2 focus-visible:ring-primary/50",
-          warn && "ring-1 ring-minus/50", className)}>{children}</motion.div>
-    </OnHero.Provider>
+          warn && "ring-1 ring-minus/50", className)}>
+        {glow && !hero && <Glow tone={glow} />}{spark && <SparkArea data={spark} tone={hero ? "muted" : tone} color={hero ? "rgb(255 255 255 / .38)" : undefined} />}
+        {icon && !hero && <span className="absolute top-3.5 right-3.5 @min-[640px]/main:top-4 @min-[640px]/main:right-5"><IconBox icon={icon} tone={tone} /></span>}
+        {children}</motion.div>
+    </HasIcon.Provider></OnHero.Provider>
   );
 }
 
 export function TileLabel({ children, className }: { children: React.ReactNode; className?: string }) {
-  const hero = useContext(OnHero);
-  return <span className={cn("text-[13px] font-semibold tracking-[.06em] uppercase", hero ? "text-white/80" : "text-muted-foreground", className)}>{children}</span>;
+  const hero = useContext(OnHero), icon = useContext(HasIcon);
+  return <span className={cn("text-[13px] font-semibold tracking-[.06em] uppercase", icon && "pr-11 @min-[640px]/main:pr-12", hero ? "text-white/80" : "text-muted-foreground", className)}>{children}</span>;
 }
 
 /** значение плитки; count — число с досчётом: «sum» — целое с пробелами, «mln» — «1,2 млн» */

@@ -1,6 +1,6 @@
 // Раздел «Продажи»: бенто-мозаика — показатели, календарь, итог дня, касса по точкам, форма продажи, график, долги; ниже журнал, таблица по периодам, файлы.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Plus, SlidersHorizontal } from "lucide-react";
+import { HandCoins, Plus, SlidersHorizontal, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import type { Data } from "@/lib/types";
 import { useMutations } from "@/lib/useData";
@@ -94,6 +94,8 @@ export function SalesPage({ d }: { d: Data }) {
   const canDeleteExp = (e: { date?: string }) => !lim || ((e.date || "") >= yest && (e.date || "") <= today);
   const list = useMemo(() => filtered(c, F), [c, F]);
   const ex = useMemo(() => expFiltered(c, F), [c, F]);
+  // выручка по дням периода (до 30 последних дней) — мини-график в плитке
+  const daily = useMemo(() => { const m: Record<string, number> = {}; list.forEach((s) => { m[s.date] = (m[s.date] || 0) + (+s.sum || 0); }); return Object.keys(m).sort().slice(-30).map((k) => m[k]); }, [list]);
   const a = agg(list), pv = prevList(c, F), pa = pv ? agg(pv.list) : null;
   const expSum = ex.reduce((x, e) => x + expVal(e), 0);
   const rows = useMemo(() => dayCashRows(list, ex, c.settings.points), [list, ex, c.settings.points]);
@@ -177,7 +179,7 @@ export function SalesPage({ d }: { d: Data }) {
 
       <div className={GRID}>
         <Item k="rev" c={cn(C.rev, vis("overview"))}>
-          <Tile i={nx()} hero to={toAn("rev")} label="выручку и темп в аналитике">
+          <Tile i={nx()} hero spark={daily} to={toAn("rev")} label="выручку и темп в аналитике">
             <TileTop><TileLabel>Выручка за период</TileLabel><Cmp cur={a.rev} prev={pa && pa.rev} long /></TileTop>
             <TileBody><TileValue count={a.rev} className="@min-[640px]/main:text-[40px] @min-[1024px]/main:text-[32px] @min-[1600px]/main:text-[44px]" />
               <TileSub className={cn("flex-wrap", SUB.phone)}>{fmt(a.checks)} чеков · {fmt(a.n)} позиций · средний {fmt(a.avg)}</TileSub></TileBody>
@@ -190,7 +192,7 @@ export function SalesPage({ d }: { d: Data }) {
           <Tile i={nx()} to={toAn("chk")} label="чеки в аналитике"><TileTop><TileLabel>Средний чек</TileLabel><Cmp cur={a.avg} prev={pa && pa.avg} /></TileTop><TileValue count={a.avg} className={VAL} /></Tile>
         </Item>
         <Item k="cash" c={cn(C.cash, vis("overview"))}>
-          <Tile i={nx()} to={{ tab: "kassa" }} label="кассу"><TileLabel>Б/Ч − расходы дня</TileLabel>
+          <Tile i={nx()} to={{ tab: "kassa" }} label="кассу" icon={Wallet} tone="plus"><TileLabel>Б/Ч − расходы дня</TileLabel>
             <TileBody><TileValue count={a.cash - expSum} compact className={VAL} />
               <TileSub className={SUBC + SUB.phone}>расходы {fmtM(expSum)}</TileSub>
               <TileSub className={SUBC + SUB.mid}>наличные {fmtM(a.cash).replace(" млн", "")} · расходы {fmtM(expSum)}</TileSub>
@@ -198,7 +200,7 @@ export function SalesPage({ d }: { d: Data }) {
         </Item>
         <Item k="debtTile" c={cn(C.debtTile, vis("overview"))}>
           <button type="button" onClick={() => setDOpen(true)} className="block h-full w-full rounded-3xl text-left outline-none focus-visible:ring-3 focus-visible:ring-primary/40" aria-label="Открыть долги">
-            <Tile i={nx()}><TileLabel>Долги</TileLabel><TileBody><TileValue count={dr.openSum} format="mln" className={dr.openSum ? "text-minus" : ""} /><TileSub>открыто {dr.openCount}</TileSub></TileBody></Tile>
+            <Tile i={nx()} icon={HandCoins} tone="minus" glow={dr.openSum ? "minus" : null}><TileLabel>Долги</TileLabel><TileBody><TileValue count={dr.openSum} format="mln" className={dr.openSum ? "text-minus" : ""} /><TileSub>открыто {dr.openCount}</TileSub></TileBody></Tile>
           </button>
         </Item>
 

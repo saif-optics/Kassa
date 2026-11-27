@@ -67,30 +67,30 @@
     --card-foreground: #1c1c1e;
     --popover: #ffffff;
     --popover-foreground: #1c1c1e;
-    --primary: #026ea6;
+    --primary: #1590c9;
     --primary-foreground: #ffffff;
     --secondary: rgb(118 118 128 / 0.12);
     --secondary-foreground: #1c1c1e;
     --muted: rgb(118 118 128 / 0.1);
     --muted-foreground: #5f6f7d;
-    --accent: rgb(2 110 166 / 0.1);
-    --accent-foreground: #026ea6;
-    --destructive: #d70015;
+    --accent: rgb(21 144 201 / 0.12);
+    --accent-foreground: #0f6f9c;
+    --destructive: #d94a3f;
     --border: rgb(34 51 70 / 0.14);
     --input: rgb(60 60 67 / 0.18);
-    --ring: #026ea6;
-    --chart-1: #026ea6; --chart-2: #af52de; --chart-3: #34c759; --chart-4: #ff9f0a; --chart-5: #8e8e93;
-    --brand: #026ea6; --brand-cyan: #09c0e4; --brand-navy: #223346;
+    --ring: #1590c9;
+    --chart-1: #1590c9; --chart-2: #6d5bd0; --chart-3: #15924f; --chart-4: #b7791f; --chart-5: #64748b;
+    --brand: #1590c9; --brand-cyan: #09c0e4; --brand-navy: #223346;
     --radius: 0.9rem;
-    --plus: #248a3d; --plus-soft: rgb(52 199 89 / 0.14);
-    --minus: #d70015; --minus-soft: rgb(255 59 48 / 0.12);
-    --warn: #b25000; --warn-soft: rgb(255 159 10 / 0.16);
+    --plus: #15924f; --plus-soft: rgb(21 146 79 / 0.16);
+    --minus: #d94a3f; --minus-soft: rgb(217 74 63 / 0.16);
+    --warn: #b7791f; --warn-soft: rgb(183 121 31 / 0.16);
     --glass-brd: rgb(255 255 255 / 0.9);
     --bg-img: url("/bg-day.webp");
     --bg-tint: linear-gradient(180deg, rgb(238 242 246 / 0.9), rgb(238 242 246 / 0.74) 35%, rgb(238 242 246 / 0.7) 60%, rgb(238 242 246 / 0.86));
     --shadow: 0 18px 48px rgb(40 30 20 / 0.14), 0 2px 6px rgb(40 30 20 / 0.06);
-    --sidebar: rgb(255 255 255 / 0.66); --sidebar-foreground: #1c1c1e; --sidebar-primary: #026ea6; --sidebar-primary-foreground: #fff;
-    --sidebar-accent: rgb(118 118 128 / 0.12); --sidebar-accent-foreground: #1c1c1e; --sidebar-border: rgb(60 60 67 / 0.14); --sidebar-ring: #026ea6;
+    --sidebar: rgb(255 255 255 / 0.66); --sidebar-foreground: #1c1c1e; --sidebar-primary: #1590c9; --sidebar-primary-foreground: #fff;
+    --sidebar-accent: rgb(118 118 128 / 0.12); --sidebar-accent-foreground: #1c1c1e; --sidebar-border: rgb(60 60 67 / 0.14); --sidebar-ring: #1590c9;
 }
 
 .dark {
@@ -102,26 +102,26 @@
     --popover-foreground: #f5f5f7;
     --primary: #27b3dc;
     --primary-foreground: #06202c;
-    --secondary: rgb(118 118 128 / 0.24);
+    --secondary: rgb(118 128 140 / 0.28);
     --secondary-foreground: #f5f5f7;
-    --muted: rgb(118 118 128 / 0.2);
-    --muted-foreground: #97a3ae;
+    --muted: rgb(118 128 140 / 0.24);
+    --muted-foreground: #a9b6c3;
     --accent: rgb(39 179 220 / 0.16);
-    --accent-foreground: #6fd3ef;
-    --destructive: #ff453a;
-    --border: rgb(255 255 255 / 0.12);
-    --input: rgb(255 255 255 / 0.16);
+    --accent-foreground: #7fd9f2;
+    --destructive: #ef6257;
+    --border: rgb(255 255 255 / 0.17);
+    --input: rgb(255 255 255 / 0.22);
     --ring: #27b3dc;
-    --chart-1: #27b3dc; --chart-2: #bf5af2; --chart-3: #30d158; --chart-4: #ff9f0a; --chart-5: #98989d;
-    --plus: #30d158; --plus-soft: rgb(48 209 88 / 0.16);
-    --minus: #ff453a; --minus-soft: rgb(255 69 58 / 0.16);
-    --warn: #ffd60a; --warn-soft: rgb(255 214 10 / 0.14);
+    --chart-1: #27b3dc; --chart-2: #8b7cf6; --chart-3: #2fbf71; --chart-4: #f5b335; --chart-5: #7f90a0;
+    --plus: #2fbf71; --plus-soft: rgb(47 191 113 / 0.16);
+    --minus: #ef6257; --minus-soft: rgb(239 98 87 / 0.16);
+    --warn: #f5b335; --warn-soft: rgb(245 179 53 / 0.16);
     --glass-brd: rgb(255 255 255 / 0.17);
     --bg-img: url("/bg-night.webp");
     --bg-tint: linear-gradient(180deg, rgb(11 14 19 / 0.9), rgb(11 14 19 / 0.72) 35%, rgb(11 14 19 / 0.66) 60%, rgb(11 14 19 / 0.88));
     --shadow: 0 18px 48px rgb(0 0 0 / 0.45), 0 2px 6px rgb(0 0 0 / 0.2);
     --sidebar: rgb(20 18 17 / 0.6); --sidebar-foreground: #f5f5f7; --sidebar-primary: #27b3dc; --sidebar-primary-foreground: #fff;
-    --sidebar-accent: rgb(118 118 128 / 0.24); --sidebar-accent-foreground: #f5f5f7; --sidebar-border: rgb(255 255 255 / 0.12); --sidebar-ring: #27b3dc;
+    --sidebar-accent: rgb(118 118 128 / 0.24); --sidebar-accent-foreground: #f5f5f7; --sidebar-border: rgb(255 255 255 / 0.17); --sidebar-ring: #27b3dc;
 }
 
 @media (max-width: 639px) {
@@ -285,3 +285,26 @@ body::before { content: ""; position: fixed; inset: -14px; z-index: -1; pointer-
 .dark .logo-glow { filter: drop-shadow(0 0 3px rgb(72 189 224 / .55)) drop-shadow(0 0 8px rgb(72 189 224 / .35)); animation: logo-pulse 5s ease-in-out infinite; }
 @keyframes logo-pulse { 0%, 100% { opacity: .88 } 50% { opacity: 1 } }
 @media (prefers-reduced-motion: reduce) { .dark .logo-glow { animation: none; } }
+
+/* ===== Экран загрузки «Фокус»: один проход 1,8 с, без повтора; фон тёмный в любой теме ===== */
+.sp-root { background: radial-gradient(60% 55% at 50% 45%, #0e2433 0%, #070b11 70%); color: #e8f6fc; transition: opacity .25s var(--ease-out), transform .25s var(--ease-out); }
+.sp-root.sp-out { opacity: 0; transform: scale(1.04); pointer-events: none; }
+.sp-logo { width: min(340px, 78vw); height: auto; overflow: visible; }
+.sp-wm { font-size: 22px; font-weight: 800; letter-spacing: .32em; padding-left: .32em; margin-top: 4px; animation: sp-fade .5s ease .72s both; }
+.sp-sub { font-size: 12px; letter-spacing: .3em; padding-left: .3em; color: #7fa3b8; margin-top: -14px; animation: sp-fade .5s ease .8s both; }
+.sp-ring { transform-box: fill-box; transform-origin: center; animation: sp-focus .8s cubic-bezier(.22,1,.36,1) both; }
+.sp-ring2 { animation-delay: .08s; }
+.sp-side { animation: sp-fade .45s ease .7s both; }
+.sp-glow { animation: sp-glow 1s ease .6s both; }
+.sp-wave { transform-box: fill-box; transform-origin: center; opacity: 0; animation: sp-wave .85s cubic-bezier(.22,1,.36,1) .55s both; }
+.sp-wave2 { animation-delay: .8s; }
+@keyframes sp-focus { from { transform: scale(1.35); opacity: 0; filter: blur(14px); } to { transform: none; opacity: 1; filter: blur(0); } }
+@keyframes sp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sp-glow { from { opacity: 0; } to { opacity: .45; } }
+@keyframes sp-wave { 0% { transform: scale(.4); opacity: 0; } 15% { opacity: .7; } 100% { transform: scale(1.9); opacity: 0; } }
+/* без движения: кольца и надпись сразу на месте, только короткое проявление */
+@media (prefers-reduced-motion: reduce) {
+  .sp-ring, .sp-side, .sp-glow, .sp-wm, .sp-sub { animation: sp-fade .2s ease both !important; }
+  .sp-wave { display: none; }
+  .sp-root, .sp-root.sp-out { transition: opacity .2s linear !important; transform: none !important; }
+}

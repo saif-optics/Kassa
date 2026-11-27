@@ -2,7 +2,7 @@
 // Остальные разделы пока открываются на рабочем сайте — переносим по одному.
 import { useEffect, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useIsFetching, useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import { ChevronsLeft, ChevronsRight, LogOut, MoreHorizontal, Moon, Sun, type LucideIcon } from "lucide-react";
 import { Toaster } from "sonner";
@@ -22,6 +22,7 @@ import { TasksPage } from "@/features/tasks/TasksPage";
 import { UsersPage } from "@/features/users/UsersPage";
 import { useData } from "@/lib/useData";
 import { Login } from "@/components/Login";
+import { Splash } from "@/components/Splash";
 import { useIsPhone } from "@/lib/useMedia";
 import { PayPage } from "@/features/pay/PayPage";
 import { KassaPage } from "@/features/kassa/KassaPage";
@@ -194,6 +195,18 @@ function Gate({ email }: { email: string }) {
   return <AccessProvider value={q.data}><Shell email={isDemo ? "демо-данные" : email} /></AccessProvider>;
 }
 
+// экран загрузки: готов, когда известна сессия и (если вошли) загружены права и данные
+function SplashHost({ session }: { session: Session | null | undefined }) {
+  useIsFetching(); // перерисовка при смене состояния запросов
+  let ready = session !== undefined;
+  if (session) {
+    const acc = qc.getQueryState(["kassa-access", session.user.email || ""]);
+    if (!acc || acc.status === "pending") ready = false;
+    else if (acc.data) { const dt = qc.getQueryState(["kassa-data"]); ready = !!dt && dt.status !== "pending"; }
+  }
+  return <Splash ready={ready} />;
+}
+
 export default function App() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   // при смене пользователя (выход, вход под другим) кэш данных и прав очищается, чтобы не показать чужое
@@ -204,6 +217,7 @@ export default function App() {
     <QueryClientProvider client={qc}>
       <TooltipProvider delayDuration={150}>
         {session === undefined ? null : session ? <Gate email={session.user.email || ""} /> : <Login />}
+        <SplashHost session={session} />
       </TooltipProvider>
     </QueryClientProvider>
   );

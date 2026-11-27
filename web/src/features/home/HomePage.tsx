@@ -1,6 +1,6 @@
 // Раздел «Главная»: плитки дня, что требует внимания, точки и 14 дней, разделы по важности, последние продажи.
 import { useMemo } from "react";
-import { CalendarCheck, Calculator, FileText, ListChecks, Plus, ShoppingBag, Wallet, type LucideIcon } from "lucide-react";
+import { CalendarCheck, Calculator, FileText, Landmark, ListChecks, Plus, ShoppingBag, Target, Wallet, type LucideIcon } from "lucide-react";
 import type { Data } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/Card";
@@ -97,7 +97,7 @@ export function HomePage({ d }: { d: Data }) {
                 {h.lastDay !== today && <span className="max-[639px]:hidden">продаж сегодня нет</span>}
               </div></TileBody>
           </Tile></Item>
-          {adm && <Item c={C.cash}><Tile i={nx()} warn={t.cash.diff != null && t.cash.diff <= -1000} to={{ tab: "kassa" }} label="кассу">
+          {adm && <Item c={C.cash}><Tile i={nx()} warn={t.cash.diff != null && t.cash.diff <= -1000} to={{ tab: "kassa" }} label="кассу" icon={Wallet} tone="brand" glow={t.cash.diff != null && t.cash.diff <= -1000 ? "minus" : t.cash.diff != null && t.cash.diff >= 1000 ? "warn" : null}>
             <TileLabel>{t.cash.fact ? "Наличные в кассе" : "Должно быть на руках"}</TileLabel>
             <TileBody><TileValue count={t.cash.value} compact />
               <TileSub>{t.cash.fact ? <Chip tone={t.cash.ok ? "plus" : t.cash.diff! < 0 ? "minus" : "warn"}>{t.cash.diffLabel}</Chip> : <span>касса не пересчитана</span>}</TileSub></TileBody>
@@ -107,13 +107,13 @@ export function HomePage({ d }: { d: Data }) {
             <TileBody><TileValue count={t.plan.value} format="mln" />
               <TileSub>{t.plan.pct != null ? <span>{pctF(t.plan.pct)} плана{h.plan.S && !h.plan.K.past ? ` · ${fmtM(h.plan.S.pace)} в день` : ""}</span> : <span>план месяца не задан</span>}</TileSub></TileBody>
           </Tile></Item>
-          {adm && <Item c={C.rs}><Tile i={nx()} to={{ tab: "report" }} label="отчёт по расчётному счёту">
+          {adm && <Item c={C.rs}><Tile i={nx()} to={{ tab: "report" }} label="отчёт по расчётному счёту" icon={Landmark} tone="info">
             <TileLabel>Расчётный счёт</TileLabel>
             <TileBody>{t.rs.value != null ? <TileValue count={t.rs.value} compact /> : <TileValue>—</TileValue>}
               <TileSub>{t.rs.nextPay ? <Chip tone="warn" className="min-w-0 shrink"><span className="truncate">{t.rs.nextPay.name} · {t.rs.nextPay.days <= 0 ? "сегодня" : `${t.rs.nextPay.days} дн.`}</span></Chip>
                 : t.rs.value == null ? <span>выписки пока нет</span> : <span>платежей впереди нет</span>}</TileSub></TileBody>
           </Tile></Item>}
-          <Item c={C.need}><Tile i={nx()} to={canTab(a, "plan") ? { tab: "plan" } : undefined} label="план">
+          <Item c={C.need}><Tile i={nx()} to={canTab(a, "plan") ? { tab: "plan" } : undefined} label="план" icon={Target} tone="warn">
             <TileLabel>Нужно в день</TileLabel>
             <TileBody>{t.plan.needPerDay != null ? <TileValue count={t.plan.needPerDay} compact /> : <TileValue>—</TileValue>}
               <TileSub><span>{t.plan.needPerDay != null ? `до плана ${t.plan.daysLeft} раб. дн.` : t.plan.planTotal ? "месяц закрыт" : "план месяца не задан"}</span></TileSub></TileBody>
