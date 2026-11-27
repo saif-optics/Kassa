@@ -208,7 +208,9 @@ html.embed .login{margin:24px auto}
 })();
 </script>
 <script type="module">
-import * as F from "./face.js";
+// face.js грузится лениво при съёмке: статический импорт блокируется из file://
+let F = null;
+const face = async () => F ??= await import("./face.js");
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {}); // кэш весов
 // демо-режим (?demo=1): выдуманные данные, база не используется и ничего не пишется
 const DEMO = new URLSearchParams(location.search).get("demo") === "1";
@@ -511,6 +513,7 @@ async function capture(name) {
   openModal("camModal"); $("camTitle").textContent = name; $("camProg").style.width = "0";
   $("camHint").textContent = "Загрузка распознавания… 0%"; camCancel = false;
   try {
+    await face();
     const fa = await F.loadFace(p => { $("camHint").textContent = "Загрузка распознавания… " + Math.round(p * 100) + "%"; });
     camStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" } });
     const v = $("video"); v.srcObject = camStream; await v.play();
@@ -538,7 +541,7 @@ async function capture(name) {
       $("camHint").textContent = out.length < POSES.length ? "Есть! " + POSES[out.length].t : "Готово";
     }
     return camCancel ? null : out;
-  } catch (err) { alert(F.explain(err)); return null; }
+  } catch (err) { alert(F ? F.explain(err) : "Не удалось загрузить распознавание"); return null; }
   finally { camStream?.getTracks().forEach(t => t.stop()); camStream = null; closeModal("camModal"); }
 }
 $("camCancel").onclick = () => { camCancel = true; };
