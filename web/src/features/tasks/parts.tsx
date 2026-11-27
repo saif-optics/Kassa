@@ -14,15 +14,16 @@ import { Chip, type ChipTone } from "@/components/Tile";
 import { DUR, EASE, land } from "@/lib/motion";
 import { useIsPhone } from "@/lib/useMedia";
 import { cn } from "@/lib/utils";
-import { MAXLEN, PRI, ST, TASK_POINTS, errMsg, fmtD, fmtT, isOverdue, type NewTask, type Priority, type Status, type Task, type TaskComment, type useTaskActions } from "./logic";
+import { MAXLEN, PRI, ST, errMsg, fmtD, fmtT, isOverdue, type Priority, type Status, type Task, type TaskComment, type useTaskActions } from "./logic";
+import { ScopeChip, type Who } from "./common";
 
 type Actions = ReturnType<typeof useTaskActions>;
 const PRI_TONE: Record<Priority, ChipTone> = { high: "minus", normal: "muted", low: "info" };
 const ST_TONE: Record<Status, ChipTone> = { new: "warn", work: "info", done: "plus" };
 const fail = (e: unknown) => { toast.error(errMsg(e)); };
 
-export function TaskCard({ t, comments, admin, today, open, onToggle, act, i }: {
-  t: Task; comments: TaskComment[]; admin: boolean; today: string; open: boolean; onToggle: () => void; act: Actions; i: number;
+export function TaskCard({ t, comments, admin, today, open, onToggle, act, i, w }: {
+  t: Task; comments: TaskComment[]; admin: boolean; today: string; open: boolean; onToggle: () => void; act: Actions; i: number; w: Who;
 }) {
   const od = isOverdue(t, today);
   return (
@@ -37,9 +38,10 @@ export function TaskCard({ t, comments, admin, today, open, onToggle, act, i }: 
         <div className="flex flex-wrap items-center gap-1.5">
           <Chip tone={PRI_TONE[t.priority]}>{PRI[t.priority]}</Chip>
           <Chip tone={ST_TONE[t.status]}>{ST[t.status]}</Chip>
-          {t.due && <Chip tone={od ? "minus" : "muted"}>{od ? "Просрочено · " : "Срок "}{fmtD(t.due)}</Chip>}
+          {t.due && <Chip tone={od ? "minus" : "muted"}>{od ? "Просрочено · " : "Срок "}{fmtD(t.due)}{t.due_time ? " " + t.due_time : ""}</Chip>}
+          <ScopeChip s={t} w={w} />
           {t.source === "seller" && <Chip tone="warn">от продавца</Chip>}
-          {t.assignee && <span className="min-w-0 truncate text-[12px] text-muted-foreground">Ответственный: {t.assignee}</span>}
+          {t.assignee && t.scope !== "person" && <span className="min-w-0 truncate text-[12px] text-muted-foreground">Ответственный: {t.assignee}</span>}
         </div>
       </div>
       <AnimatePresence initial={false}>
@@ -54,7 +56,7 @@ export function TaskCard({ t, comments, admin, today, open, onToggle, act, i }: 
   );
 }
 
-function Details({ t, comments, admin, act }: { t: Task; comments: TaskComment[]; admin: boolean; act: Actions }) {
+export function Details({ t, comments, admin, act }: { t: Task; comments: TaskComment[]; admin: boolean; act: Actions }) {
   const [text, setText] = useState(""), [busy, setBusy] = useState(false), [ask, setAsk] = useState(false);
   const run = async (f: () => Promise<void>) => { if (busy) return; setBusy(true); try { await f(); } catch (e) { fail(e); } setBusy(false); };
   const send = (e: React.FormEvent) => { e.preventDefault(); const b = text.trim(); if (!b) return; run(async () => { await act.comment(t.id, b); setText(""); }); };
@@ -123,30 +125,6 @@ const Buttons = ({ busy, ok, onClose }: { busy: boolean; ok: string; onClose: ()
     <Button type="button" variant="secondary" onClick={onClose} className="h-10 flex-1 rounded-full sm:flex-none sm:px-6">Отмена</Button>
   </div>
 );
-
-/** новое задание (админ) */
-export function NewTaskForm({ point, onSave, onClose }: { point: string; onSave: (v: NewTask) => Promise<void>; onClose: () => void }) {
-  const [v, setV] = useState<NewTask>({ point: point || TASK_POINTS[0], title: "", body: "", priority: "normal", due: "", assignee: "" }), [busy, setBusy] = useState(false);
-  const set = <K extends keyof NewTask>(k: K, x: NewTask[K]) => setV((o) => ({ ...o, [k]: x }));
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!v.title.trim()) { toast.error("Напишите заголовок"); return; }
-    setBusy(true);
-    try { await onSave({ ...v, title: v.title.trim(), body: v.body.trim(), assignee: v.assignee.trim() }); toast.success("Задание создано"); onClose(); } catch (x) { fail(x); }
-    setBusy(false);
-  };
-  return (
-    <form onSubmit={submit} className="grid gap-3 sm:grid-cols-2">
-      <Field label="Точка"><Segments size="sm" aria-label="Точка" value={v.point} onChange={(k) => set("point", k)} items={TASK_POINTS.map((p) => ({ key: p, label: p }))} /></Field>
-      <Field label="Срочность"><Segments size="sm" aria-label="Срочность" value={v.priority} onChange={(k) => set("priority", k as Priority)} items={(Object.keys(PRI) as Priority[]).map((k) => ({ key: k, label: PRI[k] }))} /></Field>
-      <Field label="Заголовок" count={`${v.title.length}/${MAXLEN.title}`} className="sm:col-span-2"><Input value={v.title} onChange={(e) => set("title", e.target.value)} maxLength={MAXLEN.title} required className="h-10" /></Field>
-      <Field label="Описание" count={`${v.body.length}/${MAXLEN.body}`} className="sm:col-span-2"><Textarea value={v.body} onChange={(e) => set("body", e.target.value)} maxLength={MAXLEN.body} className="min-h-20 text-[14px]" /></Field>
-      <Field label="Срок"><Input type="date" value={v.due} onChange={(e) => set("due", e.target.value)} className="h-10" /></Field>
-      <Field label="Ответственный"><Input value={v.assignee} onChange={(e) => set("assignee", e.target.value)} maxLength={MAXLEN.assignee} className="h-10" /></Field>
-      <Buttons busy={busy} ok="Создать" onClose={onClose} />
-    </form>
-  );
-}
 
 /** проблема или предложение (ограниченная роль) → rpc tasks_problem */
 export function ProblemForm({ onSave, onClose }: { onSave: (title: string, body: string) => Promise<void>; onClose: () => void }) {
