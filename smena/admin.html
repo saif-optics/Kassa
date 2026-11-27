@@ -159,11 +159,11 @@ html.embed .login{margin:24px auto}
         <div class="ch" style="display:flex;align-items:flex-start;gap:10px"><div style="flex:1"><h3>Как отмечаться</h3><div class="sub">Для сотрудников</div></div><button class="btn2 noprint" id="print">Распечатать</button></div>
         <ol class="steps">
           <li><span class="n">1</span><div><b>Пришли на работу</b> — на компьютере точки открыт экран «Отметиться». Нажмите кнопку или пробел.</div></li>
-          <li><span class="n">2</span><div>Посмотрите в камеру 2–3 секунды. Снимите солнцезащитные очки и маску, лицо должно быть освещено.</div></li>
-          <li><span class="n">3</span><div>Экран покажет ваше имя и через 4 секунды сам поставит «Пришёл». Если нужно другое — нажмите нужную кнопку. Если показал не вас — «Это не я».</div></li>
+          <li><span class="n">2</span><div>Посмотрите в камеру и выполните задание на экране (моргнуть или повернуть голову) — 2–3 секунды. Снимите солнцезащитные очки и маску, лицо должно быть освещено.</div></li>
+          <li><span class="n">3</span><div>Экран покажет ваше имя и через секунду сам поставит «Пришёл». Если нужно другое — нажмите нужную кнопку. Если показал не вас — «Это не я».</div></li>
           <li><span class="n">4</span><div>Уходя домой — то же самое: нажмите «Отметиться», экран предложит «Ушёл».</div></li>
           <li><span class="n">5</span><div>«Не узнаю» — подойдите ближе, уберите волосы с лица, попробуйте ещё раз. Не помогло — скажите управляющему, лицо переснимут.</div></li>
-          <li><span class="n">6</span><div>Повторно нажимать не нужно: вторая такая же отметка за 3 минуты не записывается. Нет интернета — отметка сохранится и отправится сама.</div></li>
+          <li><span class="n">6</span><div>Повторно нажимать не нужно: если вы уже отметились, экран ответит «Уже отмечено» (полторы минуты повторно ничего не пишется), а сервер дополнительно не примет такую же отметку в течение 3 минут. Нет интернета — отметка сохранится на устройстве и отправится сама, когда связь появится; в журнале у неё будет время отправки.</div></li>
         </ol>
         <div class="memo-note">Опоздание считается от времени начала работы точки</div>
       </div>
@@ -172,7 +172,7 @@ html.embed .login{margin:24px auto}
         <ol class="steps">
           <li><span class="n">1</span><div>«Точки»: задайте время начала работы и скопируйте ссылку киоска.</div></li>
           <li><span class="n">2</span><div>На компьютере точки откройте ссылку в Chrome, разрешите камеру, оставьте страницу открытой. Точка запомнится.</div></li>
-          <li><span class="n">3</span><div>«Сотрудники»: добавьте людей и точку работы. Снимите лицо на том же компьютере при обычном освещении — 6 образцов, около 10 секунд.</div></li>
+          <li><span class="n">3</span><div>«Сотрудники»: добавьте людей и точку работы. Снимите лицо на том же компьютере при обычном освещении — 5 образцов с разных ракурсов (прямо, влево, вправо, выше, ниже), около 15 секунд.</div></li>
           <li><span class="n">4</span><div>Проверка: «Журнал» за сегодня — приход, опоздание, уход, фото и «где».</div></li>
           <li><span class="n">5</span><div>Уволился — «Отключить», история останется. Плохо узнаёт — «Переснять».</div></li>
         </ol>
@@ -208,12 +208,13 @@ html.embed .login{margin:24px auto}
 })();
 </script>
 <script type="module">
+import * as F from "./face.js";
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {}); // кэш весов
 // демо-режим (?demo=1): выдуманные данные, база не используется и ничего не пишется
 const DEMO = new URLSearchParams(location.search).get("demo") === "1";
 const sb = DEMO ? null : (await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm")).createClient("https://qvblxhyftwivkzxucfak.supabase.co", "sb_publishable_-ceoJkpmAZ7Y8osbPHaOlg_3nqUsdB7",
   { auth: { persistSession: true, autoRefreshToken: true } });
-const MODELS = "https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/model/";
-const TZ = "Asia/Tashkent", SAMPLES = 6;
+const TZ = "Asia/Tashkent";
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const hm = d => new Intl.DateTimeFormat("ru-RU", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(new Date(d));
@@ -466,7 +467,7 @@ function renderEmp() {
     list.map(e => { const n = e.descriptors?.length || 0; return `<tr class="${e.active ? "" : "off"}">
       <td><div class="who">${avatar(e.name, e.point)}${esc(e.name)}</div></td>
       <td><select data-pt="${e.id}" aria-label="Точка работы">${points.map(p => `<option ${p.point === e.point ? "selected" : ""}>${esc(p.point)}</option>`).join("")}</select></td>
-      <td>${n ? `<span class="pill g">снято · ${n} ${plural(n, "образец", "образца", "образцов")}</span>` : `<span class="pill y">не снято</span>`}</td>
+      <td>${n ? `<span class="pill ${n < 3 ? "y" : "g"}">снято · ${n} ${plural(n, "образец", "образца", "образцов")}${n < 3 ? " — мало, переснимите" : ""}</span>` : `<span class="pill y">не снято</span>`}</td>
       <td>${e.active ? `<span class="pill g">работает</span>` : `<span class="pill">отключён</span>`}</td>
       <td style="text-align:right;white-space:nowrap"><button class="${n ? "btn2" : "btn"} sm" data-face="${e.id}">${n ? "Переснять" : "Снять лицо"}</button>
         <button class="${e.active ? "btn3" : "btn2"} sm" data-act="${e.id}">${e.active ? "Отключить" : "Включить"}</button></td></tr>`; }).join("");
@@ -495,31 +496,49 @@ $("addEmp").onclick = () => addEmp(false);
 $("addEmpFace").onclick = () => addEmp(true);
 
 // ---------- съёмка лица ----------
-let faceapi = null, camStream = null, camCancel = false;
-async function models() {
-  if (faceapi) return faceapi;
-  const fa = await import("https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/dist/face-api.esm.js");
-  await fa.tf.setBackend("webgl").catch(() => {}); await fa.tf.ready();
-  await Promise.all([fa.nets.tinyFaceDetector.loadFromUri(MODELS), fa.nets.faceLandmark68Net.loadFromUri(MODELS), fa.nets.faceRecognitionNet.loadFromUri(MODELS)]);
-  return faceapi = fa;
-}
+// 5 снимков с разных ракурсов (прямо, чуть влево, чуть вправо, подбородок выше, ниже). Киоск сравнивает с каждым и берёт минимум.
+// Снимок берётся только при нормальном кадре (размер, центр, свет, резкость) и если это тот же человек, что на первом снимке.
+let camStream = null, camCancel = false;
+const POSES = [
+  { t: "Смотрите прямо в камеру", ok: o => Math.abs(o) < 0.12 },
+  { t: "Чуть поверните голову влево", ok: o => o > 0.12 },
+  { t: "Чуть поверните голову вправо", ok: o => o < -0.12 },
+  { t: "Подбородок чуть выше", ok: o => Math.abs(o) < 0.2 },
+  { t: "Подбородок чуть ниже", ok: o => Math.abs(o) < 0.2 },
+];
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 async function capture(name) {
   openModal("camModal"); $("camTitle").textContent = name; $("camProg").style.width = "0";
-  $("camHint").textContent = "Загрузка распознавания…"; camCancel = false;
+  $("camHint").textContent = "Загрузка распознавания… 0%"; camCancel = false;
   try {
-    const fa = await models();
-    camStream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: "user" } });
+    const fa = await F.loadFace(p => { $("camHint").textContent = "Загрузка распознавания… " + Math.round(p * 100) + "%"; });
+    camStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" } });
     const v = $("video"); v.srcObject = camStream; await v.play();
-    $("camHint").textContent = "Смотрите в камеру, слегка поворачивайте голову";
-    const opts = new fa.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.6 });
-    const out = []; let lastAt = 0;
-    while (out.length < SAMPLES && !camCancel) {
-      const r = await fa.detectSingleFace(v, opts).withFaceLandmarks().withFaceDescriptor();
-      if (r && Date.now() - lastAt > 450) { out.push(Array.from(r.descriptor, x => +x.toFixed(5))); lastAt = Date.now(); $("camProg").style.width = (out.length / SAMPLES * 100) + "%"; }
-      else if (!r) $("camHint").textContent = "Лицо не видно — подойдите ближе, хороший свет";
+    await F.warmup(fa);
+    const fc = document.createElement("canvas"), fg = fc.getContext("2d");
+    const out = []; let first = null, lastAt = 0;
+    while (out.length < POSES.length && !camCancel) {
+      const pose = POSES[out.length];
+      $("camTitle").textContent = `${name} · снимок ${out.length + 1} из ${POSES.length}`;
+      await new Promise(r => requestAnimationFrame(r)); await sleep(60);
+      if (!v.videoWidth) continue;
+      if (fc.width !== v.videoWidth) { fc.width = v.videoWidth; fc.height = v.videoHeight; }
+      fg.drawImage(v, 0, 0);
+      const det = await F.detect(fa, fc);
+      if (!det) { $("camHint").textContent = "Лицо не видно — подойдите ближе, нужен хороший свет"; continue; }
+      const q = F.quality(det.box, fc.width, fc.height, F.facePixels(fc, det.box));
+      if (!q.ok) { $("camHint").textContent = q.hint; continue; }
+      const lm = await F.landmarks(fa, fc, det); if (!lm) continue;
+      if (!pose.ok(F.turnOffset(lm.landmarks.positions))) { $("camHint").textContent = pose.t; continue; }
+      if (Date.now() - lastAt < 700) { $("camHint").textContent = pose.t; continue; } // пауза между снимками, чтобы успеть сменить ракурс
+      const d = Array.from(await F.describeFace(fa, fc, lm), x => +x.toFixed(5));
+      if (first && F.match([{ id: 1, d: [first] }], d).d > 0.6) { $("camHint").textContent = "В кадре должен быть один человек"; continue; }
+      first ||= d; out.push(d); lastAt = Date.now();
+      $("camProg").style.width = (out.length / POSES.length * 100) + "%";
+      $("camHint").textContent = out.length < POSES.length ? "Есть! " + POSES[out.length].t : "Готово";
     }
     return camCancel ? null : out;
-  } catch (err) { alert("Камера: " + err.message); return null; }
+  } catch (err) { alert(F.explain(err)); return null; }
   finally { camStream?.getTracks().forEach(t => t.stop()); camStream = null; closeModal("camModal"); }
 }
 $("camCancel").onclick = () => { camCancel = true; };

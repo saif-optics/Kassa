@@ -2,60 +2,73 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Отметка — Saif-Optics</title>
-<!-- Проверка живости (защита от фото): после узнавания лица (расстояние < MATCH) киоск даёт случайное задание
-     на LIVE_MS: «Моргните» (EAR глаз по 68 точкам: падает ниже EAR_LOW и возвращается выше EAR_HIGH)
-     или «Поверните голову влево/вправо» (нос, точка 30, смещается от центра глаз больше TURN_MIN
-     межглазного расстояния в нужную сторону и возвращается к центру ближе TURN_BACK). Всё время проверяется
-     тот же человек (расстояние < MATCH + SAME_PLUS), кадров не чаще 1000/LIVE_GAP в секунду.
-     Защита только от статичного фото: видео с лицом она не остановит.
-     Не прошёл — отметка не пишется, поиск лица начинается заново. -->
-<meta name="theme-color" content="#f2f2f7">
+<!-- Киоск отметки по лицу. Распознавание — face.js (общий с админкой): модели локально (vendor/, models/), кэш — sw.js.
+     Порядок: детектор (SSD на компьютере, Tiny на телефоне) → проверка кадра (размер, центр, свет, резкость) →
+     точки лица → дескриптор → сравнение со ВСЕМИ снимками сотрудника (минимум) + отрыв от второго сотрудника;
+     решение — NEED кадров подряд. Параллельно — ОДНО короткое задание живости (моргнуть или повернуть голову).
+     Защита только от статичного фото: видео с лицом она не остановит. ?debug=1 — цифры на экране для подбора порогов. -->
+<meta name="theme-color" content="#0e1319">
 <style>
-:root{--bg:#f2f2f7;--card:rgba(255,255,255,.72);--line:rgba(60,60,67,.14);--tx:#1c1c1e;--mut:#8e8e93;--acc:#007aff;--ok:#34c759;--warn:#ff9500;--bad:#ff3b30}
-@media (prefers-color-scheme:dark){:root{--bg:#000;--card:rgba(44,44,46,.72);--line:rgba(84,84,88,.5);--tx:#f2f2f7;--mut:#98989f}}
-*{box-sizing:border-box}html,body{margin:0;height:100%}
-body{font:16px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;color:var(--tx);background:var(--bg);
- background-image:radial-gradient(1200px 600px at 10% -10%,rgba(0,122,255,.18),transparent),radial-gradient(900px 500px at 110% 110%,rgba(52,199,89,.14),transparent);
- display:flex;align-items:center;justify-content:center;-webkit-font-smoothing:antialiased;user-select:none}
-.glass{background:var(--card);backdrop-filter:blur(30px) saturate(1.6);-webkit-backdrop-filter:blur(30px) saturate(1.6);border:1px solid var(--line);border-radius:28px;box-shadow:0 20px 60px rgba(0,0,0,.08)}
-.wrap{width:min(980px,94vw);display:grid;grid-template-columns:1.2fr 1fr;gap:20px}
-@media (max-width:760px){.wrap{grid-template-columns:1fr}}
-.main{padding:32px;display:flex;flex-direction:column;align-items:center;text-align:center;min-height:540px;justify-content:center}
+:root{--bg:#0e1319;--card:rgba(28,36,46,.78);--line:rgba(160,185,210,.16);--tx:#eef3f8;--mut:#8b9aab;--acc:#27b3dc;--ok:#2fbf71;--warn:#f0a43a;--bad:#ef6257}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%}
+body{font:16px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;color:var(--tx);background:var(--bg);
+ background-image:radial-gradient(1100px 600px at 8% -10%,rgba(39,179,220,.2),transparent),radial-gradient(900px 500px at 110% 110%,rgba(47,191,113,.12),transparent);
+ min-height:100vh;display:flex;align-items:center;justify-content:center;-webkit-font-smoothing:antialiased;user-select:none;-webkit-user-select:none;padding:12px}
+.glass{background:var(--card);backdrop-filter:blur(26px) saturate(1.5);-webkit-backdrop-filter:blur(26px) saturate(1.5);border:1px solid var(--line);border-radius:28px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.wrap{width:min(1000px,100%);display:grid;grid-template-columns:1.25fr 1fr;gap:18px}
+@media (max-width:760px){.wrap{grid-template-columns:1fr}body{align-items:flex-start}}
+.main{padding:28px;display:flex;flex-direction:column;align-items:center;text-align:center;min-height:560px;justify-content:center}
+@media (max-width:760px){.main{padding:18px;min-height:0}}
 .pt{font-size:15px;color:var(--mut);letter-spacing:.02em}.pt b{color:var(--tx)}
-.clock{font-size:92px;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1;margin:10px 0 4px}
-.date{color:var(--mut);margin-bottom:28px;text-transform:capitalize}
-button{font:inherit;border:0;cursor:pointer;border-radius:16px;transition:transform .12s,opacity .12s}
-button:active{transform:scale(.97)}button:disabled{opacity:.45;cursor:default}
-.big{background:var(--acc);color:#fff;font-size:24px;font-weight:600;padding:22px 54px;border-radius:22px;box-shadow:0 10px 30px rgba(0,122,255,.35)}
-.sec{background:rgba(120,120,128,.16);color:var(--tx);padding:12px 20px;font-weight:600}
+.clock{font-size:clamp(64px,12vw,96px);font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1;margin:10px 0 4px}
+.date{color:var(--mut);margin-bottom:26px;text-transform:capitalize}
+button{font:inherit;border:0;cursor:pointer;border-radius:16px;transition:transform .12s,opacity .12s;color:inherit}
+button:active{transform:scale(.97)}button:disabled{opacity:.5;cursor:default}
+.big{background:var(--acc);color:#06222c;font-size:24px;font-weight:700;padding:22px 54px;border-radius:22px;box-shadow:0 10px 30px rgba(39,179,220,.35)}
+.sec{background:rgba(140,160,185,.16);color:var(--tx);padding:12px 22px;font-weight:600}
 .hint{color:var(--mut);font-size:14px;margin-top:14px}
-.cam{position:relative;width:100%;max-width:520px;aspect-ratio:4/3;border-radius:24px;overflow:hidden;background:#000}
+.ld{width:min(280px,70%);height:5px;border-radius:3px;background:rgba(140,160,185,.2);margin:14px auto 0;overflow:hidden}.ld i{display:block;height:100%;width:0;background:var(--acc);transition:width .2s}
+
+/* камера + рамка-овал: цвет по состоянию (ищу — белый, держите — голубой, готово — зелёный, подсказка — коралл) */
+.cam{position:relative;width:100%;max-width:560px;aspect-ratio:4/3;border-radius:26px;overflow:hidden;background:#000;--rc:rgba(255,255,255,.75)}
+@media (max-width:760px),(max-aspect-ratio:1/1){.cam{aspect-ratio:3/4;max-height:70vh}}
 .cam video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
-.cam .ring{position:absolute;inset:12% 22%;border:3px solid rgba(255,255,255,.7);border-radius:50%;transition:border-color .2s}
-.cam.found .ring{border-color:var(--ok)}
-.cam .chal{position:absolute;left:0;right:0;top:0;padding:14px 10px;text-align:center;color:#fff;font-size:30px;font-weight:800;background:linear-gradient(rgba(0,0,0,.65),transparent);text-shadow:0 2px 8px rgba(0,0,0,.6)}
-.cam .chal small{display:block;font-size:20px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:2px}
-.status{margin-top:14px;font-size:18px;font-weight:600;min-height:26px}
-.who{display:flex;flex-direction:column;align-items:center;gap:10px}
-.who img{width:150px;height:150px;border-radius:50%;object-fit:cover;border:4px solid var(--ok)}
-.who .nm{font-size:30px;font-weight:700}
+.cam .ring{position:absolute;inset:9% 24%;border:4px solid var(--rc);border-radius:50%;transition:border-color .25s,box-shadow .25s,transform .25s;box-shadow:0 0 0 999px rgba(6,10,14,.38)}
+.cam.search .ring{animation:pulse 1.6s ease-in-out infinite}
+.cam.hold{--rc:var(--acc)}.cam.hold .ring{box-shadow:0 0 0 999px rgba(6,10,14,.38),0 0 28px rgba(39,179,220,.55)}
+.cam.ok{--rc:var(--ok)}.cam.ok .ring{box-shadow:0 0 0 999px rgba(6,10,14,.38),0 0 34px rgba(47,191,113,.7);transform:scale(1.03)}
+.cam.warn{--rc:var(--bad)}
+@keyframes pulse{50%{transform:scale(1.025);opacity:.8}}
+.cam .chal{position:absolute;left:0;right:0;top:0;padding:14px 10px;text-align:center;color:#fff;font-size:clamp(24px,5vw,32px);font-weight:800;background:linear-gradient(rgba(0,0,0,.7),transparent);text-shadow:0 2px 8px rgba(0,0,0,.6);animation:drop .25s ease-out}
+@keyframes drop{from{transform:translateY(-14px);opacity:0}}
+.cam .meter{position:absolute;left:18%;right:18%;bottom:14px;height:6px;border-radius:3px;background:rgba(255,255,255,.22);overflow:hidden}.cam .meter i{display:block;height:100%;width:0;background:var(--acc);transition:width .2s}
+.cam .dbg{position:absolute;left:6px;bottom:24px;font:11px/1.3 monospace;color:#9f9;text-shadow:0 1px 2px #000;white-space:pre}
+.status{margin-top:16px;font-size:clamp(20px,4.5vw,26px);font-weight:700;min-height:34px;transition:color .2s}
+.status.warn{color:var(--bad)}.status.ok{color:var(--ok)}.status.hold{color:var(--acc)}
+.who{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%}
+.who img{width:150px;height:150px;border-radius:50%;object-fit:cover;border:4px solid var(--ok);animation:pop .3s ease-out}
+.who .nm{font-size:clamp(30px,6vw,40px);font-weight:800;line-height:1.1}
+@keyframes pop{from{transform:scale(.8);opacity:0}}
 .row{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;justify-content:center}
-.kind{padding:18px 34px;font-size:20px;font-weight:700;background:rgba(120,120,128,.16);color:var(--tx);position:relative;overflow:hidden}
-.kind.on{background:var(--ok);color:#fff}.kind.on.out{background:var(--warn)}
-.kind .bar{position:absolute;left:0;bottom:0;height:4px;background:rgba(255,255,255,.8);width:0}
-.done{font-size:64px;color:var(--ok);line-height:1}.done.out{color:var(--warn)}
-.side{padding:22px 20px;max-height:540px;overflow:auto}
+.kind{padding:18px 34px;font-size:22px;font-weight:700;background:rgba(140,160,185,.16);color:var(--tx);position:relative;overflow:hidden}
+.kind.on{background:var(--ok);color:#06210f}.kind.on.out{background:var(--warn);color:#2a1a02}
+.kind .bar{position:absolute;left:0;bottom:0;height:4px;background:rgba(0,0,0,.35);width:0}
+.done{font-size:84px;color:var(--ok);line-height:1;animation:pop .35s cubic-bezier(.2,1.4,.4,1)}.done.out{color:var(--warn)}
+.kindbig{font-size:clamp(40px,9vw,60px);font-weight:800;color:var(--ok);font-variant-numeric:tabular-nums;line-height:1.05}.kindbig.out{color:var(--warn)}.kindbig.bad{color:var(--bad);font-size:30px}
+.side{padding:22px 20px;max-height:560px;overflow:auto}
+@media (max-width:760px){.side{max-height:none}}
 .side h3{margin:0 0 12px;font-size:17px}
-.li{display:flex;justify-content:space-between;align-items:center;padding:10px 4px;border-bottom:1px solid var(--line);font-size:15px}
+.li{display:flex;justify-content:space-between;align-items:center;padding:11px 4px;border-bottom:1px solid var(--line);font-size:16px}
 .li:last-child{border:0}.li .t{font-variant-numeric:tabular-nums;color:var(--mut)}.late{color:var(--bad)!important}
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;background:var(--ok)}.dot.out{background:var(--mut)}
-input{font:inherit;font-size:28px;text-align:center;letter-spacing:.2em;text-transform:uppercase;padding:14px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.6);color:var(--tx);width:260px}
+input{font:inherit;font-size:28px;text-align:center;letter-spacing:.2em;text-transform:uppercase;padding:14px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.07);color:var(--tx);width:min(260px,80vw)}
 .err{color:var(--bad);margin-top:12px;min-height:22px}
 .q{position:fixed;left:16px;bottom:14px;font-size:13px;color:var(--warn)}
 .gear{position:fixed;right:14px;bottom:10px;background:none;color:var(--mut);font-size:13px;padding:6px 10px}
 .hide{display:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
@@ -75,10 +88,12 @@ input{font:inherit;font-size:28px;text-align:center;letter-spacing:.2em;text-tra
       <div class="clock" id="clock">--:--</div>
       <div class="date" id="date"></div>
       <button class="big" id="go" disabled>Загрузка…</button>
+      <div class="ld" id="ld"><i></i></div>
+      <div class="err hide" id="ldErr" style="max-width:420px;margin:12px auto 0"></div>
       <div class="hint">Нажмите и посмотрите в камеру · или клавиша «пробел»</div>
     </div>
     <div id="scan" class="hide" style="width:100%;display:flex;flex-direction:column;align-items:center">
-      <div class="cam" id="camBox"><video id="video" playsinline muted></video><div class="ring"></div><div class="chal hide" id="chal"></div></div>
+      <div class="cam search" id="camBox"><video id="video" playsinline muted></video><div class="ring"></div><div class="chal hide" id="chal"></div><div class="meter"><i id="meter"></i></div><div class="dbg hide" id="dbg"></div></div>
       <div class="status" id="status">Смотрите в камеру</div>
       <button class="sec" id="cancelScan" style="margin-top:10px">Отмена</button>
     </div>
@@ -94,7 +109,8 @@ input{font:inherit;font-size:28px;text-align:center;letter-spacing:.2em;text-tra
     </div>
     <div id="result" class="hide who">
       <div class="done" id="doneIcon">✓</div>
-      <div class="nm" id="doneTitle"></div>
+      <div class="nm" id="doneName"></div>
+      <div class="kindbig" id="doneTitle"></div>
       <div class="hint" style="font-size:18px;margin:0" id="doneSub"></div>
     </div>
   </div>
@@ -107,33 +123,47 @@ input{font:inherit;font-size:28px;text-align:center;letter-spacing:.2em;text-tra
 <button class="gear hide" id="reset">Сменить точку</button>
 
 <script type="module">
+import * as F from "./face.js";
 const SB = "https://qvblxhyftwivkzxucfak.supabase.co";
 const KEY = "sb_publishable_-ceoJkpmAZ7Y8osbPHaOlg_3nqUsdB7";
-const MODELS = "https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/model/";
 const TZ = "Asia/Tashkent";
-const MATCH = 0.45;         // порог расстояния: меньше — тот же человек
-const SAME_PLUS = 0.05;     // допуск «тот же человек» во время проверки живости (MATCH + SAME_PLUS)
-const LIVE_MS = 6000;       // время на задание проверки живости
-const LIVE_GAP = 125;       // не чаще ~8 кадров в секунду при проверке
-const EAR_LOW = 0.22, EAR_HIGH = 0.25;  // моргание: закрыт ниже max(LOW, 0.75 × макс. EAR задания), открыт выше HIGH
-const TURN_MIN = 0.25, TURN_BACK = 0.12; // поворот головы: доли межглазного расстояния
-const NEED = 3;             // подряд кадров с одним и тем же человеком
+const DEBUG = new URLSearchParams(location.search).get("debug") === "1";
+const LIVE_MS = 5000;       // время на одно задание живости (не прошёл — новое задание, без паузы)
+const FIND_MS = 25000;      // сколько ищем лицо, потом возвращаемся на главный экран
+const CONFIRM_MS = 1500;    // пауза перед автоматической отметкой (можно сменить «Пришёл/Ушёл» или «Это не я»)
+const AGAIN_MS = 90000;     // повторная отметка того же человека раньше — не пишется
+// Время отметки при отправке из очереди: в att_kiosk_mark пока нет параметра p_at, сервер ставит время отправки.
+// Когда в базе появится p_at (timestamptz, необязательный) — поставить true, очередь начнёт слать исходное время.
+const SUPPORTS_P_AT = false;
+const SLOW_MS = 8000;       // после стольких мс показываем «Связь медленная, ждём…»
+const WAIT_MS = 40000;      // дольше ответ записи не ждём (дальше — очередь с проверкой журнала)
 const $ = id => document.getElementById(id);
 const show = (id, on = true) => $(id).classList.toggle("hide", !on);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const raf = () => new Promise(r => requestAnimationFrame(r));
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 let code = new URLSearchParams(location.search).get("code") || localStorage.getItem("att_code") || "";
-let data = null, faceapi = null, ready = false, stream = null, busy = false;
+let data = null, fa = null, ready = false, stream = null, busy = false, warmP = null;
 
-async function rpc(fn, args) {
-  const r = await fetch(`${SB}/rest/v1/rpc/${fn}`, { method: "POST",
-    headers: { apikey: KEY, Authorization: `Bearer ${KEY}`, "Content-Type": "application/json" }, body: JSON.stringify(args) });
-  const j = await r.json().catch(() => null);
-  if (!r.ok) { const e = new Error(j?.message || r.statusText); e.server = true; throw e; }
-  return j;
+// service worker: кэш весов и работа без интернета
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});
+navigator.storage?.persist?.().catch(() => {});
+
+async function rpc(fn, args, timeout = 0) {
+  const ac = timeout ? new AbortController() : null, to = timeout && setTimeout(() => ac.abort(), timeout);
+  try {
+    const r = await fetch(`${SB}/rest/v1/rpc/${fn}`, { method: "POST", signal: ac?.signal,
+      headers: { apikey: KEY, Authorization: `Bearer ${KEY}`, "Content-Type": "application/json" }, body: JSON.stringify(args) });
+    const j = await r.json().catch(() => null);
+    if (!r.ok) { const e = new Error(j?.message || r.statusText); e.server = true; throw e; }
+    return j;
+  } finally { clearTimeout(to); }
 }
 const hm = d => new Intl.DateTimeFormat("ru-RU", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(new Date(d));
 const mins = s => { const [h, m] = s.split(":").map(Number); return h * 60 + m; };
 const lateMin = ts => { const n = mins(hm(ts)) - mins(data.start_time); return n > 0 ? n : 0; };
+const jget = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
 
 // ---------- часы ----------
 function tick() {
@@ -143,28 +173,59 @@ function tick() {
 }
 setInterval(tick, 1000); tick();
 
+// ---------- звук и вибрация ----------
+let actx = null;
+function beep(kind) {
+  try {
+    actx ??= new (window.AudioContext || window.webkitAudioContext)(); actx.resume?.();
+    const seq = kind === "ok" ? [[660, 0, .09], [880, .1, .14]] : kind === "bad" ? [[220, 0, .25]] : [[520, 0, .06]];
+    for (const [f, at, len] of seq) {
+      const o = actx.createOscillator(), g = actx.createGain(); o.frequency.value = f; o.type = "sine";
+      g.gain.setValueAtTime(.0001, actx.currentTime + at); g.gain.exponentialRampToValueAtTime(.25, actx.currentTime + at + .01);
+      g.gain.exponentialRampToValueAtTime(.0001, actx.currentTime + at + len);
+      o.connect(g).connect(actx.destination); o.start(actx.currentTime + at); o.stop(actx.currentTime + at + len + .02);
+    }
+  } catch {}
+}
+const buzz = p => { try { navigator.vibrate?.(p); } catch {} };
+
+// ---------- геолокация: заранее, отметку не задерживает ----------
+let geoLast = null;
+function geoWarm() {
+  navigator.geolocation?.getCurrentPosition(p => { geoLast = { c: p.coords, t: Date.now() }; }, () => {}, { timeout: 8000, maximumAge: 600000 });
+}
+
 // ---------- настройка ----------
+function openApp() {
+  show("setup", false); show("app"); show("reset");
+  $("ptName").textContent = data.point; renderToday(); geoWarm();
+  setInterval(refresh, 5 * 60 * 1000);
+}
 async function start() {
   if (!code) { show("setup"); $("code").focus(); return; }
-  try { data = await rpc("att_kiosk_load", { p_code: code }); }
+  const cached = code === localStorage.getItem("att_code") ? jget("att_cache", null) : null;
+  const fresh = async () => { data = await rpc("att_kiosk_load", { p_code: code }, 8000); localStorage.setItem("att_code", code); localStorage.setItem("att_cache", JSON.stringify(data)); };
+  if (cached) {
+    // из кэша — сразу; свежие данные подтянутся в фоне (сотрудники, переснятые лица)
+    data = cached; openApp();
+    fresh().then(() => { $("ptName").textContent = data.point; renderToday(); })
+      .catch(e => { if (e.server) { localStorage.removeItem("att_code"); localStorage.removeItem("att_cache"); location.reload(); } });
+    return;
+  }
+  try { await fresh(); }
   catch (e) {
     if (e.server) { localStorage.removeItem("att_code"); code = ""; show("setup"); $("setupErr").textContent = "Неверный код точки"; return; }
-    data = JSON.parse(localStorage.getItem("att_cache") || "null");
-    if (!data) { show("setup"); $("setupErr").textContent = "Нет интернета"; return; }
+    show("setup"); $("setupErr").textContent = "Нет интернета"; return;
   }
-  localStorage.setItem("att_code", code); localStorage.setItem("att_cache", JSON.stringify(data));
   if (location.search.includes("code=")) history.replaceState(null, "", location.pathname);
-  show("setup", false); show("app"); show("reset");
-  $("ptName").textContent = data.point;
-  renderToday(); loadModels();
-  setInterval(refresh, 5 * 60 * 1000);
+  openApp();
 }
 $("saveCode").onclick = () => { code = $("code").value.trim().toUpperCase(); $("setupErr").textContent = ""; start(); };
 $("code").onkeydown = e => { if (e.key === "Enter") $("saveCode").click(); };
-$("reset").onclick = () => { if (confirm("Сменить точку на этом компьютере?")) { localStorage.removeItem("att_code"); location.reload(); } };
+$("reset").onclick = () => { if (confirm("Сменить точку на этом устройстве?")) { localStorage.removeItem("att_code"); localStorage.removeItem("att_cache"); location.reload(); } };
 
 async function refresh() {
-  try { data = await rpc("att_kiosk_load", { p_code: code }); localStorage.setItem("att_cache", JSON.stringify(data)); renderToday(); } catch {}
+  try { data = await rpc("att_kiosk_load", { p_code: code }, 8000); localStorage.setItem("att_cache", JSON.stringify(data)); renderToday(); } catch {}
   flushQueue();
 }
 
@@ -181,147 +242,130 @@ function renderToday() {
   $("today").innerHTML = rows.length ? rows.map(r => {
     const out = r.last.k === "out";
     const late = r.first && lateMin(r.first) > 0;
-    return `<div class="li"><span><span class="dot ${out ? "out" : ""}"></span>${r.name}</span>
+    return `<div class="li"><span><span class="dot ${out ? "out" : ""}"></span>${esc(r.name)}</span>
       <span class="t ${late ? "late" : ""}">${r.first ? hm(r.first) : "—"}${out ? " – " + hm(r.last.t) : ""}</span></div>`;
   }).join("") : `<div class="hint">Пока никто не отметился</div>`;
 }
 
-// ---------- модели ----------
+// ---------- модели: грузим сразу при открытии страницы, параллельно с данными точки ----------
 async function loadModels() {
+  const t0 = performance.now();
   try {
-    faceapi = await import("https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/dist/face-api.esm.js");
-    await faceapi.tf.setBackend("webgl").catch(() => {});
-    await faceapi.tf.ready();
-    await Promise.all([
-      faceapi.nets.tinyFaceDetector.loadFromUri(MODELS),
-      faceapi.nets.faceLandmark68Net.loadFromUri(MODELS),
-      faceapi.nets.faceRecognitionNet.loadFromUri(MODELS),
-    ]);
-    ready = true; $("go").disabled = false; $("go").textContent = "Отметиться";
-  } catch (e) { $("go").textContent = "Ошибка загрузки — обновите страницу"; console.error(e); }
+    fa = await F.loadFace(p => { $("go").textContent = `Загрузка ${Math.round(p * 100)}%`; $("ld").firstChild.style.width = p * 100 + "%"; });
+    const tLoad = Math.round(performance.now() - t0);
+    $("go").textContent = "Подготовка…";
+    warmP = F.warmup(fa); const tw = await warmP;
+    window.__kiosk = { det: F.DET, load_ms: tLoad, warm_ms: tw };
+    if (DEBUG) console.log("модели", window.__kiosk);
+    ready = true; $("go").disabled = false; $("go").textContent = "Отметиться"; show("ld", false);
+  } catch (e) {
+    console.error(e); $("go").textContent = "Повторить"; $("go").disabled = false; show("ld", false);
+    $("ldErr").textContent = F.explain(e); show("ldErr");
+  }
 }
+
+function status(text, cls = "") { const s = $("status"); s.textContent = text; s.className = "status " + cls; }
+function state(cls) { $("camBox").className = "cam " + cls; }
+const avg = a => a.length ? a.reduce((s, x) => s + x, 0) / a.length : 100;
 
 // ---------- распознавание ----------
-function best(desc) {
-  let b = { id: null, d: 9 }, second = 9;
-  for (const e of data.employees) for (const s of (e.d || [])) {
-    let sum = 0; for (let i = 0; i < 128; i++) { const x = desc[i] - s[i]; sum += x * x; }
-    const d = Math.sqrt(sum);
-    if (d < b.d) { if (b.id !== e.id) second = b.d; b = { id: e.id, d }; }
-    else if (e.id !== b.id && d < second) second = d;
-  }
-  return { ...b, second };
-}
-
 async function scan() {
   if (!ready || busy) return;
-  busy = true;
-  show("idle", false); show("scan"); $("camBox").classList.remove("found");
-  $("status").textContent = "Смотрите в камеру";
+  busy = true; beep("tap");
+  show("idle", false); show("scan"); state("search"); status("Смотрите в камеру"); $("meter").style.width = "0";
+  $("chal").classList.add("hide"); $("dbg").classList.toggle("hide", !DEBUG);
+  geoWarm();
+  const tStart = performance.now();
+  const v = $("video");
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: "user" }, audio: false });
+    // камера включается параллельно с прогревом (если он ещё не закончился)
+    [stream] = await Promise.all([navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user", frameRate: { ideal: 30 } }, audio: false }), warmP]);
+    v.srcObject = stream; await v.play();
   } catch (e) {
-    $("status").textContent = e?.name === "NotFoundError" ? "Камера не найдена на этом компьютере" : "Нет доступа к камере — разрешите в настройках Chrome";
-    setTimeout(home, 4000); return;
+    console.error(e); stopCam();
+    status(F.explain(e), "warn"); beep("bad");
+    setTimeout(home, 6000); return; // home() сбрасывает busy
   }
-  const v = $("video"); v.srcObject = stream; await v.play();
-  const opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 });
-  const my = stream;
-  let streak = 0, lastId = null, t0 = Date.now();
+  const my = stream, fc = document.createElement("canvas"), fg = fc.getContext("2d");
+  const cyc = [], need = F.CFG.NEED, t0 = Date.now();
+  let streak = 0, lastId = null, live = null, liveT = 0, miss = 0, bad = 0, frames = 0, slow = 0, noFace = 0, lastStart = 0, tFace = 0;
+  const reset = () => { streak = 0; lastId = null; live = null; miss = 0; bad = 0; $("chal").classList.add("hide"); $("meter").style.width = "0"; };
   while (stream === my) {
-    if (Date.now() - t0 > 20000) { $("status").textContent = "Не удалось узнать. Попробуйте ещё раз"; stopCam(); setTimeout(home, 2500); return; }
-    const r = await faceapi.detectSingleFace(v, opts).withFaceLandmarks().withFaceDescriptor();
-    if (stream !== my) return;
-    if (!r) { streak = 0; $("camBox").classList.remove("found"); $("status").textContent = "Смотрите в камеру"; continue; }
-    const m = best(r.descriptor);
-    if (m.id && m.d < MATCH && m.second - m.d > 0.04) {
-      streak = m.id === lastId ? streak + 1 : 1; lastId = m.id;
-      $("camBox").classList.add("found"); $("status").textContent = "Узнаю…";
-      if (streak >= NEED) {
-        const photo = grab(v);
-        const ok = await live(v, m.id, opts, my);
-        if (stream !== my) return;
-        if (ok) { stopCam(); return ask(m.id, 1 - m.d, photo); }
-        $("camBox").classList.remove("found"); $("status").textContent = "Не удалось подтвердить, попробуйте ещё раз";
-        await new Promise(r => setTimeout(r, 1800));
-        if (stream !== my) return;
-        streak = 0; lastId = null; t0 = Date.now();
+    const wait = F.CFG.FRAME_MS - (performance.now() - lastStart); // не чаще одного цикла за FRAME_MS, циклы не накладываются
+    if (wait > 0) await sleep(wait);
+    await raf(); if (stream !== my) return;
+    lastStart = performance.now();
+    if (Date.now() - t0 > FIND_MS) { status("Не удалось узнать. Попробуйте ещё раз", "warn"); beep("bad"); stopCam(); setTimeout(home, 2500); return; }
+    if (!v.videoWidth) continue;
+    if (fc.width !== v.videoWidth) { fc.width = v.videoWidth; fc.height = v.videoHeight; }
+    fg.drawImage(v, 0, 0);
+    try {
+      const td = performance.now();
+      const det = await F.detect(fa, fc);
+      const dMs = performance.now() - td;
+      // слабый компьютер: SSD дольше ~300 мс на кадр — переходим на лёгкий детектор
+      frames++; if (F.DET === "ssd" && frames > 1 && frames <= 7 && dMs > 300 && ++slow >= 3) F.useTiny();
+      if (stream !== my) return;
+      if (!det) { if (++noFace >= 2) { reset(); state("search"); status("Смотрите в камеру"); } continue; }
+      noFace = 0; tFace ||= performance.now();
+      const q = F.quality(det.box, fc.width, fc.height, F.facePixels(fc, det.box));
+      if (!q.ok) { reset(); state("warn"); status(q.hint, "warn"); dbg(q, dMs, 0, null); continue; }
+      const lm = await F.landmarks(fa, fc, det);
+      if (stream !== my || !lm) continue;
+      const p = lm.landmarks.positions;
+      // дескриптор (самая тяжёлая сеть) — только на лице, обращённом в камеру: пока узнаём — каждый кадр, потом каждый 3-й
+      const frontal = Math.abs(F.turnOffset(p)) < 0.15;
+      let m = null;
+      if (frontal && (streak < need || frames % 3 === 0)) {
+        const desc = await F.describeFace(fa, fc, lm); if (stream !== my) return;
+        if (streak < need) {
+          m = F.match(data.employees, desc);
+          if (F.sure(m)) { if (m.id !== lastId) live = null; streak = m.id === lastId ? streak + 1 : 1; lastId = m.id; miss = 0; }
+          else if (streak && ++miss >= 2) reset(); // один сомнительный кадр не сбрасывает прогресс
+        } else if (F.isSame(data.employees, lastId, desc, F.CFG.MATCH + 0.05)) bad = 0;
+        else if (++bad >= 2) { reset(); state("search"); continue; }
       }
-    } else {
-      streak = 0; $("camBox").classList.remove("found");
-      $("status").textContent = data.employees.length ? "Не узнаю — подойдите ближе" : "Сотрудники ещё не добавлены";
-    }
+      if (streak >= 1) {
+        // ровно одно задание живости; запускается сразу после первого уверенного кадра, пока набираются остальные
+        if (!live) { live = F.pickLive(avg(cyc)); liveT = Date.now(); $("chal").textContent = live.text; $("chal").classList.remove("hide"); beep("tap"); }
+        live.feed(p);
+        state(live.done && streak >= need ? "ok" : "hold");
+        status(live.done ? "Узнаю…" : live.text, "hold");
+        $("meter").style.width = Math.round(((Math.min(streak, need) / need) * 0.5 + (live.done ? 0.5 : 0)) * 100) + "%";
+        if (live.done && streak >= need) {
+          const id = lastId, score = 1 - (m?.d ?? F.CFG.MATCH), photo = grab(fc);
+          if (DEBUG) console.log("от лица до решения, мс:", Math.round(performance.now() - tFace), "от нажатия:", Math.round(performance.now() - tStart));
+          stopCam(); beep("ok"); buzz(70); return ask(id, score, photo);
+        }
+        if (Date.now() - liveT > LIVE_MS) { live = null; $("chal").classList.add("hide"); status("Не получилось — попробуем ещё раз", "warn"); }
+      } else { state("search"); status(data.employees.length ? "Смотрите прямо в камеру" : "Сотрудники ещё не добавлены"); }
+      dbg(q, dMs, performance.now() - lastStart, m); cyc.push(performance.now() - lastStart); if (cyc.length > 8) cyc.shift();
+    } catch (e) { console.error(e); await sleep(300); }
   }
 }
-// ---------- проверка живости ----------
-const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
-const eyeEar = (p, i) => (dist(p[i + 1], p[i + 5]) + dist(p[i + 2], p[i + 4])) / (2 * dist(p[i], p[i + 3]));
-function sameFace(desc, id) {
-  const e = data.employees.find(x => x.id === id);
-  for (const s of (e?.d || [])) {
-    let sum = 0; for (let i = 0; i < 128; i++) { const x = desc[i] - s[i]; sum += x * x; }
-    if (Math.sqrt(sum) < MATCH + SAME_PLUS) return true;
-  }
-  return false;
+function dbg(q, dMs, cMs, m) {
+  if (!DEBUG) return;
+  $("dbg").textContent = `${F.DET} detect ${dMs | 0}мс · цикл ${cMs | 0}мс\nразмер ${q.m.size.toFixed(2)} свет ${q.m.light | 0} резк ${q.m.sharp | 0}` + (m ? `\nd=${m.d.toFixed(3)} второй=${m.second.toFixed(3)}` : "");
 }
-// true — задание выполнено тем же человеком за LIVE_MS; false — нет (или камеру закрыли)
-async function live(v, id, opts, my) {
-  const tasks = [
-    { t: "Моргните", k: "blink" },
-    { t: "Поверните голову влево", k: "turn", dir: 1 },   // кадр с камеры не зеркальный: влево у человека = x носа растёт
-    { t: "Поверните голову вправо", k: "turn", dir: -1 },
-  ];
-  const task = tasks[Math.floor(Math.random() * tasks.length)];
-  const box = $("chal"), t0 = Date.now();
-  let closed = false, turned = false, centered = false, ok = false, n = 0, last = 0, bad = 0, maxEar = 0;
-  $("status").textContent = "Проверяем, что это вы";
-  show("chal");
-  const draw = () => { box.innerHTML = `${task.t}<small>${Math.max(0, Math.ceil((LIVE_MS - (Date.now() - t0)) / 1000))} с</small>`; };
-  draw();
-  try {
-    while (stream === my && Date.now() - t0 < LIVE_MS && !ok) {
-      const wait = LIVE_GAP - (Date.now() - last);
-      if (wait > 0) await new Promise(r => setTimeout(r, wait));
-      last = Date.now(); draw();
-      if (stream !== my) return false;
-      // дескриптор (тяжёлый) — на каждом третьем кадре, остальное — только точки лица
-      const chk = n++ % 3 === 0;
-      const q = faceapi.detectSingleFace(v, opts).withFaceLandmarks();
-      const r = await (chk ? q.withFaceDescriptor() : q);
-      if (stream !== my) return false;
-      if (!r) continue;
-      if (chk) { bad = sameFace(r.descriptor, id) ? 0 : bad + 1; if (bad >= 2) return false; } // 2 плохих проверки подряд — сброс
-      const p = r.landmarks.positions;
-      if (task.k === "blink") {
-        const ear = (eyeEar(p, 36) + eyeEar(p, 42)) / 2;
-        maxEar = Math.max(maxEar, ear);
-        if (ear < Math.max(EAR_LOW, 0.75 * maxEar)) closed = true; else if (closed && ear > EAR_HIGH) ok = true;
-      } else {
-        const eye = dist(p[36], p[45]);
-        const off = (p[30].x - (p[36].x + p[45].x) / 2) / eye * task.dir;
-        if (!centered) { if (Math.abs(off) < TURN_BACK) centered = true; } // сначала центр
-        else if (off > TURN_MIN) turned = true;
-        else if (turned && Math.abs(off) < TURN_BACK) ok = true;
-      }
-    }
-  } catch (e) { console.error(e); return false; }
-  finally { show("chal", false); }
-  return ok;
-}
-function grab(v) {
-  const c = document.createElement("canvas"); c.width = 320; c.height = 240;
-  const g = c.getContext("2d"); g.translate(320, 0); g.scale(-1, 1); g.drawImage(v, 0, 0, 320, 240);
-  return c.toDataURL("image/jpeg", 0.7);
+function grab(src) { // миниатюра для отметки, зеркально (как на экране)
+  const c = document.createElement("canvas"); c.width = 320; c.height = Math.round(320 * src.height / src.width);
+  const g = c.getContext("2d"); g.translate(c.width, 0); g.scale(-1, 1); g.drawImage(src, 0, 0, c.width, c.height);
+  return c.toDataURL("image/jpeg", 0.65);
 }
 function stopCam() { if (stream) stream.getTracks().forEach(t => t.stop()); stream = null; }
 $("cancelScan").onclick = () => { stopCam(); home(); };
 
 // ---------- подтверждение ----------
 let timer = null, pending = null;
+const recent = new Map(); // id → {t, ts, kind}: защита от двойной отметки
 function ask(id, score, photo) {
   const emp = data.employees.find(e => e.id === id);
   const evs = data.today.filter(e => e.e === id);
   const last = evs[evs.length - 1];
+  const rc = recent.get(id);
+  if (rc && Date.now() - rc.t < AGAIN_MS) { // только что отметился — повторно не пишем
+    fin(true, emp.name, `${rc.kind === "in" ? "Пришёл" : "Ушёл"} ${hm(rc.ts)}`, "Уже отмечено — повторно не нужно", rc.kind); return;
+  }
   const sug = last?.k === "in" ? "out" : "in";
   pending = { id, score, photo, name: emp.name };
   show("scan", false); show("confirm");
@@ -330,65 +374,81 @@ function ask(id, score, photo) {
   document.querySelectorAll(".kind").forEach(b => {
     b.classList.toggle("on", b.dataset.k === sug);
     const bar = b.querySelector(".bar"); bar.style.transition = "none"; bar.style.width = "0";
-    if (b.dataset.k === sug) requestAnimationFrame(() => requestAnimationFrame(() => { bar.style.transition = "width 4s linear"; bar.style.width = "100%"; }));
+    if (b.dataset.k === sug) requestAnimationFrame(() => requestAnimationFrame(() => { bar.style.transition = `width ${CONFIRM_MS}ms linear`; bar.style.width = "100%"; }));
   });
-  clearTimeout(timer); timer = setTimeout(() => mark(sug), 4000);
+  clearTimeout(timer); timer = setTimeout(() => mark(sug), CONFIRM_MS);
 }
 document.querySelectorAll(".kind").forEach(b => b.onclick = () => mark(b.dataset.k));
 $("notMe").onclick = () => { clearTimeout(timer); pending = null; home(); };
-
-function geo() {
-  return new Promise(res => {
-    if (!navigator.geolocation) return res(null);
-    navigator.geolocation.getCurrentPosition(p => res(p.coords), () => res(null), { timeout: 3000, maximumAge: 600000 });
-  });
-}
 
 async function mark(kind) {
   clearTimeout(timer);
   if (!pending) return;
   const p = pending; pending = null;
-  const c = await geo();
+  const c = geoLast && Date.now() - geoLast.t < 30 * 60000 ? geoLast.c : null; // геолокацию не ждём
+  const now = new Date().toISOString();
   const args = { p_code: code, p_emp: p.id, p_kind: kind, p_score: +p.score.toFixed(3), p_photo: p.photo,
     p_lat: c?.latitude ?? null, p_lng: c?.longitude ?? null, p_acc: c?.accuracy ?? null, p_device: navigator.userAgent };
-  const now = new Date().toISOString();
-  let ts = now;
-  try { const r = await rpc("att_kiosk_mark", args); ts = r.ts; }
+  let ts = now, offline = false;
+  // Запись не обрываем по таймауту: запрос мог дойти, а ответ опоздать — повтор дал бы дубль.
+  const slow = setTimeout(() => { $("whoHint").textContent = "Связь медленная, ждём ответа…"; }, SLOW_MS);
+  try { const r = await rpc("att_kiosk_mark", args, WAIT_MS); ts = r.ts; sentMark(p.id, kind); }
   catch (e) {
-    if (e.server) { done(false, p.name, "Ошибка: " + e.message); return; }
-    const q = JSON.parse(localStorage.getItem("att_queue") || "[]"); q.push({ args, at: now });
-    localStorage.setItem("att_queue", JSON.stringify(q)); showQueue();
-  }
+    if (e.server) { fin(false, p.name, "Не записано", e.message); return; }
+    // В очередь — только если запрос не ушёл (нет сети / ошибка сети до ответа). Обрыв по WAIT_MS — «возможно ушёл»: перед повтором сверимся с журналом.
+    const q = jget("att_queue", []); q.push({ args: SUPPORTS_P_AT ? { ...args, p_at: now } : args, at: now, maybe: e.name === "AbortError" });
+    localStorage.setItem("att_queue", JSON.stringify(q)); showQueue(); offline = true;
+  } finally { clearTimeout(slow); }
+  recent.set(p.id, { t: Date.now(), ts, kind });
   data.today.push({ e: p.id, k: kind, t: ts }); renderToday();
   const late = kind === "in" ? lateMin(ts) : 0;
-  done(true, `${kind === "in" ? "Приход" : "Уход"} · ${hm(ts)}`,
-    kind === "in" ? (late ? `${p.name}, опоздание ${late} мин` : `${p.name}, хорошего дня!`) : `${p.name}, до завтра!`, kind);
+  fin(true, p.name, `${kind === "in" ? "Пришёл" : "Ушёл"} ${hm(ts)}`,
+    offline ? "Нет связи — отметка сохранена и отправится сама" : kind === "in" ? (late ? `Опоздание ${late} мин` : "Хорошего дня!") : "До завтра!", kind);
 }
 
-function done(ok, title, sub, kind) {
-  show("confirm", false); show("result");
+function fin(ok, name, title, sub, kind) {
+  show("confirm", false); show("scan", false); show("result");
   $("doneIcon").textContent = ok ? "✓" : "!"; $("doneIcon").className = "done" + (kind === "out" ? " out" : "");
-  if (!ok) $("doneIcon").style.color = "var(--bad)"; else $("doneIcon").style.color = "";
-  $("doneTitle").textContent = title; $("doneSub").textContent = sub;
-  setTimeout(home, 3500);
+  $("doneIcon").style.color = ok ? "" : "var(--bad)";
+  $("doneName").textContent = name; $("doneTitle").textContent = title; $("doneTitle").className = "kindbig" + (ok ? (kind === "out" ? " out" : "") : " bad");
+  $("doneSub").textContent = sub;
+  if (!ok) { beep("bad"); buzz([80, 60, 80]); }
+  setTimeout(home, 3000);
 }
 function home() { busy = false; ["scan", "confirm", "result"].forEach(i => show(i, false)); show("idle"); }
 
 // ---------- офлайн-очередь ----------
 function showQueue() {
-  const n = JSON.parse(localStorage.getItem("att_queue") || "[]").length;
+  const n = jget("att_queue", []).length;
   $("queue").textContent = n ? `Нет связи: ${n} отметок ждут отправки` : ""; show("queue", n > 0);
 }
+let flushing = false;
+// ушедшие отметки (emp|kind → время ухода): тот же человек и вид повторно из очереди не шлём
+const sentMark = (emp, kind) => { const m = jget("att_sent", {}); m[emp + "|" + kind] = Date.now(); for (const k in m) if (Date.now() - m[k] > 24 * 3600e3) delete m[k]; localStorage.setItem("att_sent", JSON.stringify(m)); };
 async function flushQueue() {
-  const q = JSON.parse(localStorage.getItem("att_queue") || "[]"); if (!q.length) return;
-  const rest = [];
-  for (const it of q) { try { await rpc("att_kiosk_mark", it.args); } catch (e) { if (!e.server) rest.push(it); } }
-  localStorage.setItem("att_queue", JSON.stringify(rest)); showQueue();
+  if (flushing) return; const q = jget("att_queue", []); if (!q.length) return;
+  flushing = true;
+  try {
+    let fresh = null; try { fresh = await rpc("att_kiosk_load", { p_code: code }, 15000); } catch {} // журнал дня — не дошла ли отметка
+    const rest = [], sent = jget("att_sent", {});
+    for (const it of q) {
+      const emp = it.args.p_emp, kind = it.args.p_kind, at = new Date(it.at).getTime();
+      const inLog = fresh?.today?.some(e => e.e === emp && e.k === kind && new Date(e.t).getTime() >= at - 60000);
+      if (inLog || (sent[emp + "|" + kind] ?? 0) >= at) continue; // уже записана — выбрасываем
+      if (it.maybe && !fresh) { rest.push(it); continue; } // не знаем, дошла ли — без журнала не повторяем
+      try { await rpc("att_kiosk_mark", it.args, WAIT_MS); sentMark(emp, kind); }
+      catch (e) { if (!e.server) rest.push({ ...it, maybe: it.maybe || e.name === "AbortError" }); }
+    }
+    // за время отправки могли добавиться новые — берём их из хранилища
+    const cur = jget("att_queue", []).filter(x => !q.some(y => y.at === x.at && y.args.p_emp === x.args.p_emp));
+    localStorage.setItem("att_queue", JSON.stringify([...rest, ...cur])); showQueue();
+  } finally { flushing = false; }
 }
-setInterval(flushQueue, 30000); showQueue();
+setInterval(flushQueue, 30000); addEventListener("online", flushQueue); showQueue();
 
-$("go").onclick = scan;
+$("go").onclick = () => { if (ready) scan(); else { show("ldErr", false); show("ld"); $("go").disabled = true; $("go").textContent = "Загрузка…"; loadModels(); } };
 document.addEventListener("keydown", e => { if ((e.code === "Space" || e.key === "Enter") && !$("idle").classList.contains("hide") && !$("app").classList.contains("hide")) { e.preventDefault(); scan(); } });
+loadModels();
 start();
 </script>
 </body>
