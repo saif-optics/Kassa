@@ -1,7 +1,7 @@
 // Раздел «Сверка»: чеки Billz против записей Кассы по дням и точкам; фискальные модули против Кассы; блок автозагрузки Billz.
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileSpreadsheet, RefreshCw } from "lucide-react";
+import { ArrowRight, FileSpreadsheet, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/Card";
@@ -10,6 +10,7 @@ import { RowCards, type RowColumn } from "@/components/RowCards";
 import { Segments } from "@/components/Segments";
 import { Chip, Tile, TileLabel, TileSub, TileValue } from "@/components/Tile";
 import { cn } from "@/lib/utils";
+import { go } from "@/lib/go";
 import { useIsPhone } from "@/lib/useMedia";
 import type { Data } from "@/lib/types";
 import { Field, FIELD, saveBook, usePaging } from "../report/ui";
@@ -152,6 +153,7 @@ function Detail({ ch, ks, d, p }: { ch: BzCheck[]; ks: KSale[]; d: string; p: st
   ];
   return (
     <div className="flex min-w-0 flex-col gap-4">
+      <div><Button type="button" variant="secondary" size="sm" className="rounded-full" aria-label={`Открыть ${dL(d)}, ${p} в продажах`} onClick={() => go("sales", { day: d, point: p })}>Открыть день в «Продажах»<ArrowRight /></Button></div>
       <div className="grid min-w-0 gap-4">
         <div className="min-w-0"><h3 className="mb-1 text-[14.5px] font-semibold">Billz · {p} · {dL(d)}</h3>
           <RowCards dense columns={bc} rows={B.map((b, j) => ({ ...b, k: String(j) }))} rowKey={(b) => b.k} empty="Чеков в Billz нет" /></div>

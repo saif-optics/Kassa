@@ -4,6 +4,8 @@ import { useState } from "react";
 import { DUR } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { useIsPhone } from "@/lib/useMedia";
+import { goProps } from "@/lib/go";
+import { useSalesDest } from "./link";
 import type { Bar as HBar } from "./base";
 import { fmt, fmtM, niceStep } from "./util";
 
@@ -108,7 +110,9 @@ export function GroupBarsC({ labels, series, h }: { labels: string[]; series: { 
   );
 }
 
-export function DonutC({ items, center, sub }: { items: { label: string; value: number; color: string; valTxt?: string }[]; center: string; sub?: string }) {
+/** pay — подписи это способы оплаты: строка ведёт в «Продажи» за период (фильтра по оплате в Продажах нет) */
+export function DonutC({ items, center, sub, pay }: { items: { label: string; value: number; color: string; valTxt?: string }[]; center: string; sub?: string; pay?: boolean }) {
+  const dest = useSalesDest(), to = pay ? dest() : null;
   const it = items.filter((i) => i.value > 0); if (!it.length) return <None />;
   const tot = it.reduce((a, i) => a + i.value, 0);
   const [hov, setHov] = useState(false);
@@ -128,19 +132,21 @@ export function DonutC({ items, center, sub }: { items: { label: string; value: 
         </div>
       </div>
       <div className="flex min-w-[200px] flex-1 flex-col gap-1.5 text-[13px]">
-        {it.map((i) => <div key={i.label} className="flex items-center justify-between gap-3"><span className="inline-flex min-w-0 items-center gap-2"><i className="size-2.5 shrink-0 rounded-[3px]" style={{ background: i.color }} /><span className="leading-tight">{lbl(i.label)}</span></span><span className="num shrink-0 text-muted-foreground">{i.valTxt != null ? i.valTxt : fmtM(i.value)} · {Math.round((i.value / tot) * 100)}%</span></div>)}
+        {it.map((i) => <div key={i.label} {...(to ? goProps(to, `продажи, оплата: ${i.label}`) : {})} className={cn("flex items-center justify-between gap-3", to && "-mx-1.5 cursor-pointer rounded-lg px-1.5 py-0.5 outline-none transition-colors hover:bg-foreground/5 focus-visible:ring-2 focus-visible:ring-primary/40")}><span className="inline-flex min-w-0 items-center gap-2"><i className="size-2.5 shrink-0 rounded-[3px]" style={{ background: i.color }} /><span className="leading-tight">{lbl(i.label)}</span></span><span className="num shrink-0 text-muted-foreground">{i.valTxt != null ? i.valTxt : fmtM(i.value)} · {Math.round((i.value / tot) * 100)}%</span></div>)}
       </div>
     </div>
   );
 }
 
-export function HBars({ items, rank, dot, cols }: { items: HBar[]; rank?: boolean; dot?: boolean; cols?: boolean }) {
+/** pts — подписи строк это точки: строка ведёт в «Продажи» этой точки */
+export function HBars({ items, rank, dot, cols, pts }: { items: HBar[]; rank?: boolean; dot?: boolean; cols?: boolean; pts?: boolean }) {
+  const dest = useSalesDest();
   if (!items.length) return <None />;
   const max = Math.max(1, ...items.map((i) => Math.abs(i.value)));
   return (
     <div className={cols ? "grid gap-x-8 gap-y-3 sm:grid-cols-2 xl:grid-cols-3" : "flex flex-col gap-3"}>
       {items.map((i, k) => (
-        <div key={i.label + k} className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1.5">
+        <div key={i.label + k} {...(pts && dest(i.label) ? goProps(dest(i.label)!, `продажи точки ${i.label}`) : {})} className={cn("grid grid-cols-[1fr_auto] gap-x-3 gap-y-1.5", pts && dest(i.label) && "-mx-1.5 cursor-pointer rounded-lg px-1.5 py-0.5 outline-none transition-colors hover:bg-foreground/5 focus-visible:ring-2 focus-visible:ring-primary/40")}>
           <span className="flex min-w-0 flex-wrap items-baseline gap-x-2 text-[13.5px]">
             {rank && <span className="num grid size-5 shrink-0 place-items-center self-center rounded-full bg-muted text-[11px] font-semibold text-muted-foreground">{k + 1}</span>}
             {dot && i.color && <i className="size-2.5 shrink-0 self-center rounded-full" style={{ background: i.color }} />}

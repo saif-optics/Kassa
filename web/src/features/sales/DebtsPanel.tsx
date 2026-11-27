@@ -1,5 +1,6 @@
 // Долги: блок мозаики (до 4 строк) и полная таблица в листе — возникшие в периоде и все ещё открытые старые: продажа, оплачено, долг, погашения, статус.
 import { Card } from "@/components/Card";
+import { Fold } from "@/components/Fold";
 import { Chip } from "@/components/Tile";
 import { Row, RowCell, RowName, Rows } from "@/components/Rows";
 import { RowCards, type RowColumn } from "@/components/RowCards";
@@ -22,7 +23,7 @@ export function DebtsBlock({ r, onAll, i = 0 }: { r: DebtsInfo; onAll: () => voi
   const closed = r.rows.filter((d) => d.closedAt).sort((a, b) => (b.closedAt || "").localeCompare(a.closedAt || ""));
   const list = [...open, ...closed].slice(0, 4), empty = !r.rows.length && !r.orphans.length;
   return (
-    <Card title="Долги" note={empty ? "долгов нет" : <>открыто <span className="num">{r.openCount}</span> · <span className="num">{fmt(r.openSum)}</span></>} i={i} className="gap-1">
+    <Card title="Долги" to={onAll} label="список долгов" note={empty ? "долгов нет" : <>открыто <span className="num">{r.openCount}</span> · <span className="num">{fmt(r.openSum)}</span></>} i={i} className="gap-1">
       {list.length ? (
         <Rows cols="1fr auto" phone="1fr auto">
           {list.map((d, k) => (
@@ -61,7 +62,7 @@ export function DebtsTable({ r }: { r: DebtsInfo }) {
     <div className="grid gap-2.5">
       <Note>Долги из пометок «долг … не записан» и их погашения. «Старый» — продажа раньше выбранного периода.</Note>
       <p className="text-[13px] text-muted-foreground">{empty ? "Долгов нет" : <>Открыто: <b className="num text-foreground">{r.openCount}</b> на сумму <b className="num text-foreground">{fmt(r.openSum)}</b> · Закрыто за период: <b className="num text-foreground">{r.closedCount}</b></>}</p>
-      {!empty && <RowCards rows={rows} rowKey={(d) => d.key} columns={cols} />}
+      {!empty && <Fold id="sales.debts" rows={rows}>{(shown) => <RowCards rows={shown} rowKey={(d) => d.key} columns={cols} />}</Fold>}
     </div>
   );
 }

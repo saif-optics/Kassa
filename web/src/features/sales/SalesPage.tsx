@@ -11,6 +11,7 @@ import { PageHead } from "@/components/PageHead";
 import { Segments } from "@/components/Segments";
 import { Item } from "@/components/Grid";
 import { useIsPhone } from "@/lib/useMedia";
+import { clearHashParams, useHashParams } from "@/lib/go";
 import { cn } from "@/lib/utils";
 import { Chip, Tile, TileBody, TileLabel, TileSub, TileTop, TileValue, type ChipTone } from "@/components/Tile";
 import { PRESETS, SalesFilterSheet, useSalesFilter } from "./filter";
@@ -82,7 +83,7 @@ export function SalesPage({ d }: { d: Data }) {
   const setTab = (t: string) => { setTabS(t as Tab); try { sessionStorage.setItem("kassa-web.sales.tab", t); } catch { /* без хранилища */ } };
   const vis = (t: Tab) => (phone && tab !== t ? "hidden" : "");
   const sec = (t: Tab) => cn("flex flex-col gap-4", vis(t));
-  const mu = useMutations(), { F, setPreset } = useSalesFilter(), access = useAccess();
+  const mu = useMutations(), { F, setPreset, setRange, setPoint } = useSalesFilter(), access = useAccess(), hp = useHashParams();
   const c = useMemo(() => ctxOf(d), [d]);
   // ограниченная роль (кассир, продавец, гость): права по переключателям, только своя точка, даты сегодня/вчера — как проверяет сервер
   const lim = !access.isAdmin, today = c.today, yest = addD(today, -1);
@@ -104,7 +105,24 @@ export function SalesPage({ d }: { d: Data }) {
   const jRef = useRef<HTMLDivElement>(null);
   const cal = useCalendar(c, F, jDay);
   const resetKey = `${F.from}|${F.to}|${F.point}`;
-  useEffect(() => setJDay(""), [resetKey]);
+  const keepDay = useRef(""); // день из ссылки переживает сброс журнала при смене периода
+  useEffect(() => { setJDay(keepDay.current); keepDay.current = ""; }, [resetKey]);
+  // переход по ссылке из других разделов: #sales?day=2026-11-27&point=Премиум&from=..&to=..&debts=1&sec=exp
+  useEffect(() => {
+    if (![...hp.keys()].length) return;
+    const day = hp.get("day") || "", from = hp.get("from") || day, to = hp.get("to") || day, pt = hp.get("point");
+    const ok = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s);
+    if (ok(from) && ok(to)) {
+      const nextPoint = pt && c.settings.points.includes(pt) ? pt : F.point;
+      if (`${from}|${to}|${nextPoint}` !== resetKey && ok(day)) keepDay.current = day;
+      setRange(from, to);
+    }
+    if (pt && c.settings.points.includes(pt)) setPoint(pt);
+    if (ok(day)) setJDay(day);
+    if (hp.get("debts") === "1") setDOpen(true);
+    if (hp.get("sec") === "exp" && expMode) { if (phone) setTab("sale"); else setEOpen(true); }
+    clearHashParams();
+  }, [hp]); // eslint-disable-line react-hooks/exhaustive-deps
   const say = (t: string, bad?: boolean, ms = 5000) => { setXmsg({ t, bad }); if (t) setTimeout(() => setXmsg((m) => (m && m.t === t ? null : m)), ms); };
 
   const save = async (id: string | null, rec: SaleRec) => {
@@ -141,6 +159,8 @@ export function SalesPage({ d }: { d: Data }) {
 
   const expProps = { exp: ex, settings: formSettings, mode: expMode || "view", onAdd: addExp, onAddSimple: addExpSimple, onDelete: (id: string) => mu.delEntry(id), canDelete: canDeleteExp,
     dates: lim ? { min: expMode === "simple" ? addD(today, -2) : yest, max: today } : undefined } as const;
+  // ссылка в Аналитику: вкладка и тот же период и точка (у Аналитики свой фильтр, он берёт их из адреса)
+  const toAn = (t: string) => ({ tab: "analytics", params: { tab: t, from: F.from || r.from, to: F.to || r.to, point: F.point !== "all" ? F.point : undefined } });
   const openPt = blocks.find((b) => b.pt === pt);
   const sub = <>{dShort(F.from || r.from)} — {dShort(F.to || r.to)} · {F.point === "all" ? "все точки" : F.point} · {F.cat === "all" ? "все категории" : F.cat} · <button type="button" onClick={() => setFOpen(true)} className="font-semibold text-primary hover:underline">фильтры</button></>;
   const periods = <Segments aria-label="Период" items={PRESETS.map(([key, label]) => ({ key, label }))} value={F.preset === "custom" ? "" : F.preset} onChange={setPreset} />;
@@ -157,20 +177,20 @@ export function SalesPage({ d }: { d: Data }) {
 
       <div className={GRID}>
         <Item k="rev" c={cn(C.rev, vis("overview"))}>
-          <Tile i={nx()} hero>
+          <Tile i={nx()} hero to={toAn("rev")} label="выручку и темп в аналитике">
             <TileTop><TileLabel>Выручка за период</TileLabel><Cmp cur={a.rev} prev={pa && pa.rev} long /></TileTop>
             <TileBody><TileValue count={a.rev} className="@min-[640px]/main:text-[40px] @min-[1024px]/main:text-[32px] @min-[1600px]/main:text-[44px]" />
               <TileSub className={cn("flex-wrap", SUB.phone)}>{fmt(a.checks)} чеков · {fmt(a.n)} позиций · средний {fmt(a.avg)}</TileSub></TileBody>
           </Tile>
         </Item>
         <Item k="checks" c={C.checks}>
-          <Tile i={nx()}><TileTop><TileLabel>Чеков / позиций</TileLabel><Cmp cur={a.checks} prev={pa && pa.checks} /></TileTop><TileValue className={VAL}>{fmt(a.checks)} / {fmt(a.n)}</TileValue></Tile>
+          <Tile i={nx()} to={toAn("chk")} label="чеки в аналитике"><TileTop><TileLabel>Чеков / позиций</TileLabel><Cmp cur={a.checks} prev={pa && pa.checks} /></TileTop><TileValue className={VAL}>{fmt(a.checks)} / {fmt(a.n)}</TileValue></Tile>
         </Item>
         <Item k="avg" c={C.avg}>
-          <Tile i={nx()}><TileTop><TileLabel>Средний чек</TileLabel><Cmp cur={a.avg} prev={pa && pa.avg} /></TileTop><TileValue count={a.avg} className={VAL} /></Tile>
+          <Tile i={nx()} to={toAn("chk")} label="чеки в аналитике"><TileTop><TileLabel>Средний чек</TileLabel><Cmp cur={a.avg} prev={pa && pa.avg} /></TileTop><TileValue count={a.avg} className={VAL} /></Tile>
         </Item>
         <Item k="cash" c={cn(C.cash, vis("overview"))}>
-          <Tile i={nx()}><TileLabel>Б/Ч − расходы дня</TileLabel>
+          <Tile i={nx()} to={{ tab: "kassa" }} label="кассу"><TileLabel>Б/Ч − расходы дня</TileLabel>
             <TileBody><TileValue count={a.cash - expSum} compact className={VAL} />
               <TileSub className={SUBC + SUB.phone}>расходы {fmtM(expSum)}</TileSub>
               <TileSub className={SUBC + SUB.mid}>наличные {fmtM(a.cash).replace(" млн", "")} · расходы {fmtM(expSum)}</TileSub>

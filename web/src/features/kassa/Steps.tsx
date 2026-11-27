@@ -7,12 +7,15 @@ import { DUR, EASE } from "@/lib/motion";
 import type { Entry } from "@/lib/types";
 import { dShort, fmt, val, type Kassa } from "./logic";
 import { pl } from "../pay/logic";
+import { Fold } from "@/components/Fold";
 
 const byDate = (a: Entry, b: Entry) => (a.date || "").localeCompare(b.date || "") || (a.createdAt || 0) - (b.createdAt || 0);
-const Items = ({ arr }: { arr: Entry[] }) => (
-  <ul className="mt-1 mb-2 flex flex-col">{[...arr].sort(byDate).map((e) => (
+const Items = ({ id, arr }: { id: string; arr: Entry[] }) => (
+  <Fold id={`kassa.step.${id}`} rows={[...arr].sort(byDate)}>{(shown) => (
+  <ul className="mt-1 mb-2 flex flex-col">{shown.map((e) => (
     <li key={e.id} className="flex justify-between gap-3 border-b border-border py-1.5 text-[13px] last:border-0"><span className="min-w-0 truncate">{dShort(e.date)} · {e.name}</span>
       <span className="num whitespace-nowrap">{typeof e.fact === "number" && e.fact !== +(e.amount || 0) ? <><s className="text-muted-foreground">{fmt(e.amount || 0)}</s> {fmt(e.fact)}</> : fmt(val(e))}</span></li>))}</ul>
+  )}</Fold>
 );
 
 /** title — заголовок «Расчёт по шагам» внутри блока (большой блок Кассы); без него заголовок рисует внешняя Card.
@@ -25,12 +28,12 @@ export function Steps({ c, rsvBal, title }: { c: Kassa; rsvBal: number; title?: 
   const steps: S[] = [];
   steps.push({ k: "bc", sign: "=", tone: "bg-primary/15 text-primary", title: `Б/Ч ${c.bcC ? "Премиума, Яшнабада и C1" : "Премиума и Яшнабада"}${c.days.length ? " с " + dShort(c.days[0].d) : ""}${last ? " по " + dShort(last) : ""}`,
     sub: `Премиум ${fmt(c.bcP)} + Яшнабад ${fmt(c.bcY)}${c.bcC ? ` + C1 ${fmt(c.bcC)}` : ""}${nS ? ` · из продаж: ${nS} дн.` : ""}${nX ? ` · из отчёта: ${nX} дн.` : ""}`, amt: fmt(c.bcT), n: c.days.length,
-    body: <ul className="mt-1 mb-2 flex flex-col">{c.days.map((d) => <li key={d.d} className="flex justify-between gap-3 border-b border-border py-1.5 text-[13px] last:border-0"><span className="min-w-0 truncate">{dShort(d.d)} · Премиум {fmt(d.p)} · Яшнабад {fmt(d.y)}{d.c ? ` · C1 ${fmt(d.c)}` : ""} <span className="text-muted-foreground">({d.src === "Excel" ? "отчёт" : "продажи"})</span></span><span className="num">{fmt(d.p + d.y + (d.c || 0))}</span></li>)}</ul> });
-  steps.push({ k: "inc", sign: "+", tone: "bg-plus-soft text-plus", title: "Приходы", sub: c.inc.length ? "добавлено к Б/Ч" : "пока нет", amt: "+" + fmt(c.sInc), n: c.inc.length, body: <Items arr={c.inc} /> });
-  steps.push({ k: "op", sign: "−", tone: "bg-primary/12 text-primary", title: "Операционные расходы", sub: "расходы дня", amt: "−" + fmt(c.sOp), n: c.op.length, body: <Items arr={c.op} /> });
-  steps.push({ k: "oth", sign: "−", tone: "bg-warn-soft text-warn", title: "Прочие расходы", sub: "поставщики, бухгалтер, мастера", amt: "−" + fmt(c.sOth), n: c.oth.length, body: <Items arr={c.oth} /> });
-  if (c.rsvMove.length) steps.push({ k: "rsv", sign: "−", tone: "bg-warn-soft text-warn", title: "Переведено в резерв", sub: "из кассы в резерв", amt: "−" + fmt(c.sRsvMove), n: c.rsvMove.length, body: <Items arr={c.rsvMove} /> });
-  steps.push({ k: "rsvx", sign: "·", tone: "bg-muted text-muted-foreground", title: "Расходы из резерва", sub: (c.rsvExp.length ? "оплачены резервом, касса не меняется" : "в этом месяце не было") + " · в резерве " + fmt(rsvBal), amt: "−" + fmt(c.sRsvExp), n: c.rsvExp.length, body: <Items arr={c.rsvExp} /> });
+    body: <Fold id="kassa.step.days" rows={c.days}>{(shown) => <ul className="mt-1 mb-2 flex flex-col">{shown.map((d) => <li key={d.d} className="flex justify-between gap-3 border-b border-border py-1.5 text-[13px] last:border-0"><span className="min-w-0 truncate">{dShort(d.d)} · Премиум {fmt(d.p)} · Яшнабад {fmt(d.y)}{d.c ? ` · C1 ${fmt(d.c)}` : ""} <span className="text-muted-foreground">({d.src === "Excel" ? "отчёт" : "продажи"})</span></span><span className="num">{fmt(d.p + d.y + (d.c || 0))}</span></li>)}</ul>}</Fold> });
+  steps.push({ k: "inc", sign: "+", tone: "bg-plus-soft text-plus", title: "Приходы", sub: c.inc.length ? "добавлено к Б/Ч" : "пока нет", amt: "+" + fmt(c.sInc), n: c.inc.length, body: <Items id="inc" arr={c.inc} /> });
+  steps.push({ k: "op", sign: "−", tone: "bg-primary/12 text-primary", title: "Операционные расходы", sub: "расходы дня", amt: "−" + fmt(c.sOp), n: c.op.length, body: <Items id="op" arr={c.op} /> });
+  steps.push({ k: "oth", sign: "−", tone: "bg-warn-soft text-warn", title: "Прочие расходы", sub: "поставщики, бухгалтер, мастера", amt: "−" + fmt(c.sOth), n: c.oth.length, body: <Items id="oth" arr={c.oth} /> });
+  if (c.rsvMove.length) steps.push({ k: "rsv", sign: "−", tone: "bg-warn-soft text-warn", title: "Переведено в резерв", sub: "из кассы в резерв", amt: "−" + fmt(c.sRsvMove), n: c.rsvMove.length, body: <Items id="rsvMove" arr={c.rsvMove} /> });
+  steps.push({ k: "rsvx", sign: "·", tone: "bg-muted text-muted-foreground", title: "Расходы из резерва", sub: (c.rsvExp.length ? "оплачены резервом, касса не меняется" : "в этом месяце не было") + " · в резерве " + fmt(rsvBal), amt: "−" + fmt(c.sRsvExp), n: c.rsvExp.length, body: <Items id="rsvExp" arr={c.rsvExp} /> });
   const GR = "grid-cols-[28px_minmax(0,1fr)_auto] gap-2.5 @min-[640px]/main:grid-cols-[34px_minmax(0,1fr)_auto] @min-[640px]/main:gap-3";
   const CIRC = "grid size-[26px] place-items-center rounded-full text-[13px] font-bold @min-[640px]/main:size-[30px] @min-[640px]/main:text-[15px]";
   return (

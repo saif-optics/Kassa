@@ -13,6 +13,7 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Brand } from "@/components/Logo";
 import { FlowPill } from "@/components/FlowPill";
 import { DUR, fade } from "@/lib/motion";
+import { go as goTo, hashTab } from "@/lib/go";
 import { NAV } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 import { getSession, isDemo, onAuth, signOut } from "@/lib/source";
@@ -67,10 +68,10 @@ function Clock() {
 // раздел — из адреса (#kassa, #pay); неготовые разделы открываются на рабочем сайте
 // недоступный по правам раздел — первый доступный («Главная» открыта всем)
 function useTab(allowed: string[]) {
-  const get = () => { const h = location.hash.replace("#", ""); return allowed.includes(h) ? h : allowed[0] || "home"; };
+  const get = () => { const h = hashTab(); return allowed.includes(h) ? h : allowed[0] || "home"; };
   const [t, setT] = useState(get);
   useEffect(() => { const f = () => setT(get()); f(); window.addEventListener("hashchange", f); return () => window.removeEventListener("hashchange", f); }, [allowed.join()]); // eslint-disable-line react-hooks/exhaustive-deps
-  return [t, (x: string) => { location.hash = x; window.scrollTo({ top: 0, behavior: "smooth" }); }] as const;
+  return [t, (x: string) => goTo(x)] as const;
 }
 
 // кнопка боковой панели: Tooltip всегда на месте (подсказка только в свёрнутом виде), чтобы фокус не терялся

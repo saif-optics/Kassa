@@ -95,9 +95,10 @@ export async function call(action: string, body: Record<string, unknown> = {}): 
 /** список: сначала RPC access_list, если его нет — функция */
 export async function listUsers(): Promise<UserRow[]> {
   if (isDemo) return structuredClone((mem ??= demoRows()));
-  try { const r = await client().rpc("access_list"); if (r && !r.error) return Array.isArray(r.data) ? (r.data as UserRow[]) : []; } catch { /* пробуем функцию */ }
+  let why = "";
+  try { const r = await client().rpc("access_list"); if (r && !r.error) return Array.isArray(r.data) ? (r.data as UserRow[]) : []; why = r?.error?.message || ""; } catch { /* пробуем функцию */ }
   const r = await call("list");
-  if (r.error) throw new Error(r.error);
+  if (r.error) throw new Error(why ? `Список не получен: ${why}. ${r.error}` : r.error);
   const d = r.data || {};
   return (Array.isArray(d.users) ? d.users : Array.isArray(d.list) ? d.list : []) as UserRow[];
 }

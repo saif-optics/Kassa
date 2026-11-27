@@ -99,7 +99,7 @@ export function KassaPage({ d, focus }: { d: Data; focus?: "expense" | "cash" | 
           </CashHero>
         </Item>
         <Item c={C.arts}>
-          <Card title="Расходы с Б/Ч" note="по статьям" i={1} className="gap-1.5"><Articles a={a} /></Card>
+          <Card title="Расходы с Б/Ч" note="по статьям" i={1} className="gap-1.5" to={{ tab: "sales", params: { sec: "exp" } }} label="расходы дня в продажах"><Articles a={a} /></Card>
         </Item>
         <Item c={C.journal}>
           <Card title="Журнал записей" action={{ label: `Все ${nRec}`, onClick: openJournal }} i={2} className="gap-1.5"><JournalMini list={all} M={M} /></Card>
@@ -127,7 +127,7 @@ export function KassaPage({ d, focus }: { d: Data; focus?: "expense" | "cash" | 
         <Item c={C.split}><Tile i={6}><Split c={c} /></Tile></Item>
 
         <Item c={C.spend}>
-          <Tile i={5}><TileLabel>Расходы с Б/Ч</TileLabel><div className="min-w-0"><TileValue count={a.sSmall} format="mln" /><TileSub><span>прочие {fmtM(c.sOth)}</span></TileSub></div></Tile>
+          <Tile i={5} to={{ tab: "sales", params: { sec: "exp" } }} label="расходы дня в продажах"><TileLabel>Расходы с Б/Ч</TileLabel><div className="min-w-0"><TileValue count={a.sSmall} format="mln" /><TileSub><span>прочие {fmtM(c.sOth)}</span></TileSub></div></Tile>
         </Item>
         <Item c={C.steps}>
           <Card title="Расчёт по шагам" note="нажмите шаг" i={6}><Steps c={c} rsvBal={reserve(d, isLast ? null : M).bal} /></Card>

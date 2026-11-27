@@ -12,6 +12,8 @@ import type { Data } from "@/lib/types";
 import { useMutations } from "@/lib/useData";
 import { useAccess } from "@/lib/access";
 import { fade } from "@/lib/motion";
+import { clearHashParams, useHashParams } from "@/lib/go";
+import { PeriodCtx } from "./link";
 import { prevList } from "./base";
 import { makeCtx } from "./cost";
 import { buildAnalytics } from "./logic";
@@ -68,6 +70,16 @@ export function AnalyticsPage({ d }: { d: Data }) {
     return () => { window.removeEventListener("resize", calc); ro.disconnect(); };
   }, [tab, m.empty, sel.size]);
   const setTab = (k: string) => { setTabS(k as TabKey); try { localStorage.setItem(TABKEY, k); } catch { /* нет хранилища */ } };
+  // ссылка из другого раздела: #analytics?tab=chk&from=2026-11-01&to=2026-11-27&point=Премиум
+  const hp = useHashParams();
+  useEffect(() => {
+    if (![...hp.keys()].length) return;
+    const t = hp.get("tab"), from = hp.get("from") || "", to = hp.get("to") || "", pt = hp.get("point"), ok = (s: string) => /^d{4}-d{2}-d{2}$/.test(s);
+    if (t && TABS.some(([k]) => k === t)) setTab(t);
+    if (ok(from) && ok(to)) setF({ from, to, preset: "custom" });
+    if (pt && c.points.includes(pt)) setF({ point: pt });
+    clearHashParams();
+  }, [hp]); // eslint-disable-line react-hooks/exhaustive-deps
   const saveSel = async (next: Set<number>) => {
     const o = ALL_IDS.filter((i) => !next.has(i));
     if (!adm) { setOwn(o); try { localStorage.setItem(SELKEY, JSON.stringify(o)); } catch { /* нет хранилища */ } return; }
@@ -122,6 +134,7 @@ export function AnalyticsPage({ d }: { d: Data }) {
   );
 
   return (
+    <PeriodCtx.Provider value={m.empty ? null : { from: m.r.from, to: m.r.to, point: F.point !== "all" ? F.point : undefined }}>
     <HintCtx.Provider value={hintsOn}>
       <RowHCtx.Provider value={rh}>
       <div ref={rootRef} className="flex flex-col gap-3.5">
@@ -141,5 +154,6 @@ export function AnalyticsPage({ d }: { d: Data }) {
       </div>
       </RowHCtx.Provider>
     </HintCtx.Provider>
+    </PeriodCtx.Provider>
   );
 }

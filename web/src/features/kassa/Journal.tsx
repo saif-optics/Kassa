@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ChevronRight, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FilterBar } from "@/components/FilterSheet";
+import { Fold } from "@/components/Fold";
 import { RowCards, type RowColumn } from "@/components/RowCards";
 import { Segments } from "@/components/Segments";
 import { InlineNumber } from "@/components/Inline";
@@ -29,12 +30,12 @@ type Props = { list: Entry[]; M: string; editingId: string | null; onEdit: (e: E
 
 export function Journal({ list, M, editingId, onEdit, onDelete, onFact }: Props) {
   const phone = useIsPhone();
-  const [f, setF] = useState<F>("all"), [open, setOpen] = useState<Set<string>>(new Set([M])), [all, setAll] = useState<Set<string>>(new Set()), [confirm, setConfirm] = useState<string | null>(null);
+  const [f, setF] = useState<F>("all"), [open, setOpen] = useState<Set<string>>(new Set([M])), [confirm, setConfirm] = useState<string | null>(null);
   let L = [...list].sort((a, b) => -byDate(a, b));
   if (f === "op") L = L.filter((e) => e.type !== "inc" && e.cat === "op"); if (f === "oth") L = L.filter((e) => e.type !== "inc" && e.cat !== "op");
   if (f === "inc") L = L.filter((e) => e.type === "inc" && !isRsvIn(e)); if (f === "rsv") L = L.filter((e) => isRsvIn(e) || fromRsv(e));
   const byM: Record<string, Entry[]> = {}; L.forEach((e) => { const m = (e.date || "").slice(0, 7) || "—"; (byM[m] ||= []).push(e); });
-  const months = Object.keys(byM).sort().reverse(), LIM = 10;
+  const months = Object.keys(byM).sort().reverse();
   const tg = (s: Set<string>, k: string) => { const n = new Set(s); n.has(k) ? n.delete(k) : n.add(k); return n; };
   const cur = byM[M] || [];
   const s = cur.filter((e) => !isBc(e)).reduce((a, e) => a + (e.type === "inc" ? 1 : -1) * +(e.amount || 0), 0), sf = cur.filter((e) => !isBc(e)).reduce((a, e) => a + (e.type === "inc" ? 1 : -1) * val(e), 0);
@@ -75,7 +76,7 @@ export function Journal({ list, M, editingId, onEdit, onDelete, onFact }: Props)
       </FilterBar>
       {!L.length && <p className="text-[13px] text-muted-foreground">Записей нет.</p>}
       <div className="flex flex-col">
-        {months.map((m) => { const arr = byM[m], on = open.has(m), shown = all.has(m) ? arr : arr.slice(0, LIM);
+        {months.map((m) => { const arr = byM[m], on = open.has(m);
           const exp = arr.filter((e) => e.type !== "inc").reduce((a, e) => a + val(e), 0), inc = arr.filter((e) => e.type === "inc" && !isBc(e)).reduce((a, e) => a + val(e), 0);
           return (
             <div key={m} className="border-b border-border last:border-0">
@@ -83,8 +84,7 @@ export function Journal({ list, M, editingId, onEdit, onDelete, onFact }: Props)
                 <ChevronRight className={cn("size-4 shrink-0 transition-transform", on && "rotate-90")} /><b>{m === "—" ? "Без даты" : monthName(m)}</b>
                 <span className="min-w-0 text-[13px] text-muted-foreground">· {arr.length} {pl(arr.length, "запись", "записи", "записей")} · расходы −{fmt(exp)}{inc ? ` · приходы +${fmt(inc)}` : ""}</span></button>
               {on && <div className="pb-2">
-                <RowCards columns={cols} rows={shown} rowKey={(e) => e.id} expand={expand} dense />
-                {arr.length > LIM && <Button variant="ghost" className="mt-1 w-full" onClick={() => setAll((x) => tg(x, m))}>{all.has(m) ? "Свернуть" : `Показать все (${arr.length})`}</Button>}
+                <Fold id={`kassa.journal.${m}`} rows={arr}>{(shown) => <RowCards columns={cols} rows={shown} rowKey={(e) => e.id} expand={expand} dense />}</Fold>
               </div>}
             </div>); })}
       </div>

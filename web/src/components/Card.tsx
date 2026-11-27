@@ -2,15 +2,17 @@
 import { isValidElement } from "react";
 import { motion } from "motion/react";
 import { land } from "@/lib/motion";
+import { goProps, type Dest } from "@/lib/go";
 import { cn } from "@/lib/utils";
 
 type ActionLink = { label: React.ReactNode; onClick: () => void; "aria-label"?: string };
 /** действие: кнопка-ссылка {label, onClick} или готовый узел (например, иконка-кнопка) */
 const isLink = (a: unknown): a is ActionLink => !!a && typeof a === "object" && !isValidElement(a) && "onClick" in a;
 
-export function Card({ title, note, action, i = 0, className, children }: { title: string; note?: React.ReactNode; action?: ActionLink | React.ReactNode; i?: number; className?: string; children: React.ReactNode }) {
+/** to + label — вся панель становится ссылкой (подъём при наведении, Enter, «Открыть …») */
+export function Card({ title, note, action, i = 0, className, children, to, label }: { title: string; note?: React.ReactNode; action?: ActionLink | React.ReactNode; i?: number; className?: string; children: React.ReactNode; to?: Dest | (() => void); label?: string }) {
   return (
-    <motion.section {...land(i)} className={cn("glass flex h-full min-w-0 flex-col gap-2.5 rounded-3xl p-4 @min-[640px]/main:rounded-[28px] @min-[640px]/main:px-6 @min-[640px]/main:py-[22px]", className)}>
+    <motion.section {...land(i)} {...(to ? { ...goProps(to, label || title.toLowerCase()), whileHover: { y: -2 } } : {})} className={cn("glass flex h-full min-w-0 flex-col gap-2.5 rounded-3xl p-4 @min-[640px]/main:rounded-[28px] @min-[640px]/main:px-6 @min-[640px]/main:py-[22px]", to && "cursor-pointer outline-none transition-shadow hover:shadow-lg focus-visible:ring-2 focus-visible:ring-primary/50", className)}>
       <header className="flex items-baseline justify-between gap-3">
         <h2 className="shrink-0 text-lg font-bold whitespace-nowrap">{title}</h2>
         {action ? (isLink(action)

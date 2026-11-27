@@ -52,7 +52,10 @@ export function RsView({ d }: { d: Data }) {
   const m = m0 === "all" && ms.length > 1 ? "all" : ms.includes(m0) ? m0 : ms[ms.length - 1];
   const C = useMemo(() => rsCalc(d, m), [d, m]);
   const L = useMemo(() => C.days.slice().reverse(), [C]);
-  const pg = usePaging(L.length, "rs-days", -1, m);
+  const [df, setDf] = useState<"all" | "in" | "out">("all"); // фильтр списка дней: все, с поступлениями, со списаниями
+  const Lf = useMemo(() => (df === "in" ? L.filter((x) => x.in != null && x.in > 0.5) : df === "out" ? L.filter((x) => x.out) : L), [L, df]);
+  const pg = usePaging(Lf.length, "rs-days", -1, m + df);
+  const showDays = (v: "in" | "out") => { setDf(v); requestAnimationFrame(() => document.getElementById("rs-days")?.scrollIntoView({ behavior: "smooth", block: "start" })); };
   let k = 0; const nx = () => Math.min(k++, 8); // сквозной номер посадки сверху вниз
   if (!ms.length) return <Card i={nx()} title="Выписок по счёту ещё нет"><p className="text-[13.5px] text-muted-foreground">Выписка Анор Банка загружается в базу — остатки и расходы со счёта появятся здесь.</p></Card>;
   const lbl = m === "all" ? "за всё время" : "за " + mn(m).toLowerCase(), per = m === "all" ? "" : " · " + mn(m).toLowerCase();
@@ -109,8 +112,8 @@ export function RsView({ d }: { d: Data }) {
       <Segments aria-label="Месяц" items={[...ms.map((x) => ({ key: x, label: mn(x) })), ...(ms.length > 1 ? [{ key: "all", label: "Все месяцы" }] : [])]} value={m} onChange={pick} />
       <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3.5">
         <Tile i={nx()} hero><TileLabel>{"Остаток на " + (C.startD ? dShort(C.startD) : "начало")}</TileLabel>{C.start != null ? <TileValue count={C.start} suffix=" сум" /> : <TileValue>—</TileValue>}<TileSub>утро первого дня с выпиской</TileSub></Tile>
-        <Tile i={nx()}><TileLabel>{"Поступило " + lbl}</TileLabel><TileValue className="text-plus">{"+" + fmt(C.in) + " сум"}</TileValue><TileSub>терминал, Payme, перечисления</TileSub></Tile>
-        <Tile i={nx()}><TileLabel>{"Списано " + lbl}</TileLabel><TileValue>{"−" + fmt(C.out) + " сум"}</TileValue><TileSub>{`${C.outDays} ${pl(C.outDays, "день", "дня", "дней")} со списаниями`}</TileSub></Tile>
+        <Tile i={nx()} to={() => showDays("in")} label="дни с поступлениями"><TileLabel>{"Поступило " + lbl}</TileLabel><TileValue className="text-plus">{"+" + fmt(C.in) + " сум"}</TileValue><TileSub>терминал, Payme, перечисления</TileSub></Tile>
+        <Tile i={nx()} to={() => showDays("out")} label="дни со списаниями"><TileLabel>{"Списано " + lbl}</TileLabel><TileValue>{"−" + fmt(C.out) + " сум"}</TileValue><TileSub>{`${C.outDays} ${pl(C.outDays, "день", "дня", "дней")} со списаниями`}</TileSub></Tile>
         <Tile i={nx()}><TileLabel>{"Остаток на " + (C.endD ? dShort(C.endD) : "конец")}</TileLabel>{C.end != null ? <TileValue count={C.end} suffix=" сум" /> : <TileValue>—</TileValue>}<TileSub>по последней выписке</TileSub></Tile>
       </div>
 
@@ -127,11 +130,12 @@ export function RsView({ d }: { d: Data }) {
         <div className="mt-2"><RowCards columns={ord(monCols, "e")} rows={ms} rowKey={(x) => x} dense rowClass={TAPROW} /></div>
       </Card>
 
-      <Card i={nx()} title={"Расходы по дням" + per} note="нажмите день">
+      <div id="rs-days" className="scroll-mt-4"><Card i={nx()} title={"Расходы по дням" + per} note="нажмите день">
+        <Segments aria-label="Какие дни показывать" size="sm" items={[{ key: "all", label: "Все дни" }, { key: "in", label: "Поступления" }, { key: "out", label: "Списания" }]} value={df} onChange={(v) => setDf(v as "all" | "in" | "out")} />
         <p className="text-[12.5px] text-muted-foreground">Нажмите на день, чтобы увидеть все списания, поменять статью или исправить выписку.</p>
-        <RowCards columns={ord(dayCols, "e")} rows={L.slice(pg.from, pg.to)} rowKey={(x) => x.d} expand={dayOpen} empty="Нет выписок за период" />
+        <RowCards columns={ord(dayCols, "e")} rows={Lf.slice(pg.from, pg.to)} rowKey={(x) => x.d} expand={dayOpen} empty="Нет выписок за период" />
         {pg.bar}
-      </Card>
+      </Card></div>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { TileLabel } from "@/components/Tile";
 import { fmtM } from "../plan/logic";
 import { pl } from "../pay/logic";
 import { cn } from "@/lib/utils";
+import { goProps } from "@/lib/go";
 import { dShort, fmt, type BcDay, type Kassa, analysis } from "./logic";
 
 /** «Операционные и прочие»: одна полоса долей и две подписи с суммами */
@@ -48,7 +49,7 @@ export function ArticlesMore({ a }: { a: ReturnType<typeof analysis> }) {
   return (
     <div className="flex flex-col gap-1 text-[13.5px]">
       <h4 className="font-semibold">По точкам</h4>
-      {a.byPoint.map(([k, v]) => <div key={k} className="flex justify-between"><span>{k}</span><span className="num">{fmt(v)} · {Math.round((v / (a.sSmall || 1)) * 100)}%</span></div>)}
+      {a.byPoint.map(([k, v]) => <div key={k} {...goProps({ tab: "sales", params: { point: k } }, `продажи точки ${k}`)} className="flex cursor-pointer justify-between rounded px-1 -mx-1 outline-none transition-colors hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-primary/40"><span>{k}</span><span className="num">{fmt(v)} · {Math.round((v / (a.sSmall || 1)) * 100)}%</span></div>)}
       {a.byDay.length > 0 && <><h4 className="mt-2 font-semibold">По дням</h4>
         <div className="flex justify-between"><span>Самый затратный день</span><span className="num">{dShort(a.byDay[0][0])} · {fmt(a.byDay[0][1])}</span></div>
         <div className="flex justify-between"><span>В среднем за день с расходами</span><span className="num">{fmt(a.sSmall / (a.ndays || 1))}</span></div>

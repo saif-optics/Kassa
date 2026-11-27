@@ -105,7 +105,7 @@ export function PlanPage({ d }: { d: Data }) {
           </Card>
           <section className="flex flex-col gap-3">
             <div><h2 className="text-base font-semibold">Точки и продавцы</h2><p className="mt-0.5 text-[13px] text-muted-foreground">План каждой точки, выполнение, прогноз и показатели продавца.</p></div>
-            <Points rows={view.points} K={K} points={env.points} i0={7} />
+            <Points rows={view.points} K={K} points={env.points} month={month} i0={7} />
           </section>
         </>
       )}

@@ -1,6 +1,7 @@
 // Строки списка в карточке: сетка колонок, высота 40, разделитель сверху. Колонки: <Rows cols="1fr 120px 120px">.
 import { createContext, useContext } from "react";
 import { cn } from "@/lib/utils";
+import { goProps, type Dest } from "@/lib/go";
 
 const Cols = createContext({ cols: "minmax(0,1fr) 120px 120px", phone: "minmax(0,1fr) auto auto", fill: false });
 
@@ -11,10 +12,11 @@ export function Rows({ cols = "1fr 120px 120px", phone = "1fr auto auto", fill, 
 }
 
 /** строка; bold — итоговая; на телефоне узкие колонки подстраиваются по содержимому */
-export function Row({ bold, className, children }: { bold?: boolean; className?: string; children: React.ReactNode }) {
+/** to + label — строка-ссылка: курсор, подсветка, Enter, «Открыть …» */
+export function Row({ bold, className, children, to, label }: { bold?: boolean; className?: string; children: React.ReactNode; to?: Dest | (() => void); label?: string }) {
   const { cols, phone, fill } = useContext(Cols);
-  return <div style={{ "--cols": cols, "--pcols": phone } as React.CSSProperties}
-    className={cn("grid min-h-[46px] min-w-0 items-center gap-3 border-t border-foreground/8 text-[15px] first:border-t-0 max-sm:grid-cols-(--pcols) sm:grid-cols-(--cols)", fill && "min-h-10 flex-1", bold && "font-bold", className)}>{children}</div>;
+  return <div style={{ "--cols": cols, "--pcols": phone } as React.CSSProperties} {...(to ? goProps(to, label || "раздел") : {})}
+    className={cn(to && "cursor-pointer rounded-lg outline-none transition-colors hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-primary/40", "grid min-h-[46px] min-w-0 items-center gap-3 border-t border-foreground/8 text-[15px] first:border-t-0 max-sm:grid-cols-(--pcols) sm:grid-cols-(--cols)", fill && "min-h-10 flex-1", bold && "font-bold", className)}>{children}</div>;
 }
 
 /** ячейка: right — по правому краю, числа жирные; muted — подпись 12 px */

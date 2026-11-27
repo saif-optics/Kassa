@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/Card";
+import { Fold } from "@/components/Fold";
 import { PageHead } from "@/components/PageHead";
 import { RowCards, type RowColumn } from "@/components/RowCards";
 import { Chip, Tile, TileLabel, TileSub, TileValue, type ChipTone } from "@/components/Tile";
@@ -112,8 +113,8 @@ export function UsersPage() {
       {!q.isLoading && !q.isError && !rows.length && <p className="glass-inner rounded-2xl p-5 text-[13.5px] text-muted-foreground">Пока никого нет.</p>}
       {groups(rows, points).map((g) => (
         <Card key={g.key} i={nx()} title={g.title} note={`${g.rows.length} ${pl(g.rows.length, "пользователь", "пользователя", "пользователей")}`}>
-          <RowCards className="max-w-[1400px]" columns={cols()} rows={g.rows} rowKey={(u) => u.email} dense
-            expand={(u) => <UserEdit key={u.email + String(u.active)} u={u} me={me} points={points} busy={busy} run={run} onPass={(pw) => setOnce({ email: u.email, pw })} />} />
+          <Fold id={`users.${g.key || "all"}`} rows={g.rows}>{(shown) => <RowCards className="max-w-[1400px]" columns={cols()} rows={shown} rowKey={(u) => u.email} dense
+            expand={(u) => <UserEdit key={u.email + String(u.active)} u={u} me={me} points={points} busy={busy} run={run} onPass={(pw) => setOnce({ email: u.email, pw })} />} />}</Fold>
         </Card>
       ))}
     </div>

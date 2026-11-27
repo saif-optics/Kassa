@@ -4,6 +4,7 @@
 import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Info, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { goProps, type Dest } from "@/lib/go";
 import { EdgeShades, useScrollShade, useScrollShadeY } from "@/components/ScrollShade";
 import { hintOf } from "./parts";
 
@@ -42,10 +43,11 @@ export interface PieceProps {
   nh?: boolean;
   /** значение внизу, подпись вверху */
   spread?: boolean;
-  className?: string; children?: ReactNode;
+  /** вся плитка — ссылка в другой раздел (подпись «Открыть …» — в label или title) */
+  to?: Dest; className?: string; children?: ReactNode;
 }
 
-export function Piece({ d, dn, p, m, f, tone = "n", join, bridge, label, title, note, hint, info, right, spread, nh, className, children }: PieceProps) {
+export function Piece({ d, dn, p, m, f, tone = "n", join, bridge, label, title, note, hint, info, right, spread, nh, to, className, children }: PieceProps) {
   const hintsOn = useContext(HintCtx), [open, setOpen] = useState(false);
   const h = hintsOn ? [hintOf(hint || title || (typeof label === "string" ? label : "")), info].filter(Boolean).join("\n") : "";
   const st = {
@@ -54,7 +56,7 @@ export function Piece({ d, dn, p, m, f, tone = "n", join, bridge, label, title, 
     "--mw": m?.[0], "--mh": m ? m[1] + "px" : undefined, "--pmh": f ? f[1] + "px" : undefined,
   } as CSSProperties;
   return (
-    <section className={cn("pz-i", spread && "pz-t", className)} data-tone={tone === "n" ? undefined : tone} data-j={join} style={st}>
+    <section {...(to ? goProps(to, (title || (typeof label === "string" ? label : "") || "раздел").toLowerCase()) : {})} className={cn("pz-i", spread && "pz-t", to && "cursor-pointer outline-none transition-[translate,box-shadow] hover:-translate-y-0.5 hover:shadow-lg focus-visible:ring-2 focus-visible:ring-primary/50", className)} data-tone={tone === "n" ? undefined : tone} data-j={join} style={st}>
       <div className="pz-in">
         {(label || title || note || right) && (
           <div className="flex min-w-0 items-baseline justify-between gap-3">

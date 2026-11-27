@@ -280,3 +280,8 @@ body::before { content: ""; position: fixed; inset: -14px; z-index: -1; pointer-
 
 .pz-vx{white-space:nowrap;font-size:28px;font-weight:800;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
 @container main (min-width:640px){ .pz-vx{font-size:clamp(28px,2.4cqw,52px)} }
+
+/* знак в свёрнутой панели: в тёмной теме мягкое свечение колец, медленная пульса 5 с; в светлой без свечения */
+.dark .logo-glow { filter: drop-shadow(0 0 3px rgb(72 189 224 / .55)) drop-shadow(0 0 8px rgb(72 189 224 / .35)); animation: logo-pulse 5s ease-in-out infinite; }
+@keyframes logo-pulse { 0%, 100% { opacity: .88 } 50% { opacity: 1 } }
+@media (prefers-reduced-motion: reduce) { .dark .logo-glow { animation: none; } }

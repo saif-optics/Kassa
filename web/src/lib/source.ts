@@ -110,12 +110,13 @@ export async function addExpenseLimited(name: string, amount: number, date: stri
 /** ограниченная ли роль (после входа) */
 export const isLimited = () => limited;
 
+let chSeq = 0; // у каждой подписки своё имя канала: StrictMode на localhost подписывает дважды, а removeChannel не мгновенный
 /** живые обновления: изменения с рабочего сайта и других устройств */
 export function subscribe(onChange: () => void): () => void {
   if (isDemo) { listeners.add(onChange); return () => listeners.delete(onChange); }
   if (limited) return () => {};
   const c = client();
-  const ch = c.channel("kassa-web-live").on("postgres_changes", { event: "*", schema: "public", table: "docs" }, (p) => {
+  const ch = c.channel("kassa-web-live-" + ++chSeq).on("postgres_changes", { event: "*", schema: "public", table: "docs" }, (p) => {
     const col = ((p.new as Row)?.col || (p.old as Row)?.col) as string | undefined;
     if (col !== undefined) onChange();
   }).subscribe();

@@ -1,4 +1,6 @@
 // Вкладка «Товары»: пазл 12×4 — уголок «Категории» + «Средняя цена», топ-10 с перемычкой, ABC, «Перестали продаваться», ценовые группы.
+import { goProps } from "@/lib/go";
+import { useSalesDest } from "./link";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { Sel } from "@/features/sales/parts";
@@ -35,7 +37,7 @@ export function TabGoods({ T }: { T: TabIn }) {
         bridge={tq && L.keep("toprev", "topqty") ? { dir: "h", d: "calc(var(--rh) + var(--pg) / 2)" } : undefined}><Top w={tr} /></Piece>}
       {tq && <Piece d={L.rect("topqty")} m={[3, 560]} f={[2, 0]} title="Топ-10 по количеству" hint="Топ-10 товаров по количеству" note={<span className="@max-[1499px]/main:hidden">{"всего " + fmt(tq.tot) + " шт"}</span>}><Top w={tq} two /></Piece>}
       {abc && <Piece d={L.rect("abc")} m={[3, 170]} f={[1, 170]} title="ABC-анализ" hint="ABC-анализ товаров" note={<span className="@max-[1499px]/main:hidden">{`${abc.items.length} ${pl(abc.items.length, "товар", "товара", "товаров")}`}</span>} spread><Abc w={abc} /></Piece>}
-      {lost && <Piece d={L.rect("lost")} m={[3, 170]} f={[1, 170]} tone={nLost ? "c" : "n"} label="Перестали продаваться" hint="Перестали продаваться" spread><Lost T={T} w={lost} n={nLost} /></Piece>}
+      {lost && <Piece to={{ tab: "batch" }} d={L.rect("lost")} m={[3, 170]} f={[1, 170]} tone={nLost ? "c" : "n"} label="Перестали продаваться" hint="Перестали продаваться" spread><Lost T={T} w={lost} n={nLost} /></Piece>}
       {pg && <Piece d={L.rect("pg")} m={[6, 230]} f={[2, 0]} title="Ценовые группы" hint="Самые продаваемые по ценовым группам"
         right={<Sel label="Категория" value={pg.cat} onChange={T.setPgCat} className="h-7 w-auto min-w-28 gap-2 rounded-full px-3 text-[12.5px]" options={[{ v: "all", l: "Все категории" }, ...pg.cats]} />}><Bands w={pg} /></Piece>}
     </Puzzle>
@@ -88,11 +90,13 @@ function AvgPrice({ w }: { w: NonNullable<ReturnType<typeof wOf<"ranges">>> }) {
 
 // ---------- топ-10 ----------
 function Top({ w, two }: { w: NonNullable<ReturnType<typeof wOf<"top">>>; two?: boolean }) {
+  const dest = useSalesDest(), to = dest();
   if (!w.rows.length) return <p className="pz-s">Нет данных за период</p>;
   const byR = w.by === "r", mx = Math.max(1, ...w.rows.map((o) => o[w.by]));
   const row = (o: (typeof w.rows)[number], i: number) => (
     <div key={o.k} title={`${o.k}${o.cat ? " · " + o.cat : ""}: ${fmt(o.r)} сум, ${fmt(o.u)} шт, ср. цена ${fmt(o.u ? o.r / o.u : 0)}, доля ${pctF(w.tot ? o[w.by] / w.tot : 0)}`}
-      className={cn("grid min-h-9 max-h-[52px] flex-1 grid-cols-[26px_minmax(0,1fr)_auto] items-center gap-3 border-t border-border text-[14.5px] first:border-t-0", !two && "min-h-10")}>
+      {...(to ? goProps(to, "продажи за период") : {})}
+      className={cn("grid min-h-9 max-h-[52px] flex-1 grid-cols-[26px_minmax(0,1fr)_auto] items-center gap-3 border-t border-border text-[14.5px] first:border-t-0", !two && "min-h-10", to && "cursor-pointer outline-none transition-colors hover:bg-foreground/5 focus-visible:ring-2 focus-visible:ring-primary/40")}>
       <span className="num grid size-[26px] place-items-center rounded-full bg-muted text-[12.5px] font-bold" style={i === 0 && !two ? { background: "var(--chart-4)", color: "#2a2000" } : undefined}>{i + 1}</span>
       <span className="min-w-0"><span className="block truncate">{o.k}</span>{byR && <Bar v={o[w.by] / mx} h={4} className="mt-1" color="var(--piece-blue)" />}</span>
       <b className="num text-[15.5px]">{byR ? mln(o.r) : fmt(o.u)}</b>

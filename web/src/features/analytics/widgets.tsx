@@ -17,10 +17,10 @@ export function renderW(w: Widget, points: string[], setPgCat: (c: string) => vo
   const F = fill ? ({ h: "fill" } as const) : {};
   switch (w.kind) {
     case "line": return <LineC labels={w.labels} series={w.series} h={fill ? "fill" : undefined} />;
-    case "donut": return <DonutC items={w.items} center={w.center} sub={w.sub} />;
+    case "donut": return <DonutC items={w.items} center={w.center} sub={w.sub} pay={w.ids.includes(22)} />;
     case "groupBars": return <GroupBarsC labels={w.labels} series={w.series} {...F} />;
-    case "hbars": return <HBars items={w.items} rank={w.rank} dot={w.dot} cols={w.ids[0] === 38} />;
-    case "expenses": return <><Sub>По точкам</Sub><HBars items={w.byPoint} /><Sub>По статьям</Sub><HBars items={w.byArt} /></>;
+    case "hbars": return <HBars items={w.items} rank={w.rank} dot={w.dot} cols={w.ids[0] === 38} pts={[17, 18, 19, 20].includes(w.ids[0])} />;
+    case "expenses": return <><Sub>По точкам</Sub><HBars items={w.byPoint} pts /><Sub>По статьям</Sub><HBars items={w.byArt} /></>;
     case "waterfall": return w.steps ? <WaterfallC steps={w.steps} {...F} /> : <None />;
     case "bars": {
       const signed = w.vk === "signed", qty = w.vk === "qty";

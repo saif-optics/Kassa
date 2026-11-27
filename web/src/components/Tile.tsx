@@ -5,15 +5,18 @@ import { cn } from "@/lib/utils";
 import { land, useCountUp } from "@/lib/motion";
 import { fmt } from "@/features/pay/logic";
 import { fmtM } from "@/features/plan/logic";
+import { goProps, type Dest } from "@/lib/go";
 
 const OnHero = createContext(false);
 
-export function Tile({ i = 0, hero, warn, className, children }: { i?: number; hero?: boolean; warn?: boolean; className?: string; children: React.ReactNode }) {
+/** to + label — плитка-ссылка: курсор, подъём при наведении, Enter, подпись «Открыть …» */
+export function Tile({ i = 0, hero, warn, className, children, to, label }: { i?: number; hero?: boolean; warn?: boolean; className?: string; children: React.ReactNode; to?: Dest | (() => void); label?: string }) {
   return (
     <OnHero.Provider value={!!hero}>
-      <motion.div {...land(i)}
+      <motion.div {...land(i)} {...(to ? { ...goProps(to, label || "раздел"), whileHover: { y: -2 } } : {})}
         className={cn("flex h-full relative min-h-[118px] min-w-0 flex-col justify-between overflow-hidden rounded-3xl p-4 @min-[640px]/main:rounded-[28px] @min-[640px]/main:px-6 @min-[640px]/main:py-4 @min-[1600px]/main:py-[22px]",
           hero ? "border border-white/25 bg-[linear-gradient(135deg,var(--brand),#0a4f7a_60%,var(--brand-navy))] text-white shadow-[0_14px_36px_rgb(2_110_166/0.32)]" : "glass",
+          to && "cursor-pointer outline-none transition-shadow hover:shadow-lg focus-visible:ring-2 focus-visible:ring-primary/50",
           warn && "ring-1 ring-minus/50", className)}>{children}</motion.div>
     </OnHero.Provider>
   );

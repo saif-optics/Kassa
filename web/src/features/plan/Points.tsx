@@ -10,15 +10,16 @@ const Cell = ({ k, v, color }: { k: string; v: string; color?: string }) => (
   <div className="glass-inner min-w-0 rounded-2xl px-3 py-2"><span className="block text-[11px] leading-tight text-muted-foreground">{k}</span><b className="num block whitespace-nowrap text-[14.5px]" style={color ? { color } : undefined}>{v}</b></div>
 );
 
-export function Points({ rows, K, points, i0 = 0 }: { rows: PointRow[]; K: PlanCalc; points: string[]; i0?: number }) {
+export function Points({ rows, K, points, month, i0 = 0 }: { rows: PointRow[]; K: PlanCalc; points: string[]; month: string; i0?: number }) {
   if (!rows.length) return <div className="glass rounded-3xl p-6 text-center text-muted-foreground">Нет точек с планом</div>;
   const ranked = rows.filter((r) => r.pt).length;
+  const monthEnd = new Date(Date.UTC(+month.slice(0, 4), +month.slice(5, 7), 0)).toISOString().slice(0, 10); // последний день месяца плана
   return (
     <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-3.5">
       {rows.map((r, i) => {
         const fc = r.pt ? plColor(K.past ? r.st.pct : r.st.fpct) : "var(--primary)", col = pointColor(points, r.p);
         return (
-          <Tile key={r.p} i={i0 + i} className="justify-start gap-3">
+          <Tile key={r.p} i={i0 + i} className="justify-start gap-3" to={{ tab: "sales", params: { point: r.p, from: month + "-01", to: monthEnd } }} label={`продажи точки ${r.p}`}>
             <div className="flex items-center justify-between gap-2">
               <div className="flex min-w-0 items-center gap-3">
                 <span className="grid size-10 shrink-0 place-items-center rounded-full text-base font-bold text-white" style={{ background: col }}>{(r.seller || r.p).charAt(0)}</span>
