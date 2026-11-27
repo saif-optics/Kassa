@@ -308,3 +308,9 @@ body::before { content: ""; position: fixed; inset: -14px; z-index: -1; pointer-
   .sp-wave { display: none; }
   .sp-root, .sp-root.sp-out { transition: opacity .2s linear !important; transform: none !important; }
 }
+
+/* колонка блоков с перемычкой между ними (Пользователи, Отметки): те же цвета и вырезы, что у пазла Аналитики */
+.pzc{--pr:22px;--pg:10px;--bt:36px;--bf:5px;display:flex;flex-direction:column;gap:var(--pg);min-width:0}
+@container main (min-width:640px){ .pzc{--pr:26px;--pg:14px;--bt:44px;--bf:7px} }
+.pzc .pz-br{display:block}
+.pzc .pz-brv{left:var(--bd);top:calc(100% - 2px);height:calc(var(--pg) + 4px);width:var(--bt);margin-left:calc(var(--bt)/-2)}

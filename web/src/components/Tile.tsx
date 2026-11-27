@@ -14,16 +14,18 @@ const HasIcon = createContext(false);
 
 /** to + label — плитка-ссылка: курсор, подъём при наведении, Enter, подпись «Открыть …» */
 /** icon + tone — цветная иконка в квадрате справа вверху; glow — свечение цвета смысла (статусные плитки); spark — мини-график под числом */
-export function Tile({ i = 0, hero, warn, className, children, to, label, icon, tone = "brand", glow, spark }: { i?: number; hero?: boolean; warn?: boolean; className?: string; children: React.ReactNode; to?: Dest | (() => void); label?: string; icon?: LucideIcon; tone?: Tone; glow?: Tone | null; spark?: number[] }) {
+export function Tile({ i = 0, hero, heroColor, warn, className, children, to, label, icon, tone = "brand", glow, spark }: { i?: number; hero?: boolean; heroColor?: string; warn?: boolean; className?: string; children: React.ReactNode; to?: Dest | (() => void); label?: string; icon?: LucideIcon; tone?: Tone; glow?: Tone | null; spark?: number[] }) {
   return (
     <OnHero.Provider value={!!hero}><HasIcon.Provider value={!!icon && !hero}>
       <motion.div {...land(i)} {...(to ? { ...goProps(to, label || "раздел"), whileHover: { y: -2 } } : {})}
+        style={hero && heroColor ? { background: `linear-gradient(135deg, ${heroColor}, color-mix(in srgb, ${heroColor} 62%, #000))`, boxShadow: `0 14px 36px color-mix(in srgb, ${heroColor} 32%, transparent)` } : undefined}
         className={cn("isolate flex h-full relative min-h-[118px] min-w-0 flex-col justify-between overflow-hidden rounded-3xl p-4 @min-[640px]/main:rounded-[28px] @min-[640px]/main:px-6 @min-[640px]/main:py-4 @min-[1600px]/main:py-[22px]",
           hero ? "border border-white/25 bg-[linear-gradient(135deg,var(--brand),#0a4f7a_60%,var(--brand-navy))] text-white shadow-[0_14px_36px_rgb(2_110_166/0.32)]" : "glass",
           to && "cursor-pointer outline-none transition-shadow hover:shadow-lg focus-visible:ring-2 focus-visible:ring-primary/50",
           warn && "ring-1 ring-minus/50", className)}>
         {glow && !hero && <Glow tone={glow} />}{spark && <SparkArea data={spark} tone={hero ? "muted" : tone} color={hero ? "rgb(255 255 255 / .38)" : undefined} />}
         {icon && !hero && <span className="absolute top-3.5 right-3.5 @min-[640px]/main:top-4 @min-[640px]/main:right-5"><IconBox icon={icon} tone={tone} /></span>}
+        {icon && hero && <span className="absolute max-[639px]:hidden top-3.5 right-3.5 @min-[640px]/main:top-4 @min-[640px]/main:right-5"><span aria-hidden="true" className="grid size-9 place-items-center rounded-xl bg-white/20 text-white @min-[640px]/main:size-10 @min-[640px]/main:rounded-[13px]">{(() => { const I = icon; return <I className="size-[18px] @min-[640px]/main:size-5" strokeWidth={1.9} />; })()}</span></span>}
         {children}</motion.div>
     </HasIcon.Provider></OnHero.Provider>
   );

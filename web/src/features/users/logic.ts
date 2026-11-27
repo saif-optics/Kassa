@@ -10,6 +10,10 @@ export type UserRow = { email: string; role: Role; point: string | null; label: 
 
 export const ROLES: Record<Role, string> = { owner: "Владелец", admin: "Админ", cashier: "Кассир", seller: "Продавец", marketer: "Гость" };
 const ROLE_PL: Record<Role, [string, string, string]> = { owner: ["владелец", "владельца", "владельцев"], admin: ["админ", "админа", "админов"], cashier: ["кассир", "кассира", "кассиров"], seller: ["продавец", "продавца", "продавцов"], marketer: ["гость", "гостя", "гостей"] };
+// цвета статусов — только палитра темы
+export const ROLE_VAR: Record<Role, string> = { owner: "var(--primary)", admin: "var(--chart-2)", cashier: "var(--plus)", seller: "var(--warn)", marketer: "var(--chart-5)" };
+export const ROLE_DESC: Record<Role, string> = { owner: "всё и управление доступами", admin: "всё, кроме владельца и других админов", cashier: "касса и продажи своей точки", seller: "продажи своей точки", marketer: "только то, что включено" };
+export const ROLE_ORDER: Role[] = ["owner", "admin", "cashier", "seller", "marketer"];
 export const MIN_PASS = 10;
 const NOFN = "Серверная функция не выложена";
 
@@ -30,6 +34,22 @@ export function genPass(n = 12): string {
   crypto.getRandomValues(b);
   return [...b].map((x) => A[x % A.length]).join("");
 }
+
+const TZ = "Asia/Tashkent";
+/** день в Ташкенте, YYYY-MM-DD */
+export const dayKey = (d: Date | string | number) => new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(new Date(d));
+const hmOf = (d: Date) => new Intl.DateTimeFormat("ru-RU", { timeZone: TZ, hour: "2-digit", minute: "2-digit" }).format(d);
+/** последний вход: «сегодня 18:52», «вчера 20:11», «25.11, 19:30»; online — вход меньше 15 минут назад */
+export function seen(v?: string | null): { text: string; online: boolean; today: boolean } {
+  const d = v ? new Date(v) : null;
+  if (!d || isNaN(+d)) return { text: "ещё не входил", online: false, today: false };
+  const k = dayKey(d), now = Date.now(), t = dayKey(now), y = dayKey(now - 86400_000);
+  const dd = new Intl.DateTimeFormat("ru-RU", { timeZone: TZ, day: "2-digit", month: "2-digit" }).format(d);
+  const text = k === t ? `сегодня ${hmOf(d)}` : k === y ? `вчера ${hmOf(d)}` : `${dd}, ${hmOf(d)}`;
+  return { text, online: now - +d < 15 * 60_000 && now >= +d - 60_000, today: k === t };
+}
+export const timeOf = (v: string) => hmOf(new Date(v));
+export const initials = (n?: string | null) => String(n || "?").trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() || "").join("") || "?";
 
 export const dt = (v?: string | null) => {
   if (!v) return "ещё не входил";
